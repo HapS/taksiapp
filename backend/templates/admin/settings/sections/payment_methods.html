@@ -1,0 +1,257 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/payment-methods" enctype="multipart/form-data">
+
+  <!-- Kredi Kartı -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-{{ payment_methods.credit_card.icon }} me-2"></i>Kredi Kartı Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="credit_card_b2b_available" id="credit_card_b2b" {% if payment_methods.credit_card.b2b_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="credit_card_b2b">B2B Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="credit_card_b2c_available" id="credit_card_b2c" {% if payment_methods.credit_card.b2c_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="credit_card_b2c">B2C Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Icon</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi {{ payment_methods.credit_card.icon }}"></i></span>
+            <input type="text" class="form-control" name="credit_card_icon" value="{{ payment_methods.credit_card.icon }}" placeholder="credit-card-2-front">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Sıra</label>
+          <input type="number" class="form-control" name="credit_card_order" value="{{ payment_methods.credit_card.order_id | default(value=1) }}" min="1" max="100">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <ul class="nav nav-tabs mb-4" id="creditCardTabs" role="tablist">
+            {% for lang in supported_languages %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-cc-{{ lang }}" data-bs-toggle="tab" data-bs-target="#lang-cc-{{ lang }}" type="button" role="tab">{{ lang | upper }}</button>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content" id="creditCardTabContent">
+            {% for lang in supported_languages %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="lang-cc-{{ lang }}" role="tabpanel" aria-labelledby="tab-cc-{{ lang }}">
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Başlık</label>
+                <input type="text" class="form-control" name="credit_card_title_{{ lang }}" value="{{ payment_methods.credit_card.langs[lang].title }}" placeholder="Kredi kartı ödeme yöntemi başlığı" maxlength="60">
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Açıklaması</label>
+                <textarea class="form-control" name="credit_card_description_{{ lang }}" rows="3" placeholder="Kredi kartı ödeme yöntemi açıklaması" maxlength="160">{{ payment_methods.credit_card.langs[lang].description }}</textarea>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banka Transferi -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi {{ payment_methods.bank_transfer.icon }} me-2"></i>Banka Transferi Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="bank_transfer_b2b_available" id="bank_transfer_b2b" {% if payment_methods.bank_transfer.b2b_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="bank_transfer_b2b">B2B Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="bank_transfer_b2c_available" id="bank_transfer_b2c" {% if payment_methods.bank_transfer.b2c_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="bank_transfer_b2c">B2C Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Icon</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi {{ payment_methods.bank_transfer.icon  }}"></i></span>
+            <input type="text" class="form-control" name="bank_transfer_icon" value="{{ payment_methods.bank_transfer.icon }}" placeholder="bank">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Sıra</label>
+          <input type="number" class="form-control" name="bank_transfer_order" value="{{ payment_methods.bank_transfer.order_id | default(value=2) }}" min="1" max="100">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <ul class="nav nav-tabs mb-4" id="bankTransferTabs" role="tablist">
+            {% for lang in supported_languages %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-bt-{{ lang }}" data-bs-toggle="tab" data-bs-target="#lang-bt-{{ lang }}" type="button" role="tab">{{ lang | upper }}</button>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content" id="bankTransferTabContent">
+            {% for lang in supported_languages %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="lang-bt-{{ lang }}" role="tabpanel" aria-labelledby="tab-bt-{{ lang }}">
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Başlık</label>
+                <input type="text" class="form-control" name="bank_transfer_title_{{ lang }}" value="{{ payment_methods.bank_transfer.langs[lang].title }}" placeholder="Banka transferi ödeme yöntemi başlığı" maxlength="60">
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Açıklaması</label>
+                <textarea class="form-control" name="bank_transfer_description_{{ lang }}" rows="3" placeholder="Banka transferi ödeme yöntemi açıklaması" maxlength="160">{{ payment_methods.bank_transfer.langs[lang].description }}</textarea>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kapıda Ödeme -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi {{ payment_methods.cash_on_delivery.icon }} me-2"></i>Kapıda Ödeme Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="cash_on_delivery_b2b_available" id="cash_on_delivery_b2b" {% if payment_methods.cash_on_delivery.b2b_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="cash_on_delivery_b2b">B2B Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="cash_on_delivery_b2c_available" id="cash_on_delivery_b2c" {% if payment_methods.cash_on_delivery.b2c_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="cash_on_delivery_b2c">B2C Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Icon</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi {{ payment_methods.cash_on_delivery.icon }}"></i></span>
+            <input type="text" class="form-control" name="cash_on_delivery_icon" value="{{ payment_methods.cash_on_delivery.icon }}" placeholder="cash-coin">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Sıra</label>
+          <input type="number" class="form-control" name="cash_on_delivery_order" value="{{ payment_methods.cash_on_delivery.order_id | default(value=3) }}" min="1" max="100">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <ul class="nav nav-tabs mb-4" id="codTabs" role="tablist">
+            {% for lang in supported_languages %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-cod-{{ lang }}" data-bs-toggle="tab" data-bs-target="#lang-cod-{{ lang }}" type="button" role="tab">{{ lang | upper }}</button>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content" id="codTabContent">
+            {% for lang in supported_languages %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="lang-cod-{{ lang }}" role="tabpanel" aria-labelledby="tab-cod-{{ lang }}">
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Başlık</label>
+                <input type="text" class="form-control" name="cash_on_delivery_title_{{ lang }}" value="{{ payment_methods.cash_on_delivery.langs[lang].title }}" placeholder="Kapıda ödeme yöntemi başlığı" maxlength="60">
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Açıklaması</label>
+                <textarea class="form-control" name="cash_on_delivery_description_{{ lang }}" rows="3" placeholder="Kapıda ödeme yöntemi açıklaması" maxlength="160">{{ payment_methods.cash_on_delivery.langs[lang].description }}</textarea>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B2B Kredi -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi {{ payment_methods.b2b_credit.icon }} me-2"></i>B2B Kredi Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="b2b_credit_b2b_available" id="b2b_credit_b2b" {% if payment_methods.b2b_credit.b2b_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="b2b_credit_b2b">B2B Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="b2b_credit_b2c_available" id="b2b_credit_b2c" {% if payment_methods.b2b_credit.b2c_available %}checked{% endif %}>
+            <label class="form-check-label fw-bold" for="b2b_credit_b2c">B2C Aktif</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Icon</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi {{ payment_methods.b2b_credit.icon  }}"></i></span>
+            <input type="text" class="form-control" name="b2b_credit_icon" value="{{ payment_methods.b2b_credit.icon  }}" placeholder="person-badge">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small text-muted">Sıra</label>
+          <input type="number" class="form-control" name="b2b_credit_order" value="{{ payment_methods.b2b_credit.order_id | default(value=4) }}" min="1" max="100">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <ul class="nav nav-tabs mb-4" id="b2bCreditTabs" role="tablist">
+            {% for lang in supported_languages %}
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-b2b-{{ lang }}" data-bs-toggle="tab" data-bs-target="#lang-b2b-{{ lang }}" type="button" role="tab">{{ lang | upper }}</button>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content" id="b2bCreditTabContent">
+            {% for lang in supported_languages %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="lang-b2b-{{ lang }}" role="tabpanel" aria-labelledby="tab-b2b-{{ lang }}">
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Başlık</label>
+                <input type="text" class="form-control" name="b2b_credit_title_{{ lang }}" value="{{ payment_methods.b2b_credit.langs[lang].title }}" placeholder="B2B kredi yöntemi başlığı" maxlength="60">
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">Açıklaması</label>
+                <textarea class="form-control" name="b2b_credit_description_{{ lang }}" rows="3" placeholder="B2B kredi yöntemi açıklaması" maxlength="160">{{ payment_methods.b2b_credit.langs[lang].description }}</textarea>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

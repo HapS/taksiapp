@@ -1,0 +1,237 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block title %}404 - Sayfa Bulunamadı{% endblock %}
+
+{% block content %}
+<style>
+.error-404-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.error-404-content {
+    text-align: center;
+    max-width: 600px;
+}
+
+.error-404-number {
+    font-size: 10rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.error-404-emoji {
+    font-size: 8rem;
+    margin-bottom: 30px;
+    animation: shake 2s ease-in-out infinite;
+}
+
+.error-404-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+    margin-bottom: 20px;
+}
+
+.error-404-description {
+    font-size: 1.2rem;
+    color: var(--bs-secondary);
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+.error-404-search {
+    max-width: 500px;
+    margin: 0 auto 40px;
+}
+
+.error-404-links {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-404-btn {
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-404-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.error-404-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.error-404-btn-secondary {
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border: 2px solid var(--bs-border-color);
+}
+
+.error-404-btn-secondary:hover {
+    background: var(--bs-secondary-bg);
+    transform: translateY(-2px);
+}
+
+.error-404-suggestions {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.error-404-suggestions h3 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--bs-body-color);
+}
+
+.error-404-suggestion-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    list-style: none;
+    padding: 0;
+}
+
+.error-404-suggestion-item {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.error-404-suggestion-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.error-404-suggestion-item a {
+    text-decoration: none;
+    color: var(--bs-body-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-404-suggestion-item i {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .error-404-number {
+        font-size: 6rem;
+    }
+    
+    .error-404-emoji {
+        font-size: 5rem;
+    }
+    
+    .error-404-title {
+        font-size: 1.8rem;
+    }
+    
+    .error-404-description {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<div class="error-404-container">
+    <div class="error-404-content">
+        <div class="error-404-emoji">🔍</div>
+        <div class="error-404-number">404</div>
+        <h1 class="error-404-title">
+   
+                {{ t(key="Sayfa_Bulunamadı", default="Sayfa Bulunamadı", lang=current_language) }}
+  
+        </h1>
+        <p class="error-404-description">
+            
+                {{ t(key="Aradığınız_sayfa_taşınmış,_silinmiş_veya_hiç_var_olmamış_olabilir._Endişelenmeyin,_size_yardımcı_olabiliriz!", default="Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir. 
+                Endişelenmeyin, size yardımcı olabiliriz!", lang=current_language) }}
+        </p>
+
+        <!-- Search Box -->
+        <div class="error-404-search">
+            <form action="/search" method="get" class="input-group input-group-lg">
+                <input 
+                    type="text" 
+                    name="q" 
+                    class="form-control" 
+                    placeholder="{{ t(key="Arama_yapın...", default="Arama yapın...", lang=current_language) }}"
+                    style="border-radius: 50px 0 0 50px;"
+                >
+                <button 
+                    class="btn btn-primary" 
+                    type="submit"
+                    style="border-radius: 0 50px 50px 0; padding: 0 30px;"
+                >
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+        </div>
+
+       
+    </div>
+</div>
+
+<script>
+// Add some fun interactions
+document.addEventListener('DOMContentLoaded', function() {
+    const emoji = document.querySelector('.error-404-emoji');
+    const emojis = ['🔍', '😕', '🤔', '😅', '🧐', '🗺️'];
+    let currentIndex = 0;
+    
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % emojis.length;
+        emoji.textContent = emojis[currentIndex];
+    }, 3000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,394 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/payment" enctype="multipart/form-data">
+
+  <!-- Genel Ödeme Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-credit-card me-2"></i>Genel Ödeme Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <label class="form-label fw-bold">Varsayılan Ödeme Sağlayıcısı</label>
+        <select class="form-select" name="default_payment_provider">
+          <option value="iyzico" {% if default_payment_provider == "iyzico" %}selected{% endif %}>İyzico</option>
+          <option value="garanti" {% if default_payment_provider == "garanti" %}selected{% endif %}>Garanti BBVA</option>
+          <option value="paytr" {% if default_payment_provider == "paytr" %}selected{% endif %}>PayTR</option>
+        </select>
+        <div class="form-text">Müşteriler ödeme yaparken varsayılan olarak kullanılacak sağlayıcı</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Ödeme Sağlayıcıları Tab Menü -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-credit-card me-2"></i>Ödeme Sağlayıcıları
+      </h6>
+    </div>
+    <div class="card-body p-0">
+
+      <div class="border-bottom">
+        <ul class="nav nav-pills nav-fill p-3" id="paymentProviderTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="iyzico-tab" data-bs-toggle="tab" data-bs-target="#iyzico-content" type="button" role="tab" aria-controls="iyzico-content" aria-selected="true">
+              <i class="bi bi-credit-card-2-front me-1"></i>İyzico
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="garanti-tab" data-bs-toggle="tab" data-bs-target="#garanti-content" type="button" role="tab" aria-controls="garanti-content" aria-selected="false">
+              <i class="bi bi-bank me-1"></i>Garanti BBVA
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="paytr-tab" data-bs-toggle="tab" data-bs-target="#paytr-content" type="button" role="tab" aria-controls="paytr-content" aria-selected="false">
+              <i class="bi bi-credit-card me-1"></i>PayTR
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="p-4">
+        <div class="tab-content" id="paymentProviderTabContent">
+
+          <!-- İyzico Tab -->
+          <div class="tab-pane fade show active" id="iyzico-content" role="tabpanel" aria-labelledby="iyzico-tab">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="iyzico_enabled"
+                         id="iyzico_enabled"
+                         {% if payment_providers.iyzico.enabled %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="iyzico_enabled">
+                    İyzico Aktif
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="iyzico_test_mode"
+                         id="iyzico_test_mode"
+                         {% if payment_providers.iyzico.test_mode %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="iyzico_test_mode">
+                    Test Modu
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">API Key</label>
+                <input type="text"
+                       class="form-control font-monospace"
+                       name="iyzico_api_key"
+                       value="{{ payment_providers.iyzico.config.api_key }}"
+                       placeholder="sandbox-xxx veya xxx">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Secret Key</label>
+                <input type="password"
+                       class="form-control font-monospace"
+                       name="iyzico_secret_key"
+                       value="{{ payment_providers.iyzico.config.secret_key }}"
+                       placeholder="••••••••">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Base URL</label>
+              <input type="url"
+                     class="form-control"
+                     name="iyzico_base_url"
+                     value="{{ payment_providers.iyzico.config.base_url }}"
+                     placeholder="https://sandbox-api.iyzipay.com">
+              <div class="form-text">
+                Test: https://sandbox-api.iyzipay.com | Canlı: https://api.iyzipay.com
+              </div>
+            </div>
+          </div>
+
+          <!-- Garanti BBVA Tab -->
+          <div class="tab-pane fade" id="garanti-content" role="tabpanel" aria-labelledby="garanti-tab">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="garanti_enabled"
+                         id="garanti_enabled"
+                         {% if payment_providers.garanti.enabled %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="garanti_enabled">
+                    Garanti BBVA Aktif
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="garanti_test_mode"
+                         id="garanti_test_mode"
+                         {% if payment_providers.garanti.test_mode %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="garanti_test_mode">
+                    Test Modu
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Terminal ID</label>
+                <input type="text"
+                       class="form-control"
+                       name="garanti_terminal_id"
+                       value="{{ payment_providers.garanti.config.terminal_id }}"
+                       placeholder="12345678">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Merchant ID</label>
+                <input type="text"
+                       class="form-control"
+                       name="garanti_merchant_id"
+                       value="{{ payment_providers.garanti.config.merchant_id }}"
+                       placeholder="7000679">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">User ID</label>
+                <input type="text"
+                       class="form-control"
+                       name="garanti_user_id"
+                       value="{{ payment_providers.garanti.config.user_id }}"
+                       placeholder="PROVAUT">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Password</label>
+                <input type="password"
+                       class="form-control"
+                       name="garanti_password"
+                       value="{{ payment_providers.garanti.config.password }}"
+                       placeholder="••••••••">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Store Key</label>
+                <input type="text"
+                       class="form-control font-monospace"
+                       name="garanti_store_key"
+                       value="{{ payment_providers.garanti.config.store_key }}"
+                       placeholder="12345678">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Base URL</label>
+                <input type="url"
+                       class="form-control"
+                       name="garanti_base_url"
+                       value="{{ payment_providers.garanti.config.base_url }}"
+                       placeholder="https://sanalposprovtest.garantibbva.com.tr">
+              </div>
+            </div>
+          </div>
+
+          <!-- PayTR Tab -->
+          <div class="tab-pane fade" id="paytr-content" role="tabpanel" aria-labelledby="paytr-tab">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="paytr_enabled"
+                         id="paytr_enabled"
+                         {% if payment_providers.paytr.enabled %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="paytr_enabled">
+                    PayTR Aktif
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         name="paytr_test_mode"
+                         id="paytr_test_mode"
+                         {% if payment_providers.paytr.test_mode %}checked{% endif %}>
+                  <label class="form-check-label fw-bold" for="paytr_test_mode">
+                    Test Modu
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Merchant KEY</label>
+                <input type="text"
+                       class="form-control"
+                       name="paytr_merchant_key"
+                       value="{{ payment_providers.paytr.config.merchant_key }}"
+                       placeholder="12345678">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Merchant ID</label>
+                <input type="text"
+                       class="form-control"
+                       name="paytr_merchant_id"
+                       value="{{ payment_providers.paytr.config.merchant_id }}"
+                       placeholder="7000679">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Merchant SALT</label>
+                <input type="text"
+                       class="form-control"
+                       name="paytr_merchant_salt"
+                       value="{{ payment_providers.paytr.config.merchant_salt }}"
+                       placeholder="PROVAUT">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Base URL</label>
+                <input type="url"
+                       class="form-control"
+                       name="paytr_base_url"
+                       value="{{ payment_providers.paytr.config.base_url }}"
+                       placeholder="https://www.paytr.com/odeme/api">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banka Hesap Bilgileri -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-bank2 me-2"></i>Banka Hesap Bilgileri
+      </h6>
+    </div>
+    <div class="card-body">
+
+      <!-- 1. Banka -->
+      <h6 class="fw-bold mb-3">1. Banka Hesabı</h6>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Banka Adı</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank1_name"
+                 value="{{ bank1_name }}"
+                 placeholder="Türkiye İş Bankası">
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Hesap Sahibi</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank1_account_holder"
+                 value="{{ bank1_account_holder }}"
+                 placeholder="Şirket Adı A.Ş.">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8 mb-3">
+          <label class="form-label fw-bold">IBAN</label>
+          <input type="text"
+                 class="form-control font-monospace"
+                 name="bank1_iban"
+                 value="{{ bank1_iban }}"
+                 placeholder="TR12 3456 7890 1234 5678 9012 34">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-bold">Şube Kodu</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank1_branch_code"
+                 value="{{ bank1_branch_code }}"
+                 placeholder="1234">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- 2. Banka -->
+      <h6 class="fw-bold mb-3">2. Banka Hesabı (Opsiyonel)</h6>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Banka Adı</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank2_name"
+                 value="{{ bank2_name }}"
+                 placeholder="Garanti BBVA">
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Hesap Sahibi</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank2_account_holder"
+                 value="{{ bank2_account_holder }}"
+                 placeholder="Şirket Adı A.Ş.">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8 mb-3">
+          <label class="form-label fw-bold">IBAN</label>
+          <input type="text"
+                 class="form-control font-monospace"
+                 name="bank2_iban"
+                 value="{{ bank2_iban }}"
+                 placeholder="TR98 7654 3210 9876 5432 1098 76">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-bold">Şube Kodu</label>
+          <input type="text"
+                 class="form-control"
+                 name="bank2_branch_code"
+                 value="{{ bank2_branch_code }}"
+                 placeholder="5678">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

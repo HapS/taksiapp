@@ -1,0 +1,242 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block title %}PayTR - Kredi Kartı Ödemesi{% endblock %}
+
+{% block content %}
+<div id="payment-app" class="container mt-4">
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 "><i class="bi bi-receipt me-2"></i>{{ t(key="Sipariş_Özeti", default="Sipariş Özeti", lang=current_language) }}</h6>
+                </div>
+                <div class="card-body">
+                    <div v-if="loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">{{ t(key="Yükleniyor...", default="Yükleniyor...", lang=current_language) }}</span>
+                        </div>
+                        <p class="mt-2 text-muted small">{{ t(key="Sipariş_bilgileriniz_hazırlanıyor...", default="Sipariş bilgileriniz hazırlanıyor...", lang=current_language) }}</p>
+                    </div>
+
+                    <div v-else-if="cartItems.length > 0">
+                        <div class="cart-items-summary mb-4">
+                            <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between mb-3 align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative me-3">
+                                        <img :src="item.product_cover || '/static/no_image.png'" :alt="item.product_title"
+                                             class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary border border-light" style="font-size: 0.7rem;">
+                                            [[ item.quantity ]]
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold small">[[ item.product_title ]]</div>
+                                        <div v-if="item.variant_display" class="text-muted" style="font-size: 0.7rem;">[[ item.variant_display ]]</div>
+                                    </div>
+                                </div>
+                                <span class="small fw-bold">[[ formatPrice(item.total) ]]</span>
+                            </div>
+                        </div>
+
+                        <div class="order-totals pt-3 border-top">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">{{ t(key="Ürün_Toplamı:", default="Ürün Toplamı:", lang=current_language) }}</span>
+                                <span class="small">{{ product_total_formatted }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">{{ t(key="Kargo_Ücreti:", default="Kargo Ücreti:", lang=current_language) }}</span>
+                                {% if is_free_shipping %}
+                                <span class="text-success small fw-bold">{{ t(key="Ücretsiz", default="Ücretsiz", lang=current_language) }}</span>
+                                {% else %}
+                                <span class="small">{{ standart_cargo_fee_formatted }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                <span class="fw-bold">{{ t(key="Genel_Toplam:", default="Genel Toplam:", lang=current_language) }}</span>
+                                <span class="fw-bold text-primary fs-5">{{ final_total_formatted }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="text-center py-5">
+                        <i class="bi bi-cart-x display-4 text-muted mb-3"></i>
+                        <p class="text-muted">{{ t(key="Sepetinizde_ürün_bulunamadı.", default="Sepetinizde ürün bulunamadı.", lang=current_language) }}</p>
+                        <a href="/my-cart" class="btn btn-outline-primary btn-sm mt-2">{{ t(key="Sepete_Dön", default="Sepete Dön", lang=current_language) }}</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adres Bilgisi Özeti -->
+            <div v-if="!loading && selectedAddress" class="card mb-3">
+                <div class="card-body py-2">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt text-primary me-3"></i>
+                        <div>
+                            <div class="small fw-bold">{{ t(key="Teslimat_Adresi:", default="Teslimat Adresi:", lang=current_language) }} [[ selectedAddress.title ]]</div>
+                            <div class="text-muted small">[[ selectedAddress.address_line ]], [[ selectedAddress.city_name ]]</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="payment-form-container">
+                {% if paytr_iframe_url %}
+                    <!-- PayTR iframe resizer script -->
+                    <script src="https://www.paytr.com/js/iframeResizer.min.js"></script>
+
+                    <!-- PayTR ödeme iframe'i -->
+                    <iframe
+                        src="{{ paytr_iframe_url }}"
+                        id="paytriframe"
+                        frameborder="0"
+                        scrolling="no"
+                        style="width: 100%;">
+                    </iframe>
+
+                    <script>
+                        // PayTR iframe otomatik boyutlandırma
+                        if (typeof iFrameResize === 'function') {
+                            iFrameResize({}, '#paytriframe');
+                        }
+                    </script>
+                {% elif error_message %}
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ error_message }}
+                    </div>
+                    <a href="/my-cart" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-left me-2"></i> {{ t(key="Sepete_Dön", default="Sepete Dön", lang=current_language) }}
+                    </a>
+                {% else %}
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ t(key="PayTR_ödeme_formu_yüklenemedi._Lütfen_tekrar_deneyin.", default="PayTR ödeme formu yüklenemedi. Lütfen tekrar deneyin.", lang=current_language) }}
+                    </div>
+                    <a href="/my-cart" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-left me-2"></i> {{ t(key="Sepete_Dön", default="Sepete Dön", lang=current_language) }}
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="text-center mt-3">
+                <p class="text-muted" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-lock me-1"></i> {{ t(key="Tüm_işlemleriniz_256_bit_SSL_sertifikası_ile_korunmaktadır.", default="Tüm işlemleriniz 256-bit SSL sertifikası ile korunmaktadır.", lang=current_language) }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* PayTR iframe için özel stiller */
+#paytriframe {
+    min-height: 500px;
+    width: 100%;
+    border: none;
+}
+
+/* PayTR responsive ayarları */
+@media (max-width: 768px) {
+    #paytriframe {
+        min-height: 600px;
+    }
+}
+
+[data-bs-theme="dark"] #payment-app .card {
+    background-color: var(--bs-body-bg);
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+        delimiters: ['[[', ']]'],
+        setup() {
+            const loading = ref(true);
+            const cartItems = ref([]);
+            const totalAmount = ref(0);
+            const cartCurrency = ref('TRY');
+            const addresses = ref([]);
+            const selectedAddressId = ref(null);
+
+            const selectedAddress = computed(() =>
+                addresses.value.find(addr => addr.id == selectedAddressId.value)
+            );
+
+            const formatPrice = (price) => {
+                const curr = cartCurrency.value || 'TRY';
+
+                const localeMap = {
+                    'TRY': 'tr-TR',
+                    'USD': 'en-US',
+                    'EUR': 'de-DE',
+                    'GBP': 'en-GB',
+                    'CHF': 'de-CH',
+                    'AUD': 'en-AU',
+                    'CAD': 'en-CA'
+                };
+
+                const locale = localeMap[curr] || 'tr-TR';
+
+                return new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: curr
+                }).format(price);
+            };
+
+            const loadCart = async () => {
+                try {
+                    loading.value = true;
+                    const response = await fetch('/api/cart');
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            cartItems.value = result.data.items || [];
+                            totalAmount.value = result.data.total || 0;
+                            cartCurrency.value = result.data.currency || 'TRY';
+                            if (result.data.address_id) {
+                                selectedAddressId.value = result.data.address_id;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading cart:', error);
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            const loadAddresses = async () => {
+                try {
+                    const response = await fetch('/api/user/addresses');
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.status === 'success') {
+                            addresses.value = result.data || [];
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading addresses:', error);
+                }
+            };
+
+            onMounted(async () => {
+                await Promise.all([loadCart(), loadAddresses()]);
+            });
+
+            return {
+                loading,
+                cartItems,
+                totalAmount,
+                selectedAddress,
+                formatPrice
+            };
+        }
+    }).mount('#payment-app');
+</script>
+{% endblock %}

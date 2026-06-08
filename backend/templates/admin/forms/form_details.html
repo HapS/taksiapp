@@ -1,0 +1,211 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Form Detayları - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2" id="formDetailApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">
+        <span v-if="form">[[ form.content?.title || 'Form Detayları' ]]</span>
+        <span v-else>Form Detayları</span>
+      </h4>
+      <nav aria-label="breadcrumb" class="mb-0" style="height:24px">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="/admin/forms-data">
+              <i class="bi bi-house-door"></i> Formlar
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            <i class="bi bi-file-earmark-text"></i> Başvuru #[[ form?.id || '...' ]]
+          </li>
+        </ol>
+      </nav>
+    </div>
+    <div>
+      <a href="/admin/forms-data" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Listeye Dön
+      </a>
+    </div>
+  </div>
+
+  <div v-if="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+    <p class="text-muted mt-2">Form verileri yükleniyor...</p>
+  </div>
+
+  <div v-if="error" class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle"></i> [[ error ]]
+  </div>
+
+  <div v-if="form" class="row g-4">
+
+
+    <!-- Sağ: Form Verileri -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <i class="bi bi-list-check"></i> Form Verileri
+        </div>
+        <div class="card-body p-4">
+          <div v-if="Object.keys(form.data).length === 0" class="text-center text-muted py-4">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            Form verisi bulunamadı
+          </div>
+
+          <div v-else class="row g-3">
+            <template v-for="(item, key) in form.data" :key="key">
+              <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold">[[ getFieldLabel(item, key) ]]</label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm bg-light"
+                  readonly
+                  :value="getFieldValue(item)"
+                >
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sol: Başvuru Bilgileri -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <i class="bi bi-info-circle"></i> Başvuru Bilgileri
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label text-muted small fw-bold">BAŞVURU ID</label>
+            <input type="text" class="form-control form-control-sm bg-light" readonly :value="form.id">
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted small fw-bold">FORM ADI</label>
+            <input type="text" class="form-control form-control-sm bg-light" readonly :value="form.content?.title || '-'">
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted small fw-bold">TARİH</label>
+            <input type="text" class="form-control form-control-sm bg-light" readonly :value="formatDate(form.created_at)">
+          </div>
+          <div class="mb-3" v-if="form.ip">
+            <label class="form-label text-muted small fw-bold">IP ADRESİ</label>
+            <input type="text" class="form-control form-control-sm bg-light" readonly :value="form.ip">
+          </div>
+          <div class="mb-3" v-if="form.user_id">
+            <label class="form-label text-muted small fw-bold">KULLANICI ID</label>
+            <input type="text" class="form-control form-control-sm bg-light" readonly :value="form.user_id">
+          </div>
+        </div>
+        <div class="card-footer bg-transparent">
+          <a v-if="form.content"
+             :href="`/admin/contents/form/${form.content.id}`"
+             class="btn btn-sm btn-success w-100">
+            <i class="bi bi-pencil-square"></i> Formu Düzenle
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const { createApp, ref, onMounted } = Vue;
+
+  createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+      const form = ref(null);
+      const loading = ref(true);
+      const error = ref(null);
+      const formId = {{ form_id | safe }};
+
+      const getFieldLabel = (item, key) => {
+        if (item && typeof item === 'object' && item.label) {
+          return item.label;
+        }
+        return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      };
+
+      const getFieldValue = (item) => {
+        if (item && typeof item === 'object' && 'value' in item) {
+          return formatValue(item.value);
+        }
+        return formatValue(item);
+      };
+
+      const formatValue = (value) => {
+        if (value === null || value === undefined) return '-';
+        if (typeof value === 'boolean') return value ? 'Evet' : 'Hayır';
+        if (Array.isArray(value)) return value.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join(', ');
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      };
+
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('tr-TR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      const loadForm = async () => {
+        loading.value = true;
+        error.value = null;
+        try {
+          const response = await fetch(`/admin/api/get-form-data/${formId}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            form.value = data;
+          } else {
+            error.value = data.error || 'Form yüklenirken bir hata oluştu';
+          }
+        } catch (err) {
+          error.value = 'Bağlantı hatası: ' + err.message;
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      onMounted(() => {
+        loadForm();
+      });
+
+      return {
+        form,
+        loading,
+        error,
+        getFieldLabel,
+        getFieldValue,
+        formatValue,
+        formatDate
+      };
+    },
+  }).mount("#formDetailApp");
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control[readonly] {
+  cursor: default;
+}
+
+.form-control[readonly]:focus {
+  box-shadow: none;
+}
+</style>
+{% endblock %}

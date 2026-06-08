@@ -1,0 +1,38 @@
+{% extends "@@theme@@/mailer/base.html" %}
+
+{% block title %}Hoş Geldiniz - Backend-RS{% endblock %}
+
+{% block header_title %}Hoş Geldiniz! 🎊{% endblock %}
+{% block header_subtitle %}Backend-RS ailesine katıldığınız için teşekkürler{% endblock %}
+
+{% block content %}
+<h2>Merhaba {{name}}! 👋</h2>
+
+<p>Backend-RS'e hoş geldiniz! Hesabınız başarıyla oluşturuldu ve artık tüm özelliklerimizden yararlanabilirsiniz.</p>
+
+<div class="success-box">
+    <h3 style="margin-bottom: 15px; color: #155724;">✨ Hesap Bilgileriniz</h3>
+    <p><strong>E-posta:</strong> {{email}}</p>
+    <p><strong>Kayıt Tarihi:</strong> {{registration_date}}</p>
+</div>
+
+<div class="highlight-box">
+    <h3 style="margin-bottom: 15px; color: #495057;">🚀 Neler Yapabilirsiniz?</h3>
+    <ul style="margin-left: 20px; line-height: 2;">
+        <li>Ürünleri keşfedin ve alışveriş yapın</li>
+        <li>Siparişlerinizi takip edin</li>
+        <li>Favori ürünlerinizi kaydedin</li>
+        <li>Özel kampanyalardan haberdar olun</li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{site_url}}" class="btn">Alışverişe Başla</a>
+</div>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6c757d;">
+    Herhangi bir sorunuz varsa, destek ekibimiz size yardımcı olmaktan mutluluk duyacaktır.
+</p>
+{% endblock %}

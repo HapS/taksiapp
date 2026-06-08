@@ -1,0 +1,13 @@
+// Kullanıcı doğrulama maili
+MailHelper::send_user_verification(&db, "user@example.com", "John Doe", "123456", "tr").await?;
+
+// Sipariş onay maili
+MailHelper::send_order_confirmation(&db, "user@example.com", "John Doe", "ORD123", 99.99, "tr").await?;
+
+// Custom mail
+let template_service = TemplateService::new(db);
+template_service.queue_custom_mail("user@example.com", Some("John"), "Subject", "<h1>Body</h1>", "tr", None).await?;
+
+// Kuyruğu işle
+let mail_service = MailService::new(db);
+let processed = mail_service.process_queue().await?;

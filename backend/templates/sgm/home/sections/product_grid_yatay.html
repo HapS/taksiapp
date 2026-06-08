@@ -1,0 +1,171 @@
+<!-- Product Grid Horizontal Section -->
+<div class="container py-5" style="background-color: {{ section.background_color | default(value='transparent') }};">
+  <h4 class="section-title mb-4">{{ section.title }}</h4>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for item in section.items %}
+    <div class="col">
+      <div class="card shadow-sm h-100 product-horizontal-card">
+        <div class="row g-0 h-100">
+          <!-- Product Image -->
+          <div class="col-4 position-relative">
+            <a href="{{ item.url }}" class="d-block h-100">
+              <div class="product-image-wrapper">
+                {% if item.data.langs[current_language].media.cover[0].url %}
+                <img
+                  src="{{ item.data.langs[current_language].media.cover[0].url | thumb(size="800x", crop="center") }}"
+                  alt="{{ item.title }}"
+                  class="img-fluid rounded-start product-img"
+                >
+                {% else %}
+                <img
+                  src="/media/no_image.png"
+                  alt="No Image Available"
+                  class="img-fluid rounded-start product-img"
+                >
+                {% endif %}
+              </div>
+            </a>
+
+            <!-- Badges -->
+            {% if item.data.product.variants and item.data.product.variants | length > 0 %}
+              {% set current_price = item.data.product.variants[0].display_price | default(value=item.data.product.variants[0].price) %}
+              {% set current_original_price = item.data.product.variants[0].price %}
+              {% set current_discount = item.data.product.variants[0].discount_percentage | default(value=0) %}
+            {% else %}
+              {% set current_price = item.data.product.display_price | default(value=item.data.product.price) %}
+              {% set current_original_price = item.data.product.price %}
+              {% set current_discount = item.data.product.discount_percentage | default(value=0) %}
+            {% endif %}
+
+            <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1" style="z-index: 1;">
+              {% if current_discount and current_discount > 0 %}
+              <span class="badge bg-success shadow">
+                <i class="bi bi-tag-fill me-1"></i>%{{ current_discount | round }} İndirim
+              </span>
+              {% endif %}
+              {% if item.data.product.variants and item.data.product.variants | length > 0 %}
+              <span class="badge bg-secondary">
+                {{ item.data.product.variants | length }} varyant
+              </span>
+              {% endif %}
+              {% if item.data.product.options %}
+                {% for option in item.data.product.options %}
+                  {% if option.name == "Renk" and option.values %}
+                    {% set color_count = option.values | split(pat=",") | length %}
+                    <span class="badge bg-info">
+                      <i class="bi bi-palette me-1"></i>{{ color_count }} Renk
+                    </span>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Product Content -->
+          <div class="col-8">
+            <div class="card-body d-flex flex-column h-100 py-3">
+              <!-- Title -->
+              <a href="{{ item.url }}" class="text-decoration-none">
+                <h6 class="card-title fw-semibold text-dark mb-2 product-title">{{ item.title }}</h6>
+              </a>
+
+              <!-- Price Section -->
+              <div class="mt-auto">
+                {% set product_currency = item.data.product.display_currency | default(value="TRY") %}
+
+                <div class="price-section mb-3">
+                  {% if current_discount and current_discount > 0 and current_original_price %}
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="current-price">{{ current_price | format_price(currency=product_currency) }}</span>
+                    <span class="original-price">{{ current_original_price | format_price(currency=product_currency) }}</span>
+                  </div>
+                  {% elif current_price %}
+                  <span class="current-price">{{ current_price | format_price(currency=product_currency) }}</span>
+                  {% endif %}
+                </div>
+
+                <!-- Add to Cart Button -->
+                <button class="btn btn-sm btn-danger w-100" onclick="openAddToCartModal('{{ item.id }}')">
+                  <i class="bi bi-bag-plus me-2"></i>Sepete Ekle
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+.product-horizontal-card {
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-horizontal-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,0.15) !important;
+}
+
+.product-image-wrapper {
+  height: 180px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.product-img {
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.product-horizontal-card:hover .product-img {
+  transform: scale(1.05);
+}
+
+.product-title {
+  font-size: 1rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.price-section .current-price {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #dc3545;
+}
+
+.price-section .original-price {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.price-section .discount-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: #dc3545;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+
+
+.btn-add-cart:active {
+  transform: scale(0.98);
+}
+</style>

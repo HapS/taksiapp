@@ -1,0 +1,92 @@
+<!-- Categories -->
+<div class="card mb-4" v-if="form.content_type != 'form'">
+    <div class="card-header">
+        <h6 class="m-0"><i class="bi bi-tags"></i> Kategoriler</h6>
+    </div>
+
+    <div class="card-body" >
+        <div v-if="loadingTerms" class="text-center">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Kategoriler yükleniyor...</span>
+            </div>
+        </div>
+
+        <div v-else>
+            <div v-if="availableTerms.length === 0" class="text-muted small">
+                Bu içerik türü için kategori bulunamadı.
+            </div>
+
+            <div v-else>
+                <label for="term_master_id">Ana Kategori</label>
+                <select v-model="form.term_master_id" class="form-select form-select-sm" @change="onMasterCategoryChange">
+                    <option :value="null">Kategori Seçiniz</option>
+                    <template v-for="term in availableTerms" :key="term.id">
+                        <category-option :term="term" :level="0"></category-option>
+                    </template>
+                </select>
+
+                <!-- Seçim özeti -->
+                <div v-if="form.term_master_id" class="mt-3 p-2 bg-light rounded">
+                    <small class="text-success d-block">
+                        <i class="bi bi-check-circle"></i> Seçili: <strong>[[ getTermTitle(form.term_master_id)
+                            ]]</strong>
+                    </small>
+                </div>
+                <div v-else class="mt-3 p-2 bg-light rounded">
+                    <small class="text-muted d-block">
+                        Henüz kategori seçilmedi.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="card-body" >
+        <div v-if="loadingTerms" class="text-center">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Kategoriler yükleniyor...</span>
+            </div>
+        </div>
+
+        <div v-else style="max-height: 300px; overflow-y: auto;">
+            <div v-if="availableTerms.length === 0" class="text-muted small">
+                Bu içerik türü için kategori bulunamadı.
+            </div>
+
+            <div v-else class="category-tree p-1">
+                <!-- Recursive kategori ağacı -->
+                <div v-for="term in availableTerms" :key="term.id" class="mb-3">
+                    <category-item :term="term" :selected-ids="form.term_ids" @toggle="toggleTerm"
+                        :level="0"></category-item>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seçim özeti -->
+        <div v-if="form.term_ids.length > 0" class="mt-3 p-2 bg-light rounded">
+            <small class="text-success d-block mb-1">
+                <i class="bi bi-check-circle"></i> [[ form.term_ids.length ]] kategori seçildi
+            </small>
+            <div class="d-flex flex-wrap gap-1">
+                <span v-for="selectedId in form.term_ids" :key="selectedId"
+                    class="badge bg-primary d-flex align-items-center gap-1" style="font-size: 0.7rem; cursor: pointer;"
+                    @click="toggleTerm(selectedId)" title="Kaldırmak için tıklayın">
+                    [[ getTermTitle(selectedId) ]]
+                    <i class="bi bi-x-circle"></i>
+                </span>
+            </div>
+        </div>
+        <div v-else class="mt-3 p-2 bg-light rounded">
+            <small class="text-muted d-block">
+                Henüz kategori seçilmedi.
+            </small>
+        </div>
+
+        <p class="text-muted small mt-3 mb-0">
+            Kırmızı renkteki kategoriler yayında olmayan kategorilerdir. Ghost kategoriler özel kampanyalar veya
+            geçici kategoriler için kullanılabilir.
+        </p>
+    </div>
+</div>

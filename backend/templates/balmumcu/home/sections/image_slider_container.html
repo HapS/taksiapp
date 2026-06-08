@@ -1,0 +1,188 @@
+<!-- Full Width Hero Slider Section - Swiper -->
+{% set media_data = section.items.0.data.langs[current_language].media %}
+{% set videos = media_data.video | default(value=[]) %}
+{% set gallery = media_data.gallery | default(value=[]) %}
+{% set slider_id = section.id | replace(from=".", to="_") %}
+{% set has_content = (videos | length > 0) or (gallery | length > 0) %}
+
+{% if has_content %}
+<!-- Bootstrap native carousel inside container -->
+<style>
+/* Keep rounded corners during transitions by clipping overflow on the carousel */
+.slider-{{ slider_id }} .carousel {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.slider-{{ slider_id }} .carousel-inner,
+.slider-{{ slider_id }} .carousel-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.slider-{{ slider_id }} .carousel-item img,
+.slider-{{ slider_id }} .carousel-item video {
+    width: 100%;
+    object-fit: cover;
+    display: block;
+    /* Use inherited border radius from carousel so scaled images stay clipped */
+    border-radius: inherit;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.slider-{{ slider_id }} .carousel-caption {
+    text-align: left;
+    z-index: 10;
+}
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+<div class="container mt-4 slider-{{ slider_id }}" style="background-color: {{ section.background_color | default(value='transparent') }};">
+    <style>
+      /* Fallback layout for Swiper in case JS/CSS not loaded: show single slide */
+      .swiper-{{ slider_id }} { overflow: hidden; position: relative; }
+      .swiper-{{ slider_id }} .swiper-wrapper { display: flex; flex-wrap: nowrap; }
+      .swiper-{{ slider_id }} .swiper-slide { flex: 0 0 100%; max-width: 100%; }
+      .swiper-{{ slider_id }} .swiper-slide img, .swiper-{{ slider_id }} .swiper-slide video { width: 100%; height: auto; display: block; }
+
+      /* Styled navigation buttons (smaller/simpler) */
+      .swiper-{{ slider_id }} .swiper-button-prev,
+      .swiper-{{ slider_id }} .swiper-button-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: rgba(0,0,0,0.32);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        border: none;
+        z-index: 3000;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease;
+      }
+      .swiper-{{ slider_id }} .swiper-button-prev { left: 10px; }
+      .swiper-{{ slider_id }} .swiper-button-next { right: 10px; }
+
+      .swiper-{{ slider_id }} .swiper-button-prev,
+      .swiper-{{ slider_id }} .swiper-button-next {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: 0.5px;
+      }
+
+      .swiper-{{ slider_id }} .swiper-button-prev:hover,
+      .swiper-{{ slider_id }} .swiper-button-next:hover {
+        transform: translateY(-50%) scale(1.08);
+        background: rgba(0,0,0,0.45);
+      }
+
+      /* Remove default Swiper pseudo-icons if present */
+      .swiper-{{ slider_id }} .swiper-button-prev::after,
+      .swiper-{{ slider_id }} .swiper-button-next::after {
+        display: none;
+      }
+
+      /* Slightly smaller on very small screens */
+      @media (max-width: 576px) {
+        .swiper-{{ slider_id }} .swiper-button-prev,
+        .swiper-{{ slider_id }} .swiper-button-next { width: 30px; height: 30px; font-size: 12px; }
+        .swiper-{{ slider_id }} .swiper-button-prev { left: 8px; }
+        .swiper-{{ slider_id }} .swiper-button-next { right: 8px; }
+      }
+    </style> 
+    <div class="swiper-container swiper-{{ slider_id }}">
+        <div class="swiper-wrapper">
+            {% for video in videos %}
+            <div class="swiper-slide video-slide">
+                <a href="{{ video.link | default(value='#') }}" class="stretched-link"></a>
+                <video class="d-block w-100 rounded" muted loop playsinline preload="auto">
+                    <source src="{{ video.url }}" type="{{ video.mime_type | default(value='video/mp4') }}">
+                </video>
+                {% if video.title or video.description %}
+                    <div class="carousel-caption d-none d-md-block">
+                        {% if video.title %}<h5>{{ video.title }}</h5>{% endif %}
+                        {% if video.description %}<p>{{ video.description }}</p>{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% for image in gallery %}
+            <div class="swiper-slide">
+                <a href="{{ image.link | default(value='#') }}" class="stretched-link"></a>
+                <img src="{{ image.url | thumb(size='1920x659', crop='center') }}" class="d-block w-100 rounded" alt="{{ image.title | default(value='') }}">
+                {% if image.title or image.description %}
+                    <div class="carousel-caption d-none d-md-block">
+                        {% set link = image.link | default(value='#') %}
+                        <a href="{{ link }}" class="stretched-link text-decoration-none text-white">
+                            {% if image.title %}<h5>{{ image.title }}</h5>{% endif %}
+                            {% if image.description %}<p>{{ image.description }}</p>{% endif %}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        <div class="swiper-pagination"></div>
+        <!-- Navigation -->
+        <button class="swiper-button-prev" aria-label="Previous"></button>
+        <button class="swiper-button-next" aria-label="Next"></button>
+    </div>
+
+    {% if has_admin_access %}
+        <p class="small">image_slider_container.html</p>
+    {% endif %}
+
+</div>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+(function(){
+    var el = document.querySelector('.swiper-{{ slider_id }}');
+    if (!el || typeof Swiper === 'undefined') return;
+
+    var swiper = new Swiper(el, {
+        loop: true,
+        autoplay: { delay: 6000, disableOnInteraction: false },
+        pagination: { el: el.querySelector('.swiper-pagination'), clickable: true },
+        navigation: { nextEl: el.querySelector('.swiper-button-next'), prevEl: el.querySelector('.swiper-button-prev') },
+        slidesPerView: 1,
+        spaceBetween: 0,
+        grabCursor: true,
+        on: {
+            slideChange: function(){
+                // Pause all videos, then play active
+                el.querySelectorAll('video').forEach(function(v){ try{ v.pause(); }catch(e){} });
+                var active = el.querySelector('.swiper-slide-active video');
+                if (active && active.play) { active.play().catch(function(){}); }
+            }
+        }
+    });
+
+    // Start autoplay and play first video if present
+    try { swiper.autoplay.start(); } catch(e){}
+    var firstVideo = el.querySelector('.swiper-slide-active video');
+    if (firstVideo && firstVideo.play) { firstVideo.play().catch(function(){}); }
+
+    // Pause on hover
+    el.addEventListener('mouseenter', function(){ try{ swiper.autoplay.stop(); }catch(e){} });
+    el.addEventListener('mouseleave', function(){ try{ swiper.autoplay.start(); }catch(e){} });
+})();
+</script>
+{% else %}
+<div class="container py-5 text-center text-muted">
+    <i class="bi bi-images fs-1"></i>
+    <p>Görsel bulunamadı</p>
+</div>
+{% endif %}

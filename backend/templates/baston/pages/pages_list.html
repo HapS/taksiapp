@@ -1,0 +1,141 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+<!-- Pages Header -->
+<div class="bg-primary bg-gradient text-white py-5 mb-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="display-4 mb-3">Tüm Sayfalar</h1>
+                <p class="lead text-white-75">Çoklu dil desteği ile zengin içerikler</p>
+                
+                <!-- Language Filter -->
+                {% if supported_languages %}
+                <div class="mt-4">
+                    <small class="text-white-75 d-block mb-2">Dil Seçin:</small>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        {% for lang_code, lang_name in supported_languages %}
+                        <a href="/{{ lang_code }}/pages" 
+                           class="btn btn-sm {% if lang_code == current_language %}btn-light{% else %}btn-outline-light{% endif %}">
+                            {{ lang_name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pages Content -->
+<div class="container">
+    {% if pages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <p class="text-body-secondary">
+                <i class="bi bi-info-circle"></i> 
+                {% if current_language == "tr" %}Türkçe{% endif %}
+                {% if current_language == "en" %}English{% endif %}
+                {% if current_language == "de" %}Deutsch{% endif %}
+                dilinde <strong>{{ pages | length }}</strong> sayfa bulundu.
+            </p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for page in pages %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                {% if page.data.langs[current_language].media.cover[0].url %}
+                <img src="{{ page.data.langs[current_language].media.cover[0].url }}" 
+                     alt="{{ page.title }}" 
+                     class="card-img-top" 
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <img src="/media/no_image.png" 
+                     alt="No Image Available" 
+                     class="card-img-top" 
+                     style="height: 200px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ page.title }}</h5>
+                    
+                    {% if page.description %}
+                    <div class="card-text text-muted">
+                        {{ page.description | truncate(length=150) | safe }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            
+                            <a href="{{ page.get_absolute_url | default(value='#') }}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-arrow-right me-1"></i> Devamını Oku
+                            </a>
+                            
+                            <div class="text-end">
+                                <small class="text-muted d-block">
+                                    {% if page.created_at %}
+                                        <i class="bi bi-calendar me-1"></i>{{ page.created_at | date(format="%d.%m.%Y") }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary">{{ page.language | upper }}</span>
+                        
+                        {% if page.available_languages %}
+                        <div>
+                            <small class="text-body-secondary me-1">Diller:</small>
+                            {% for lang in page.available_languages %}
+                            <span class="badge bg-body-secondary text-body">
+                                {{ lang | upper }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Navigation -->
+    <div class="text-center my-5">
+        <a href="/" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-house me-2"></i> Ana Sayfaya Dön
+        </a>
+    </div>
+    
+    {% else %}
+    <!-- No Pages Found -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center" role="alert">
+                <h4 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>Sayfa Bulunamadı
+                </h4>
+                <p class="mb-3">
+                    {% if current_language == "tr" %}🇹🇷 Türkçe{% endif %}
+                    {% if current_language == "en" %}🇺🇸 English{% endif %}
+                    {% if current_language == "de" %}🇩🇪 Deutsch{% endif %}
+                    dilinde henüz yayınlanmış sayfa bulunmuyor.
+                </p>
+                <hr>
+                <a href="/" class="btn btn-primary">
+                    <i class="bi bi-house me-2"></i>Ana Sayfaya Dön
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

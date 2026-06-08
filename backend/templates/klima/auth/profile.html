@@ -1,0 +1,99 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">{{ t(key="profile_profil_bilgileri", lang=current_language) }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/profile/update">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">{{ t(key="profile_ad", lang=current_language) }}</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name | default(value='') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">{{ t(key="profile_soyad", lang=current_language) }}</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name | default(value='') }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{{ t(key="profile_kullanici_adi", lang=current_language) }}</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username | default(value='') }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ t(key="profile_eposta", lang=current_language) }}</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email | default(value='') }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">{{ t(key="profile_dogum_tarihi", lang=current_language) }}</label>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">{{ t(key="profile_guncelle", lang=current_language) }}</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ t(key="profile_sifre_degistir", lang=current_language) }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/profile/change-password">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">{{ t(key="profile_mevcut_sifre", lang=current_language) }}</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">{{ t(key="profile_yeni_sifre", lang=current_language) }}</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password_confirm" class="form-label">{{ t(key="profile_yeni_sifre_tekrar", lang=current_language) }}</label>
+                        <input type="password" class="form-control" id="new_password_confirm" name="new_password_confirm" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">{{ t(key="profile_sifre_degistir", lang=current_language) }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ t(key="profile_hesap_bilgileri", lang=current_language) }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ t(key="profile_kullanici_id", lang=current_language) }}:</strong> {{ user.id | default(value='N/A') }}</p>
+                <p><strong>{{ t(key="profile_kayit_tarihi", lang=current_language) }}:</strong> {{ user.created_at | date(format="%d.%m.%Y") | default(value='N/A') }}</p>
+                <p><strong>{{ t(key="profile_yetki", lang=current_language) }}:</strong> 
+                    {% if user.has_admin_access %}
+                        <span class="badge bg-danger">{{ t(key="profile_yetki_admin", lang=current_language) }}</span>
+                    {% else %}
+                        <span class="badge bg-primary">{{ t(key="profile_yetki_kullanici", lang=current_language) }}</span>
+                    {% endif %}
+                </p>
+                
+                <hr>
+                
+                <form method="post" action="/logout">
+                    <button type="submit" class="btn btn-outline-danger w-100">{{ t(key="profile_cikis_yap", lang=current_language) }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

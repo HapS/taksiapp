@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="{{ language | default(value='tr') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name | default(value="Backend-RS") }}{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6; color: #333; background-color: #f8f9fa;
+        }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .email-header { background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%); color: white; padding: 30px 40px; text-align: center; }
+        .email-header h1 { font-size: 28px; font-weight: 300; margin-bottom: 10px; color: #ffffff; }
+        .email-header p { font-size: 16px; opacity: 0.9; color: #ffffff; }
+        .email-body { padding: 40px; }
+        .email-content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; font-weight: 600; }
+        .email-content p { margin-bottom: 16px; font-size: 16px; line-height: 1.6; }
+        .highlight-box { background: #f8f9fa; border-left: 4px solid #2c3e50; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .code-box { background: #f1f3f4; border: 2px dashed #dee2e6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; color: #495057; margin: 25px 0; border-radius: 8px; letter-spacing: 4px; }
+        .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .btn { display: inline-block; padding: 12px 30px; background: #2c3e50; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; margin: 20px 0; }
+        .email-footer { background: #f8f9fa; padding: 30px 40px; text-align: center; border-top: 1px solid #dee2e6; }
+        .email-footer p { color: #6c757d; font-size: 14px; margin-bottom: 10px; }
+        .social-links { margin: 20px 0; }
+        .social-links a { display: inline-block; margin: 0 10px; color: #6c757d; text-decoration: none; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #dee2e6, transparent); margin: 30px 0; }
+        @media (max-width: 600px) { .email-header, .email-body, .email-footer { padding: 20px; } .email-header h1 { font-size: 24px; } .code-box { font-size: 24px; letter-spacing: 2px; } }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>{% block header_title %}{{ site_name | default(value="Backend-RS") }}{% endblock %}</h1>
+            <p>{% block header_subtitle %}{% endblock %}</p>
+        </div>
+        <div class="email-body">
+            <div class="email-content">{% block content %}{% endblock %}</div>
+        </div>
+        <div class="email-footer">
+            <div class="divider"></div>
+            <p><strong>{{ site_name | default(value="Backend-RS") }}</strong></p>
+            <p>{{ t(key="Bu_e_posta_otomatik_olarak_gönderilmiştir._Lütfen_yanıtlamayın.", default="Bu e-posta otomatik olarak gönderilmiştir. Lütfen yanıtlamayın.", lang=current_language) }}</p>
+            <div class="social-links">
+                {% if social_facebook %}<a href="{{ social_facebook }}">📘 Facebook</a>{% endif %}
+                {% if social_instagram %}<a href="{{ social_instagram }}">📷 Instagram</a>{% endif %}
+                {% if social_twitter %}<a href="{{ social_twitter }}">🐦 Twitter</a>{% endif %}
+                {% if contact_email %}<a href="mailto:{{ contact_email }}">📧 {{ contact_email }}</a>{% endif %}
+                {% if contact_phone %}<a href="tel:{{ contact_phone }}">📱 {{ contact_phone }}</a>{% endif %}
+            </div>
+            <p style="font-size: 12px; color: #adb5bd; margin-top: 20px;">© {{ now() | date(format="%Y") }} {{ site_name | default(value="Backend-RS") }}. {{ t(key="Tüm_hakları_saklıdır_mail_base", default="Tüm hakları saklıdır.", lang=current_language) }}</p>
+        </div>
+    </div>
+</body>
+</html>

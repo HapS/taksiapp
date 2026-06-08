@@ -1,0 +1,90 @@
+{% extends "@@theme@@/mailer/base.html" %}
+
+{% block title %}{{ status_title | default(value="Sipariş Güncellendi") }} - Backend-RS{% endblock %}
+
+{% block header_title %}{{ status_title | default(value="Sipariş Güncellendi") }}{% endblock %}
+{% block header_subtitle %}Siparişinizde yeni gelişme{% endblock %}
+
+{% block content %}
+<h2>Merhaba {{ customer_name | default(value="Değerli Müşterimiz") }}! 📦</h2>
+
+<p>{{ status_message | default(value="Sipariş durumunuz güncellenmiştir.") }}</p>
+
+<div class="highlight-box">
+    <h3 style="margin-bottom: 15px; color: #495057;">📋 Sipariş Bilgileri</h3>
+    <p><strong>Sipariş No:</strong> {{ order_id | default(value="N/A") }}</p>
+    <p><strong>Güncelleme Tarihi:</strong> {{ update_date | default(value="N/A") }}</p>
+    {% if total_amount %}
+    <p><strong>Toplam Tutar:</strong> {{ total_amount }}</p>
+    {% endif %}
+</div>
+
+<div class="success-box">
+    <h3 style="margin-bottom: 15px; color: #155724;">🔄 Durum Değişikliği</h3>
+    <p style="font-size: 16px; color: #6c757d;">
+        <strong>Önceki Durum:</strong> {{ old_status | default(value="N/A") }}
+    </p>
+    <p style="font-size: 18px; font-weight: 600; color: #28a745; margin-top: 10px;">
+        <strong>Yeni Durum:</strong> {{ new_status | default(value="N/A") }}
+    </p>
+</div>
+
+{% if order_items %}
+<div class="highlight-box">
+    <h3 style="margin-bottom: 15px; color: #495057;">🛍️ Sipariş Detayları</h3>
+    <div style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6;">Ürün</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">Adet</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">Fiyat</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">Toplam</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr style="border-bottom: 1px solid #f1f3f4;">
+                    <td style="padding: 12px;">
+                        <div style="font-weight: 600; color: #333;">{{ item.product_title | default(value="Ürün") }}</div>
+                        {% if item.variant_display %}
+                        <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">
+                            {{ item.variant_display }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">{{ item.quantity | default(value="1") }}</td>
+                    <td style="padding: 12px; text-align: right;">{{ item.price | format_price(currency=currency) }}</td>
+                    <td style="padding: 12px; text-align: right; font-weight: 600;">
+                        {{ item.total_price | default(value=item.total) | format_price(currency=currency) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if cargo_company or cargo_tracking_no %}
+<div class="highlight-box">
+    <h3 style="margin-bottom: 15px; color: #495057;">🚚 Kargo Bilgileri</h3>
+    {% if cargo_company %}
+    <p><strong>Kargo Firması:</strong> {{ cargo_company }}</p>
+    {% endif %}
+    {% if cargo_tracking_no %}
+    <p><strong>Takip No:</strong> {{ cargo_tracking_no }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ order_url | default(value="#") }}" class="btn">Siparişimi Görüntüle</a>
+</div>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6c757d;">
+    Siparişinizle ilgili sorularınız için müşteri hizmetlerimizle iletişime geçebilirsiniz.
+</p>
+{% endblock %}

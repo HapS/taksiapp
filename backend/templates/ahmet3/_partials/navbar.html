@@ -1,0 +1,542 @@
+<div class="navbar-wrapper">
+    <div class="container-fluid navbar-top-element d-none d-md-block">
+        <div class="container">
+            <div class="row align-items-center pt-2">
+                <div class="col-md-10 d-flex justify-content-start ">
+                    <ul class="d-flex list-unstyled gap-3 m-0 p-0 align-items-center">
+
+
+                        {% if menu_items %}
+                            {% for item in menu_items %}
+                            <li class="nav-item m-0 p-0">
+                                <a class="text-decoration-none nav-link topnav-item px-0" href="{{ item.url }}"
+                                    data-menu-url="{{ item.url }}">{{ item.title }}</a>
+                            </li>
+                            {% endfor %}
+                        {% endif %}
+
+
+                    </ul>
+
+                </div>
+
+
+                <div class="col-md-2 d-flex justify-content-end text-white p-0">
+                    <ul class="d-flex list-unstyled  m-0 p-0 align-items-center">
+
+                        <!-- Theme Toggle - Modern Switch -->
+                        <li class="mx-1">
+                            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()"
+                                title="Tema Değiştir" aria-label="Toggle theme">
+                                <div class="theme-toggle-track">
+                                    <div class="theme-toggle-thumb">
+                                        <i class="bi bi-sun-fill theme-icon-light"></i>
+                                        <i class="bi bi-moon-fill theme-icon-dark"></i>
+                                    </div>
+                                </div>
+                            </button>
+                        </li>
+
+                        <!-- Language Switcher - Modern Pills -->
+                        {% if supported_languages %}
+                        <li>
+                            <div class="language-switcher">
+                                {% for lang_code, lang_name in supported_languages %}
+                                <a href="/set-language/{{ lang_code }}"
+                                    class="language-pill {% if current_language == lang_code %}active{% endif %}"
+                                    title="{{ lang_name }}" data-lang="{{ lang_code }}">
+                                    {{ lang_code | upper }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        <li>
+
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <nav id="navbar" class="navbar navbar-expand-lg bg-body-tertiary p-1 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-1" href="/{{ current_language | default(value=" tr") }}">
+                Ahmet 3
+            </a>
+
+            <!-- Hamburger button for mobile -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#navbarOffcanvas" aria-controls="navbarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Desktop menu -->
+            <div class="collapse navbar-collapse" id="navbarDesktop">
+                <ul class="navbar-nav me-auto mb-lg-0">
+
+                     <!-- Mega Menu - Kategoriler -->
+                    {% if global.vocabularies.1.hierarchical_terms %}
+                    <li class="nav-item dropdown mega-menu-dropdown">
+                        <a class="nav-link dropdown-toggle px-3 mega-menu-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid-3x3-gap me-1"></i> Kategoriler
+                        </a>
+                        <div class="dropdown-menu mega-menu p-0" style="min-width: 800px;">
+                            <div class="container-fluid">
+                                <div class="row g-0">
+                                    {% for category in global.vocabularies.1.hierarchical_terms %}
+                                    <div class="col-md-3">
+                                        <div class="mega-menu-column p-3">
+                                            <h6 class="mega-menu-title">
+                                                <a href="/{{ current_language }}/products/category/{{ category.data.langs[current_language].slug | default(value=category.slugs[current_language]) }}-{{ category.id }}" class="text-decoration-none">
+                                                    {% if category.data.term_icon %}
+                                                    {{ category.data.term_icon | safe }}
+                                                    {% elif category.term_icon %}
+                                                    <i class="{{ category.term_icon }} me-2"></i>
+                                                    {% endif %}
+                                                    {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+                                                </a>
+                                            </h6>
+                                            {% if category.children %}
+                                            <ul class="list-unstyled mega-menu-links">
+                                                {% for subcategory in category.children %}
+                                                <li>
+                                                    <a href="/{{ current_language }}/products/category/{{ subcategory.data.langs[current_language].slug | default(value=subcategory.slugs[current_language]) }}-{{ subcategory.id }}" class="mega-menu-link">
+                                                        {{ subcategory.data.langs[current_language].title | default(value=subcategory.titles[current_language]) }}
+                                                    </a>
+                                                    {% if subcategory.children %}
+                                                    <ul class="list-unstyled ms-3">
+                                                        {% for subsubcategory in subcategory.children %}
+                                                        <li>
+                                                            <a href="/{{ current_language }}/products/category/{{ subsubcategory.data.langs[current_language].slug | default(value=subsubcategory.slugs[current_language]) }}-{{ subsubcategory.id }}" class="mega-menu-sublink">
+                                                                {{ subsubcategory.data.langs[current_language].title | default(value=subsubcategory.titles[current_language]) }}
+                                                            </a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% endif %}
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="row g-0 border-top">
+                                    <div class="col-12">
+                                        <div class="p-3 text-center">
+                                            3 kateme derinlik
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+
+
+                    {% if menu_items %}
+                    {% for item in menu_items %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ item.url }}" data-menu-url="{{ item.url }}">{{ item.title }}</a>
+                    </li>
+                    {% endfor %}
+                    {% endif %}
+                    
+                   
+                </ul>
+
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Cart -->
+                    <a href="/my-cart" class="ms-1 nav-link me-0  d-flex align-items-center">
+                        <span id="basket_item_count" class="badge bg-danger basket_item_count"
+                            style="position: absolute; margin-left:-10px; z-index:1000; margin-bottom:28px">
+                            {% if cart_count and cart_count > 0 %}
+                            {{ cart_count }}
+                            {% else %}
+                            0
+                            {% endif %}
+                        </span>
+                        <i class="bi bi-cart3 text-decoration-none"
+                            style="font-size:28px; position: relative; margin-right: 5px;"></i>
+                        {{ t(key="my_cart", lang=current_language) }}
+                    </a>
+
+                    {% if is_authenticated %}
+                    <div class="dropdown">
+                        <a href="#" class="ms-1 nav-link me-0 d-flex align-items-center dropdown-toggle"
+                            data-bs-toggle="dropdown" role="button">
+                            <i class="bi bi-person-circle" style="font-size:28px; margin-right: 5px;"></i>
+                            {% if session_data.first_name %}{{ session_data.first_name }}{% else %}{{ session_data.username }}{% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                             <li>
+                                <a class="dropdown-item" href="/my-account/orders">
+                                    <i class="bi bi-box-seam"></i> {{ t(key="my_orders", lang=current_language) }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/my-account/profile">
+                                    <i class="bi bi-person"></i> {{ t(key="my_profile", lang=current_language) }}
+                                </a>
+                            </li>
+                            {% if has_admin_access %}
+                            <li><a class="dropdown-item" href="/admin">
+                                    <i class="bi bi-gear"></i> Admin Panel
+                                </a></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="post" action="/logout" class="px-2">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                        <i class="bi bi-box-arrow-right"></i> {{ t(key="logout", lang=current_language) }}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                        {% if is_guest %}
+                            {# 
+                            <div class="dropdown">
+                                <a href="#" class="ms-1 nav-link me-0 d-flex align-items-center dropdown-toggle"
+                                    data-bs-toggle="dropdown" role="button">
+                                    <i class="bi bi-person-circle" style="font-size:28px; margin-right: 5px;"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="/my-account/orders">
+                                            <i class="bi bi-box-seam"></i> {{ t(key="my_orders", lang=current_language) }}
+                                        </a>
+                                    </li>
+                                    
+                                </ul>
+                            </div>
+                            #}  
+
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-outline-primary btn-sm" href="/login">
+                                    <i class="bi bi-box-arrow-in-right"></i> {{ t(key="login", lang=current_language) }}
+                                </a>
+                                <a class="btn btn-primary btn-sm" href="/register">
+                                    <i class="bi bi-person-plus"></i> {{ t(key="register", lang=current_language) }}
+                                </a>
+                            </div>
+                        
+                        {% else %}
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-outline-primary btn-sm" href="/login">
+                                    <i class="bi bi-box-arrow-in-right"></i> {{ t(key="login", lang=current_language) }}
+                                </a>
+                                <a class="btn btn-primary btn-sm" href="/register">
+                                    <i class="bi bi-person-plus"></i> {{ t(key="register", lang=current_language) }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<!-- Offcanvas menu for mobile -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="navbarOffcanvas" aria-labelledby="navbarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="navbarOffcanvasLabel">
+            <i class="bi bi-heart-fill"></i> ET2
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <!-- Navigation Links -->
+        <ul class="navbar-nav mb-4">
+            {% if menu_items %}
+            {% for item in menu_items %}
+            <li class="nav-item">
+                <a class="nav-link py-2" href="{{ item.url }}" data-menu-url="{{ item.url }}">
+                    {{ item.title }}
+                </a>
+            </li>
+            {% endfor %}
+            {% endif %}
+        </ul>
+
+        <!-- Theme Toggle -->
+        <div class="mb-4">
+            <h6 class="text-muted mb-2">{{ t(key="theme", lang=current_language) }}</h6>
+            <button id="theme-toggle-mobile" class="btn btn-sm btn-outline-secondary w-100"
+                onclick="window.toggleTheme()">
+                <i class="bi bi-moon-fill me-2"></i>
+                <span id="theme-label">{{ t(key="dark_mode", lang=current_language) }}</span>
+            </button>
+        </div>
+
+        <!-- Language Switcher -->
+        {% if supported_languages %}
+        <div class="mb-4">
+            <h6 class="text-muted mb-2">{{ t(key="language", lang=current_language) }}</h6>
+            <div class="btn-group w-100" role="group">
+                {% for lang_code, lang_name in supported_languages %}
+                <a href="/set-language/{{ lang_code }}"
+                    class="btn btn-sm {% if current_language == lang_code %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    {{ lang_code | upper }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- User Section -->
+        <div class="border-top pt-3">
+            {% if user %}
+            <div class="mb-3">
+                <h6 class="text-muted mb-2">{{ t(key="account", lang=current_language) }}</h6>
+                <div class="dropdown">
+                    <button
+                        class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-between"
+                        type="button" data-bs-toggle="dropdown">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span>{% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif
+                                %}</span>
+                        </div>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu w-100">
+                        <li>
+                            <div class="dropdown-header">
+                                <small class="text-muted">{{ user.email }}</small>
+                            </div>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/my-account">
+                                <i class="bi bi-person me-2"></i> {{ t(key="my_account", lang=current_language) }}
+                            </a>
+                        </li>
+                        {% if has_admin_access %}
+                        <li>
+                            <a class="dropdown-item" href="/admin">
+                                <i class="bi bi-gear me-2"></i> {{ t(key="admin_panel", lang=current_language) }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form method="post" action="/logout" class="px-2">
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    <i class="bi bi-box-arrow-right me-2"></i>{{ t(key="logout", lang=current_language) }}
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <div class="d-grid gap-2">
+                <a class="btn btn-primary" href="/login">
+                    <i class="bi bi-box-arrow-in-right"></i> {{ t(key="login", lang=current_language) }}
+                </a>
+                <a class="btn btn-outline-primary" href="/register">
+                    <i class="bi bi-person-plus"></i> {{ t(key="register", lang=current_language) }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    // Aktif menü işaretleme
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('a[data-menu-url]');
+            menuLinks.forEach(link => {
+                const menuUrl = link.getAttribute('data-menu-url');
+                // Mega menu dropdown'ını ve içindeki linkleri exclude et
+                if (currentPath === menuUrl && 
+                    !link.closest('.mega-menu-dropdown') && 
+                    !link.classList.contains('mega-menu-toggle') &&
+                    !link.classList.contains('mega-menu-link') &&
+                    !link.classList.contains('mega-menu-sublink')) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Mega menu toggle'larından active class'ını kaldır
+            document.querySelectorAll('.mega-menu-dropdown .nav-link, .mega-menu-toggle').forEach(link => {
+                link.classList.remove('active');
+            });
+        });
+    })();
+</script>
+
+<style>
+/* Mega Menu Styles */
+.mega-menu-dropdown .dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 0;
+    background-color: var(--bs-body-bg);
+}
+
+.mega-menu-column {
+    border-right: 1px solid var(--bs-border-color);
+}
+
+.mega-menu-column:last-child {
+    border-right: none;
+}
+
+.mega-menu-title {
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--bs-primary);
+    color: var(--bs-body-color);
+}
+
+.mega-menu-title a {
+    color: var(--bs-body-color);
+    font-weight: 600;
+}
+
+.mega-menu-title a:hover {
+    color: var(--bs-primary);
+}
+
+.mega-menu-links {
+    margin: 0;
+}
+
+.mega-menu-link {
+    display: block;
+    padding: 6px 0;
+    color: var(--bs-secondary-color);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.mega-menu-link:hover {
+    color: var(--bs-primary);
+    padding-left: 8px;
+}
+
+.mega-menu-sublink {
+    display: block;
+    padding: 4px 0;
+    color: var(--bs-tertiary-color);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.mega-menu-sublink:hover {
+    color: var(--bs-primary);
+    padding-left: 4px;
+}
+
+/* Responsive mega menu */
+@media (max-width: 991.98px) {
+    .mega-menu-dropdown .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        width: 100% !important;
+        min-width: auto !important;
+        margin: 0 !important;
+        border-radius: 0;
+        box-shadow: none;
+        border-top: 1px solid var(--bs-border-color);
+    }
+    
+    .mega-menu-column {
+        border-right: none;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+    
+    .mega-menu-column:last-child {
+        border-bottom: none;
+    }
+}
+
+/* Hover effects */
+.mega-menu-dropdown .dropdown-menu {
+    display: none;
+}
+
+.mega-menu-dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.mega-menu-dropdown .dropdown-toggle::after {
+    margin-left: 0.5em;
+}
+
+/* MEGA MENU ACTIVE STATE OVERRIDE - GÜÇLÜ CSS */
+.navbar-nav .mega-menu-dropdown .nav-link,
+.navbar-nav .mega-menu-dropdown .nav-link:hover,
+.navbar-nav .mega-menu-dropdown .nav-link:focus,
+.navbar-nav .mega-menu-dropdown .nav-link.active,
+.navbar-nav .mega-menu-dropdown .nav-link.show,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle:hover,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle:focus,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle.active,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle.show,
+.navbar-nav .mega-menu-dropdown .dropdown-toggle[aria-expanded="true"],
+.navbar-nav .mega-menu-dropdown .mega-menu-toggle,
+.navbar-nav .mega-menu-dropdown .mega-menu-toggle:hover,
+.navbar-nav .mega-menu-dropdown .mega-menu-toggle:focus,
+.navbar-nav .mega-menu-dropdown .mega-menu-toggle.active,
+.navbar-nav .mega-menu-dropdown .mega-menu-toggle.show {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: var(--bs-navbar-nav-link-color) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Dark theme support */
+[data-bs-theme="dark"] .mega-menu-dropdown .dropdown-menu {
+    background-color: var(--bs-dark);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .mega-menu-column {
+    border-right-color: var(--bs-border-color-translucent);
+}
+
+[data-bs-theme="dark"] .mega-menu-title {
+    color: var(--bs-body-color);
+    border-bottom-color: var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .mega-menu-title a {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .mega-menu-link {
+    color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .mega-menu-sublink {
+    color: var(--bs-tertiary-color);
+}
+</style>

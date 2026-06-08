@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="tr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Divriği Bastonları | El Yapımı Geleneksel Baston Ustası</title>
+    <meta name="description" content="Divriği yöresine özgü el yapımı bastonlar. Kızılcık, ceviz, gürgen ağacından özel üretim. Koç başı, kartal, yılan figürlü saplar. Sipariş üzerine kişiye özel tasarım.">
+    <meta name="keywords" content="divriği bastonu, sivas baston, el yapımı baston, geleneksel baston, koç başı baston, oymalı baston, ceviz baston, kızılcık baston">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wood-dark: #3E2723;
+            --wood: #5D4037;
+            --wood-light: #8D6E63;
+            --amber: #FF8F00;
+            --amber-light: #FFB300;
+            --cream: #FFF8E1;
+            --cream-bg: #FBF5E8;
+            --accent: #D84315;
+            --accent-hover: #BF360C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--cream-bg);
+            color: var(--wood-dark);
+            padding-top: 76px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Navbar */
+        .navbar-baston {
+            background: var(--wood-dark) !important;
+            padding: 0.8rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-baston .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--cream) !important;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-baston .navbar-brand span {
+            color: var(--amber) !important;
+        }
+
+        .navbar-baston .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-baston .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--amber);
+            transition: width 0.3s ease;
+        }
+
+        .navbar-baston .nav-link:hover::after {
+            width: 60%;
+        }
+
+        .navbar-baston .nav-link:hover {
+            color: var(--amber) !important;
+        }
+
+        .navbar-baston .navbar-toggler {
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .navbar-baston .navbar-toggler-icon {
+            filter: invert(1);
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, var(--wood-dark) 0%, #4E342E 50%, var(--wood) 100%);
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,143,0,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,179,0,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            color: var(--amber);
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.8);
+            max-width: 600px;
+            line-height: 1.8;
+        }
+
+        .hero .btn-primary {
+            background: var(--amber);
+            border: none;
+            color: var(--wood-dark);
+            font-weight: 700;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .hero .btn-primary:hover {
+            background: var(--amber-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,143,0,0.3);
+        }
+
+        .hero .btn-outline-light {
+            border-radius: 50px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+        }
+
+        .hero .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .hero-image {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-cane {
+            max-height: 500px;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .hero-badge {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--amber);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--wood-dark);
+            font-weight: 800;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            box-shadow: 0 4px 15px rgba(255,143,0,0.4);
+        }
+
+        .hero-badge.b1 { top: 10%; right: 5%; }
+        .hero-badge.b2 { bottom: 15%; left: 0; }
+
+        .hero-badge strong {
+            font-size: 1.5rem;
+            display: block;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            font-size: 2.5rem;
+            color: var(--wood-dark);
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--amber), var(--accent));
+            margin-top: 0.8rem;
+            border-radius: 2px;
+        }
+
+        .section-title.text-center::after {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .section-subtitle {
+            color: var(--wood-light);
+            font-size: 1.05rem;
+            max-width: 600px;
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 6rem 0;
+            background: #fff;
+        }
+
+        .about-image-wrap {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .about-image-wrap img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+        }
+
+        .about-image-wrap::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.3));
+        }
+
+        .about-badge {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1;
+            background: var(--amber);
+            color: var(--wood-dark);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .about-text {
+            font-size: 1.05rem;
+            line-height: 1.9;
+            color: #555;
+        }
+
+        .about-text strong {
+            color: var(--wood-dark);
+        }
+
+        .signature-line {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .signature-line img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .signature-line small {
+            color: var(--wood-light);
+        }
+
+        /* Products / Gallery Section */
+        .products-section {
+            padding: 6rem 0;
+            background: var(--cream-bg);
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+        }
+
+        .product-card-image {
+            height: 260px;
+            background: #f5f0e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-card-image .placeholder-icon {
+            font-size: 5rem;
+            color: var(--wood-light);
+            opacity: 0.5;
+        }
+
+        .product-card-image .product-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--accent);
+            color: #fff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .product-card-body {
+            padding: 1.5rem;
+        }
+
+        .product-card-body h5 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--wood-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card-body p {
+            color: var(--wood-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .product-card-body .btn-sm {
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 6rem 0;
+            background: #fff;
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            background: var(--cream-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--amber);
+            margin-bottom: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover .feature-icon {
+            background: var(--amber);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .feature-box h5 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--wood-dark);
+        }
+
+        .feature-box p {
+            color: var(--wood-light);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* Process Section */
+        .process-section {
+            padding: 6rem 0;
+            background: var(--wood-dark);
+            color: #fff;
+        }
+
+        .process-section .section-title {
+            color: #fff;
+        }
+
+        .process-section .section-title::after {
+            background: linear-gradient(90deg, var(--amber), var(--amber-light));
+        }
+
+        .process-section .section-subtitle {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .process-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            right: -30px;
+            width: 60px;
+            height: 2px;
+            background: rgba(255,143,0,0.3);
+        }
+
+        @media (max-width: 767px) {
+            .process-step:not(:last-child)::after { display: none; }
+        }
+
+        .process-step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--amber);
+            color: var(--wood-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 auto 1.2rem;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .process-step h5 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .process-step p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* Cultural Significance */
+        .culture-section {
+            padding: 6rem 0;
+            background: #fff;
+        }
+
+        .culture-card {
+            background: var(--cream-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            height: 100%;
+            border-left: 4px solid var(--amber);
+            transition: all 0.3s ease;
+        }
+
+        .culture-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .culture-card .icon {
+            font-size: 2rem;
+            color: var(--amber);
+            margin-bottom: 1rem;
+        }
+
+        .culture-card h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--wood-dark);
+        }
+
+        .culture-card p {
+            color: var(--wood-light);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* CTA Banner */
+        .cta-section {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--wood), var(--wood-dark));
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: #fff;
+            font-weight: 800;
+            font-size: 2.2rem;
+        }
+
+        .cta-section p {
+            color: rgba(255,255,255,0.8);
+            max-width: 600px;
+            margin: 1rem auto 2rem;
+        }
+
+        .cta-section .btn-cta {
+            background: var(--amber);
+            border: none;
+            color: var(--wood-dark);
+            font-weight: 700;
+            padding: 0.9rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-section .btn-cta:hover {
+            background: var(--amber-light);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,143,0,0.3);
+        }
+
+        /* Contact Section */
+        .contact-section {
+            padding: 6rem 0;
+            background: var(--cream-bg);
+        }
+
+        .contact-info-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-info-item .icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            border-radius: 12px;
+            background: var(--wood-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--amber);
+            font-size: 1.3rem;
+        }
+
+        .contact-info-item h6 {
+            font-weight: 700;
+            color: var(--wood-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .contact-info-item p {
+            color: var(--wood-light);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* Footer */
+        .footer-baston {
+            background: var(--wood-dark);
+            color: rgba(255,255,255,0.7);
+            padding: 3rem 0 1.5rem;
+        }
+
+        .footer-baston h5 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .footer-baston a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-baston a:hover {
+            color: var(--amber);
+        }
+
+        .footer-baston .list-unstyled li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-baston .list-unstyled li a {
+            font-size: 0.9rem;
+        }
+
+        .footer-baston hr {
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff !important;
+        }
+
+        .footer-brand span {
+            color: var(--amber);
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+
+        .social-links a:hover {
+            background: var(--amber);
+            color: var(--wood-dark);
+            transform: translateY(-3px);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--cream-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--wood-light); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--wood); }
+
+        /* Scroll animation classes */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .hero { min-height: auto; padding: 4rem 0; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero-image { margin-top: 3rem; }
+            .hero-cane { max-height: 350px; }
+            .section-title { font-size: 2rem; }
+        }
+
+        @media (max-width: 767px) {
+            body { padding-top: 66px; }
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1rem; }
+            .about-image-wrap img { height: 280px; }
+            .product-card-image { height: 200px; }
+            .about-section,
+            .products-section,
+            .features-section,
+            .process-section,
+            .culture-section,
+            .contact-section { padding: 4rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-baston fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#"><span>Divriği</span> Bastonu</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#about">Hakkında</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#products">Bastonlar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#process">Yapım Süreci</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#culture">Kültür</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">İletişim</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <p class="text-uppercase small fw-bold mb-3" style="color: var(--amber); letter-spacing: 3px;">
+                        <i class="bi bi-diamond-fill me-1" style="font-size: 0.5rem;"></i>
+                        Sivas / Divriği
+                    </p>
+                    <h1>Zanaatkâr<br>Elinden Çıkan<br><span>Geleneksel</span> Bastonlar</h1>
+                    <p class="mt-4">Çeyrek asrı aşkın tecrübeyle, Divriği'nin köklü bastonculuk geleneğini yaşatıyor, her bir bastonu özel sipariş üzerine tek tek el işçiliğiyle üretiyoruz.</p>
+                    <div class="d-flex flex-wrap gap-3 mt-4">
+                        <a href="#products" class="btn btn-primary btn-lg px-4"><i class="bi bi-search me-2"></i>Bastonları İncele</a>
+                        <a href="#contact" class="btn btn-outline-light btn-lg px-4"><i class="bi bi-whatsapp me-2"></i>İletişime Geç</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 hero-image">
+                    <div class="text-center">
+                        <svg class="hero-cane" width="200" height="500" viewBox="0 0 200 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="caneGrad" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#8D6E63"/>
+                                    <stop offset="50%" stop-color="#5D4037"/>
+                                    <stop offset="100%" stop-color="#3E2723"/>
+                                </linearGradient>
+                                <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#FFB300"/>
+                                    <stop offset="100%" stop-color="#FF8F00"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Handle (koç başı figürü) -->
+                            <path d="M100 60 C130 60 150 40 145 20 C140 0 110 -5 100 5 C90 -5 60 0 55 20 C50 40 70 60 100 60Z" fill="url(#caneGrad)" stroke="#3E2723" stroke-width="2"/>
+                            <!-- Ram horn left -->
+                            <path d="M60 30 C40 15 30 25 35 40 C40 55 55 50 60 45" fill="url(#caneGrad)" stroke="#3E2723" stroke-width="2"/>
+                            <!-- Ram horn right -->
+                            <path d="M140 30 C160 15 170 25 165 40 C160 55 145 50 140 45" fill="url(#caneGrad)" stroke="#3E2723" stroke-width="2"/>
+                            <!-- Eye holes -->
+                            <circle cx="85" cy="28" r="3" fill="#1a0a00"/>
+                            <circle cx="115" cy="28" r="3" fill="#1a0a00"/>
+                            <!-- Shaft -->
+                            <rect x="93" y="60" width="14" height="400" rx="4" fill="url(#caneGrad)" stroke="#3E2723" stroke-width="1"/>
+                            <!-- Decorative rings -->
+                            <rect x="90" y="100" width="20" height="6" rx="3" fill="url(#goldGrad)" opacity="0.8"/>
+                            <rect x="90" y="360" width="20" height="6" rx="3" fill="url(#goldGrad)" opacity="0.8"/>
+                            <rect x="90" y="380" width="20" height="6" rx="3" fill="url(#goldGrad)" opacity="0.8"/>
+                            <!-- Carving detail lines on shaft -->
+                            <line x1="100" y1="120" x2="100" y2="200" stroke="#4E342E" stroke-width="4" opacity="0.3" stroke-dasharray="8,8"/>
+                            <line x1="100" y1="220" x2="100" y2="340" stroke="#4E342E" stroke-width="4" opacity="0.3" stroke-dasharray="6,6"/>
+                            <!-- Ferrule -->
+                            <rect x="91" y="450" width="18" height="12" rx="2" fill="#BDBDBD"/>
+                            <path d="M88 462 L112 462 L108 470 L92 470Z" fill="#9E9E9E"/>
+                        </svg>
+                    </div>
+                    <div class="hero-badge b1">
+                        <strong>25+</strong>
+                        Yıllık Ustalık
+                    </div>
+                    <div class="hero-badge b2">
+                        <strong>Tamamen</strong>
+                        El Yapımı
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5 fade-up">
+                    <div class="about-image-wrap">
+                        <svg width="100%" height="450" viewBox="0 0 600 450" xmlns="http://www.w3.org/2000/svg" style="background: #EDE7DC;">
+                            <rect width="600" height="450" fill="#EDE7DC"/>
+                            <!-- Workshop scene -->
+                            <rect x="20" y="300" width="560" height="150" fill="#D7CCC8" rx="4"/>
+                            <rect x="0" y="290" width="600" height="20" fill="#8D6E63"/>
+                            <!-- Workbench -->
+                            <rect x="200" y="220" width="250" height="80" fill="#5D4037" rx="4"/>
+                            <rect x="190" y="210" width="270" height="15" fill="#6D4C41" rx="2"/>
+                            <!-- Cane on bench -->
+                            <rect x="240" y="170" width="10" height="60" fill="#A1887F" rx="2" transform="rotate(-15, 245, 200)"/>
+                            <!-- Craftsman figure (simplified) -->
+                            <circle cx="160" cy="170" r="35" fill="#5D4037"/>
+                            <rect x="140" y="200" width="40" height="70" rx="10" fill="#4E342E"/>
+                            <rect x="130" y="200" width="20" height="30" rx="5" fill="#6D4C41" transform="rotate(-30, 140, 215)"/>
+                            <rect x="170" y="195" width="20" height="25" rx="5" fill="#6D4C41" transform="rotate(20, 180, 205)"/>
+                            <!-- Hat -->
+                            <rect x="125" y="135" width="70" height="8" rx="4" fill="#3E2723"/>
+                            <rect x="135" y="120" width="50" height="20" rx="4" fill="#3E2723"/>
+                            <!-- Tools on wall -->
+                            <rect x="400" y="100" width="6" height="60" fill="#795548" rx="2"/>
+                            <rect x="420" y="80" width="6" height="80" fill="#795548" rx="2"/>
+                            <rect x="440" y="110" width="6" height="50" fill="#795548" rx="2"/>
+                            <rect x="395" y="90" width="56" height="4" fill="#8D6E63" rx="2"/>
+                            <!-- Finished canes on wall -->
+                            <rect x="500" y="50" width="6" height="150" fill="#A1887F" rx="3"/>
+                            <rect x="520" y="70" width="6" height="130" fill="#8D6E63" rx="3"/>
+                            <rect x="540" y="40" width="6" height="160" fill="#BCAAA4" rx="3"/>
+                            <!-- Hooks -->
+                            <circle cx="503" cy="50" r="4" fill="#8D6E63"/>
+                            <circle cx="523" cy="70" r="4" fill="#8D6E63"/>
+                            <circle cx="543" cy="40" r="4" fill="#8D6E63"/>
+                            <!-- Window -->
+                            <rect x="30" y="50" width="120" height="100" fill="#90CAF9" rx="4" opacity="0.3"/>
+                            <rect x="30" y="50" width="120" height="100" fill="none" stroke="#8D6E63" stroke-width="4" rx="4"/>
+                            <line x1="90" y1="50" x2="90" y2="150" stroke="#8D6E63" stroke-width="3"/>
+                            <line x1="30" y1="100" x2="150" y2="100" stroke="#8D6E63" stroke-width="3"/>
+                        </svg>
+                        <div class="about-badge">
+                            <i class="bi bi-hammer me-2"></i>Tamamen El İşçiliği
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 offset-lg-1 fade-up">
+                    <p class="text-uppercase small fw-bold mb-2" style="color: var(--amber); letter-spacing: 2px;">Hakkında</p>
+                    <h2 class="section-title">Divriği Bastonculuk<br>Geleneği</h2>
+                    <p class="about-text mt-4">
+                        <strong>Divriği bastonu</strong>, Sivas'ın Divriği ilçesine özgü geleneksel bir el sanatıdır. Anadolu'nun en bilinen baston ustalıklarından biri olan bu zanaat, tamamen el işçiliğiyle yapılması ve üzerindeki ince oyma/süslemelerle tanınır.
+                    </p>
+                    <p class="about-text">
+                        Genellikle <strong>kızılcık, ceviz, gürgen</strong> veya <strong>ardıç</strong> gibi sert ve dayanıklı ağaçlardan üretilen bastonlarımızda sap kısmına koç başı, kartal, yılan, at başı gibi figürler işlenmektedir. Her bir baston, sipariş üzerine kişiye özel olarak tasarlanır ve üretilir.
+                    </p>
+                    <p class="about-text">
+                        Ustamız <strong>Erol Usta</strong>, Divriği'de üç kuşaktır babadan oğula aktarılan bu geleneği yaşatmaya devam ediyor. 25 yılı aşkın süredir her bir bastonu tek tek elde işleyen ustamız, bu sanatın nadir temsilcilerindendir.
+                    </p>
+                    <div class="signature-line">
+                        <div>
+                            <strong style="font-family: 'Playfair Display', serif; font-size: 1.2rem;">Erol Usta</strong>
+                            <br><small>Divriği Baston Ustası</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products -->
+    <section class="products-section" id="products">
+        <div class="container">
+            <div class="text-center mb-5 fade-up">
+                <p class="text-uppercase small fw-bold mb-2" style="color: var(--amber); letter-spacing: 2px;">Baston Çeşitleri</p>
+                <h2 class="section-title text-center">Özel Üretim Bastonlarımız</h2>
+                <p class="section-subtitle mx-auto mt-3">Her biri özel sipariş üzerine, tamamen el işçiliğiyle üretilen eşsiz parçalar</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge">Çok Satan</span>
+                            <div class="placeholder-icon"><i class="bi bi-diamond"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Koç Başı Baston</h5>
+                            <p>Divriği'nin en ikonik modeli. Sapında işlenen koç başı figürüyle geleneksel motiflerin en bilinen örneği.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-tree me-1"></i>Kızılcık / Ceviz</small>
+                                <button class="btn btn-sm btn-outline-dark">İncele</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge" style="background: var(--amber);">Özel Tasarım</span>
+                            <div class="placeholder-icon"><i class="bi bi-snake"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Yılan Figürlü Baston</h5>
+                            <p>Sap ve gövde boyunca işlenen yılan motifiyle dikkat çeken, ustalık gerektiren özel bir model.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-tree me-1"></i>Ceviz / Gürgen</small>
+                                <button class="btn btn-sm btn-outline-dark">İncele</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge">Klasik</span>
+                            <div class="placeholder-icon"><i class="bi bi-shield"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Kartal Başlı Baston</h5>
+                            <p>Görkemli kartal figürüyle dikkat çeken, özellikle hediye ve koleksiyon amaçlı tercih edilen model.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-tree me-1"></i>Ceviz / Ardıç</small>
+                                <button class="btn btn-sm btn-outline-dark">İncele</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge" style="background: var(--accent);">Yeni</span>
+                            <div class="placeholder-icon"><i class="bi bi-bezier2"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Geometrik Desenli Baston</h5>
+                            <p>Geleneksel Türk geometrik motiflerinin modern yorumuyla işlendiği, zarif ve şık bir model.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-tree me-1"></i>Gürgen / Kızılcık</small>
+                                <button class="btn btn-sm btn-outline-dark">İncele</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge">Koleksiyon</span>
+                            <div class="placeholder-icon"><i class="bi bi-gem"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Sedef İşlemeli Baston</h5>
+                            <p>Sedef, boynuz ve metal süslemelerle zenginleştirilmiş, koleksiyon değeri yüksek özel bir parça.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-tree me-1"></i>Abanoz / Ceviz</small>
+                                <button class="btn btn-sm btn-outline-dark">İncele</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 fade-up">
+                    <div class="product-card">
+                        <div class="product-card-image">
+                            <span class="product-badge" style="background: var(--wood-light);">Özel Sipariş</span>
+                            <div class="placeholder-icon"><i class="bi bi-person-raised-hand"></i></div>
+                        </div>
+                        <div class="product-card-body">
+                            <h5>Kişiye Özel Tasarım</h5>
+                            <p>İstediğiniz figür, ölçü ve ağaç türüyle tamamen size özel üretilen, dünyada tek olan bastonunuz.</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-palette me-1"></i>Size Özel Tasarlanır</small>
+                                <button class="btn btn-sm btn-outline-dark">Bilgi Al</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-5 fade-up">
+                <p class="text-muted"><i class="bi bi-info-circle me-1"></i>Tüm bastonlarımız sipariş üzerine üretilir, teslimat süresi 2-4 haftadır.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="text-center mb-5 fade-up">
+                <h2 class="section-title text-center">Neden Divriği Bastonu?</h2>
+                <p class="section-subtitle mx-auto mt-3">Her bir bastonda nesillerin biriktirdiği bilgi ve tecrübeyi bulacaksınız</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="feature-box text-center">
+                        <div class="feature-icon mx-auto"><i class="bi bi-hand-index-thumb"></i></div>
+                        <h5>Tamamen El Yapımı</h5>
+                        <p>Her baston baştan sona usta ellerde şekillenir. Makine değil, insan dokunuşu.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="feature-box text-center">
+                        <div class="feature-icon mx-auto"><i class="bi bi-tree"></i></div>
+                        <h5>Doğal Malzeme</h5>
+                        <p>Kızılcık, ceviz, gürgen, ardıç gibi sert ve dayanıklı ağaçlar kullanılır.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="feature-box text-center">
+                        <div class="feature-icon mx-auto"><i class="bi bi-palette2"></i></div>
+                        <h5>Özgün Tasarım</h5>
+                        <p>İki baston tamamen aynı olmaz. Her parça eşsiz ve kişiye özeldir.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="feature-box text-center">
+                        <div class="feature-icon mx-auto"><i class="bi bi-arrow-through-heart"></i></div>
+                        <h5>Nesillerdir</h5>
+                        <p>Babadan oğula aktarılan 100 yıllık gelenek, üç kuşaktır yaşatılıyor.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process -->
+    <section class="process-section" id="process">
+        <div class="container">
+            <div class="text-center mb-5 fade-up">
+                <p class="text-uppercase small fw-bold mb-2" style="color: var(--amber); letter-spacing: 2px;">Yapım Süreci</p>
+                <h2 class="section-title text-center">Bir Bastonun Hikâyesi</h2>
+                <p class="section-subtitle mx-auto mt-3">Her bir baston, doğadan gelen malzemenin usta ellerde şekillenmesiyle haftalar süren bir yolculuğun eseridir</p>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-3 fade-up">
+                    <div class="process-step">
+                        <div class="process-step-number">1</div>
+                        <h5>Ağaç Seçimi</h5>
+                        <p>En kaliteli kızılcık, ceviz veya gürgen ağacı özenle seçilir ve doğal kurumaya bırakılır.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 fade-up">
+                    <div class="process-step">
+                        <div class="process-step-number">2</div>
+                        <h5>Gövde İşleme</h5>
+                        <p>Ağaç gövdesi düzleştirilir, zımparalanır ve baston formu verilir.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 fade-up">
+                    <div class="process-step">
+                        <div class="process-step-number">3</div>
+                        <h5>Sap Oyma</h5>
+                        <p>Sap kısmına koç başı, kartal veya yılan figürü tek tek oyma tekniğiyle işlenir.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 fade-up">
+                    <div class="process-step">
+                        <div class="process-step-number">4</div>
+                        <h5>Cila & Süsleme</h5>
+                        <p>Zımpara, cila ve isteğe bağlı sedef/kabartma süslemelerle son şekil verilir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cultural Significance -->
+    <section class="culture-section" id="culture">
+        <div class="container">
+            <div class="text-center mb-5 fade-up">
+                <p class="text-uppercase small fw-bold mb-2" style="color: var(--amber); letter-spacing: 2px;">Kültürel Miras</p>
+                <h2 class="section-title text-center">Bastonun Değeri</h2>
+                <p class="section-subtitle mx-auto mt-3">Divriği bastonu, sadece bir yürüme yardımcısı değil, Anadolu kültürünün yaşayan bir parçasıdır</p>
+            </div>
+            <div class="row g-4 mt-3">
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="culture-card">
+                        <div class="icon"><i class="bi bi-gift"></i></div>
+                        <h6>Düğün Hediyesi</h6>
+                        <p>Özellikle Anadolu'da baston, saygınlık simgesi olarak düğün ve özel gün hediyesi olarak büyük değer görür.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="culture-card">
+                        <div class="icon"><i class="bi bi-award"></i></div>
+                        <h6>Saygınlık Simgesi</h6>
+                        <p>Elde taşınan bir baston, geleneksel kültürde bilgelik, otorite ve saygınlık sembolüdür.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="culture-card">
+                        <div class="icon"><i class="bi bi-buildings"></i></div>
+                        <h6>UNESCO Mirası</h6>
+                        <p>Divriği Ulu Camii ve Darüşşifası gibi UNESCO dünya mirasıyla ünlü ilçenin kültürel kimliğinin önemli bir parçasıdır.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-up">
+                    <div class="culture-card">
+                        <div class="icon"><i class="bi bi-people"></i></div>
+                        <h6>Folklorik Obje</h6>
+                        <p>Halk oyunları ve yöresel etkinliklerde folklorik bir obje olarak da kullanılan geleneksel bir aksesuardır.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container fade-up">
+            <h2>Size Özel Bir Baston Hayal Edin</h2>
+            <p>Kendi figürünüzü, ağaç türünüzü ve ölçülerinizi belirleyin, dünyada tek olan bastonunuzu sipariş edin.</p>
+            <a href="#contact" class="btn btn-cta"><i class="bi bi-whatsapp me-2"></i>Hemen Sipariş Ver</a>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="contact-section" id="contact">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-5 fade-up">
+                    <p class="text-uppercase small fw-bold mb-2" style="color: var(--amber); letter-spacing: 2px;">İletişim</p>
+                    <h2 class="section-title">Bize Ulaşın</h2>
+                    <p class="text-muted mt-3" style="line-height: 1.8;">Özel siparişleriniz, sorularınız veya bilgi almak için aşağıdaki kanallardan bize ulaşabilirsiniz. Size özel bastonunuzu birlikte tasarlayalım.</p>
+                    <div class="mt-4">
+                        <div class="contact-info-item">
+                            <div class="icon"><i class="bi bi-geo-alt"></i></div>
+                            <div>
+                                <h6>Adres</h6>
+                                <p>Divriği / Sivas<br>Kale Mahallesi, Uzun Sokak No:7</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="icon"><i class="bi bi-telephone"></i></div>
+                            <div>
+                                <h6>Telefon</h6>
+                                <p>+90 555 123 45 67</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="icon"><i class="bi bi-envelope"></i></div>
+                            <div>
+                                <h6>E-posta</h6>
+                                <p>info@divrigibastonu.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="icon"><i class="bi bi-clock"></i></div>
+                            <div>
+                                <h6>Çalışma Saatleri</h6>
+                                <p>Hafta içi: 09:00 - 18:00<br>Cumartesi: 10:00 - 16:00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 offset-lg-1 fade-up">
+                    <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm">
+                        <h5 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif;">Hızlı İletişim Formu</h5>
+                        <form>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control form-control-lg bg-light border-0" placeholder="Adınız Soyadınız*">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="tel" class="form-control form-control-lg bg-light border-0" placeholder="Telefon Numaranız*">
+                                </div>
+                                <div class="col-12">
+                                    <input type="email" class="form-control form-control-lg bg-light border-0" placeholder="E-posta Adresiniz">
+                                </div>
+                                <div class="col-12">
+                                    <select class="form-select form-select-lg bg-light border-0">
+                                        <option value="">İlgilendiğiniz Baston Türünü Seçin</option>
+                                        <option>Koç Başı Baston</option>
+                                        <option>Yılan Figürlü Baston</option>
+                                        <option>Kartal Başlı Baston</option>
+                                        <option>Geometrik Desenli Baston</option>
+                                        <option>Sedef İşlemeli Baston</option>
+                                        <option>Kişiye Özel Tasarım</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <textarea class="form-control bg-light border-0" rows="4" placeholder="Mesajınız (isteğe bağlı ölçü, ağaç türü, figür tercihlerinizi belirtebilirsiniz)"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-dark w-100 py-3 fw-bold" style="background: var(--wood-dark); border-radius: 12px;">
+                                        <i class="bi bi-send me-2"></i>Mesajı Gönder
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-baston">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <span class="footer-brand"><span>Divriği</span> Bastonu</span>
+                    <p class="mt-3 small">Çeyrek asrı aşkın tecrübeyle, geleneksel Divriği bastonculuğunu yaşatıyor, her bir bastonu özenle el işçiliğiyle üretiyoruz.</p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 offset-lg-1">
+                    <h5>Hızlı Bağlantılar</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#about">Hakkında</a></li>
+                        <li><a href="#products">Bastonlar</a></li>
+                        <li><a href="#process">Yapım Süreci</a></li>
+                        <li><a href="#culture">Kültür</a></li>
+                        <li><a href="#contact">İletişim</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <h5>Baston Türleri</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Koç Başı</a></li>
+                        <li><a href="#">Kartal Başlı</a></li>
+                        <li><a href="#">Yılan Figürlü</a></li>
+                        <li><a href="#">Geometrik</a></li>
+                        <li><a href="#">Sedef İşlemeli</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <h5>İletişim</h5>
+                    <ul class="list-unstyled small">
+                        <li><i class="bi bi-geo-alt me-1"></i> Divriği / Sivas</li>
+                        <li><i class="bi bi-telephone me-1"></i> +90 555 123 45 67</li>
+                        <li><i class="bi bi-envelope me-1"></i> info@divrigibastonu.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col text-center">
+                    <p class="small mb-0">
+                        <i class="bi bi-c-circle me-1"></i> 2026 Divriği Bastonu. Tüm hakları saklıdır.
+                        <span class="opacity-50">|</span>
+                        <span class="opacity-75">El yapımı geleneksel Divriği bastonları.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const offset = 80;
+                    const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                    // Close mobile nav if open
+                    const nav = document.getElementById('navbarNav');
+                    if (nav.classList.contains('show')) {
+                        const btn = document.querySelector('.navbar-toggler');
+                        btn.click();
+                    }
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const top = section.offsetTop - 150;
+                if (window.pageYOffset >= top) {
+                    current = section.getAttribute('id');
+                }
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

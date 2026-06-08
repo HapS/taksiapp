@@ -1,0 +1,867 @@
+<style>
+/* ===== Top Bar ===== */
+.iklima-navbar-top {
+    background: #0A1A3A !important;
+}
+.iklima-navbar-top .row {
+    min-height: 36px;
+}
+
+/* ===== Main Navbar ===== */
+.iklima-navbar {
+    background: #0A1A3A !important;
+    padding: 0.6rem 0;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.iklima-navbar .navbar-brand {
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: #fff !important;
+    background: none !important;
+    -webkit-text-fill-color: #fff !important;
+    transition: color 0.3s ease;
+}
+.iklima-navbar .navbar-brand span {
+    color: var(--accent-orange, #ff6b35) !important;
+}
+
+.iklima-navbar .nav-link {
+    color: rgba(255,255,255,0.85) !important;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+.iklima-navbar .nav-link:hover {
+    color: var(--accent-orange, #ff6b35) !important;
+}
+.iklima-navbar .nav-link.active {
+    color: var(--accent-orange, #ff6b35) !important;
+}
+.iklima-navbar .nav-link::before,
+.iklima-navbar .nav-link.active::before {
+    display: none;
+}
+
+.iklima-navbar .btn-search {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+}
+.iklima-navbar .btn-search:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.iklima-navbar .form-control-search {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+}
+.iklima-navbar .form-control-search::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+.iklima-navbar .form-control-search:focus {
+    background: rgba(255,255,255,0.15);
+    border-color: var(--accent-orange, #ff6b35);
+    box-shadow: none;
+    color: #fff;
+}
+
+.iklima-navbar .input-group-text-search {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5);
+}
+
+.iklima-toggler-icon {
+    color: #fff !important;
+}
+
+.iklima-navbar .btn-outline-light {
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.5) !important;
+}
+.iklima-navbar .btn-outline-light:hover {
+    background: rgba(255,255,255,0.1) !important;
+    color: #fff !important;
+}
+
+/* User Dropdown */
+.iklima-navbar .dropdown-menu {
+    background: #0d1b30;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.iklima-navbar .dropdown-item {
+    color: rgba(255,255,255,0.8);
+}
+.iklima-navbar .dropdown-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--accent-orange, #ff6b35);
+}
+.iklima-navbar .dropdown-divider {
+    border-top-color: rgba(0,0,0,0.1);
+}
+
+/* Nav Action (Amazon-style two-line) */
+.iklima-nav-action {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.6rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background 0.2s ease, color 0.2s ease;
+    min-width: 56px;
+}
+.iklima-nav-action:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff !important;
+    text-decoration: none;
+}
+.iklima-nav-action-icon {
+    position: relative;
+    font-size: 1.3rem;
+    line-height: 1;
+    margin-bottom: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+}
+.iklima-nav-action-icon .bi {
+    font-size: 1.3rem;
+}
+.iklima-nav-action.dropdown-toggle::after {
+    display: none !important;
+}
+.iklima-nav-action-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+.iklima-cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -14px;
+    background: var(--accent-orange, #ff6b35);
+    font-size: 0.6rem;
+    padding: 0.15em 0.4em;
+    line-height: 1;
+    min-width: 1rem;
+}
+
+/* ===== Category Strip (Amazon-style) ===== */
+.category-strip {
+    background: #1a2d4a;
+    border-bottom: 2px solid var(--accent-orange, #ff6b35);
+    position: relative;
+    z-index: 1030;
+}
+[data-bs-theme="dark"] .category-strip {
+    background: #0d1b30;
+    border-bottom-color: var(--accent-orange, #ff6b35);
+}
+
+.category-strip-inner {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: visible;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.category-strip-inner::-webkit-scrollbar {
+    display: none;
+}
+
+.category-strip-item {
+    position: relative;
+    padding: 0.5rem 1rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.category-strip-item:not(.dropdown) {
+    display: flex;
+    align-items: center;
+}
+.category-strip-item.dropdown {
+    display: block;
+}
+.category-strip-item.dropdown > a {
+    display: flex;
+    align-items: center;
+}
+.category-strip-item:hover,
+.category-strip-item:focus,
+.category-strip-item:focus-within,
+.category-strip-item.dropdown.show {
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    border-bottom-color: var(--accent-orange, #ff6b35);
+    text-decoration: none;
+}
+.category-strip-item .bi {
+    font-size: 0.7rem;
+    margin-left: 0.3rem;
+    opacity: 0.7;
+}
+.category-strip-item.has-children .bi-chevron-down {
+    display: inline;
+}
+.category-strip-item:not(.has-children) .bi-chevron-down {
+    display: none;
+}
+
+/* Category dropdown - Bootstrap dropdown override */
+.category-strip-item .dropdown-menu {
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+    border: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    min-width: 220px;
+}
+[data-bs-theme="dark"] .category-strip-item .dropdown-menu {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.category-strip-item .dropdown-item {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+}
+
+.category-strip-item .dropdown-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-orange, #ff6b35);
+    padding: 0.5rem 1rem 0.2rem;
+}
+
+/* ===== Logo Visibility ===== */
+.dark-theme-logo { display: none !important; }
+.light-theme-logo { display: inline-block !important; }
+[data-bs-theme="dark"] .dark-theme-logo { display: inline-block !important; }
+[data-bs-theme="dark"] .light-theme-logo { display: none !important; }
+
+/* ===== Top Navbar Links ===== */
+.iklima-topnav-item {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease;
+}
+.iklima-topnav-item:hover {
+    color: var(--accent-orange, #ff6b35) !important;
+}
+
+/* ===== Offcanvas ===== */
+.iklima-offcanvas {
+    background: var(--dark-blue, #0a1628) !important;
+    color: #fff;
+}
+.iklima-offcanvas .offcanvas-header {
+    background: rgba(255,255,255,0.05) !important;
+    border-bottom-color: rgba(255,255,255,0.1) !important;
+}
+.iklima-offcanvas .btn-close {
+    filter: invert(1);
+}
+.iklima-offcanvas .accordion-item {
+    background: transparent;
+    border-bottom-color: rgba(255,255,255,0.1);
+}
+.iklima-offcanvas .accordion-button {
+    background: transparent;
+    color: #fff;
+}
+.iklima-offcanvas .accordion-button:not(.collapsed) {
+    background: rgba(255,255,255,0.1);
+    color: var(--accent-orange, #ff6b35);
+}
+.iklima-offcanvas .accordion-button::after {
+    filter: invert(1);
+}
+.iklima-offcanvas .accordion-button:not(.collapsed)::after {
+    filter: invert(1);
+}
+.iklima-offcanvas .accordion-header a.accordion-button::after {
+    display: none;
+}
+.iklima-offcanvas .list-group-item-action {
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border-bottom-color: rgba(255,255,255,0.05);
+}
+.iklima-offcanvas .list-group-item-action:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--accent-orange, #ff6b35);
+}
+.iklima-offcanvas .bg-light,
+.iklima-offcanvas .bg-body-tertiary {
+    background: rgba(255,255,255,0.05) !important;
+}
+.iklima-offcanvas .border-bottom {
+    border-bottom-color: rgba(255,255,255,0.1) !important;
+}
+.iklima-offcanvas .card {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 991.98px) {
+    .category-strip {
+        display: none;
+    }
+}
+</style>
+
+<div class="navbar-wrapper">
+    <!-- Top Bar -->
+    <div class="container-fluid navbar-top-element d-none d-md-block iklima-navbar-top">
+        <div class="container">
+            <div class="row align-items-center my-0">
+                <div class="col-md-10 d-flex justify-content-start">
+                    <ul class="d-flex list-unstyled gap-3 m-0 p-0 align-items-center">
+                        {% if menu_items %}
+                            {% for item in menu_items %}
+                            <li class="nav-item m-0 p-0">
+                                <a class="text-decoration-none iklima-topnav-item px-0" href="{{ item.url }}"
+                                    data-menu-url="{{ item.url }}">{{ item.title }}</a>
+                            </li>
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if global.vocabularies.14 %}
+                            {% for item in global.vocabularies.14.terms %}
+                                <li class="nav-item m-0 p-0">
+                                    <a class="text-decoration-none iklima-topnav-item px-0"
+                                    href="/{{ current_language }}/products/category/{{ item.data.langs[current_language].title | slugify }}-{{ item.data.content_id }}"
+                                        data-menu-url="{{ item.data.langs[current_language].menu_url }}">{{ item.data.langs[current_language].title }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="col-md-2 d-flex justify-content-end text-white p-0">
+                    <ul class="d-flex list-unstyled m-0 p-0 align-items-center">
+                        <li class="mx-1">
+                            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()"
+                                title="Tema Değiştir" aria-label="Toggle theme">
+                                <div class="theme-toggle-track">
+                                    <div class="theme-toggle-thumb">
+                                        <i class="bi bi-sun-fill theme-icon-light"></i>
+                                        <i class="bi bi-moon-fill theme-icon-dark"></i>
+                                    </div>
+                                </div>
+                            </button>
+                        </li>
+
+                        {% if supported_languages %}
+                        <li>
+                            <div class="language-switcher">
+                                {% for lang_code, lang_name in supported_languages %}
+                                <a href="/set-language/{{ lang_code }}"
+                                    class="language-pill {% if current_language == lang_code %}active{% endif %}"
+                                    title="{{ lang_name }}" data-lang="{{ lang_code }}">
+                                    {{ lang_code | upper }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        <li class="ms-1">
+                            {% include "@@theme@@/_partials/currency_dropdown.html" %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <nav id="navbar" class="navbar navbar-expand-lg iklima-navbar">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/{{ current_language | default(value="tr") }}">
+                <img src="{{ settings.site_logo }}" alt="Site Logo" height="55" class="light-theme-logo">
+                <img src="{{ settings.site_logo_dark }}" alt="Site Logo Koyu Tema" height="55" class="dark-theme-logo">
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#navbarOffcanvas" aria-controls="navbarOffcanvas">
+                <i class="bi bi-list iklima-toggler-icon fs-4"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarDesktop">
+                <form class="d-flex mx-auto w-50" role="search" action="/search" method="get">
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-search border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input class="form-control form-control-search border-start-0 pl-2" type="search" name="q" placeholder="{{ t(key='ara', default='Ara', lang=current_language) }}..." aria-label="Search">
+                        <button class="btn btn-search px-4" type="submit">
+                            {{ t(key="ara", default="Ara", lang=current_language) }}
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex align-items-center gap-1">
+                    <a href="/my-cart" class="iklima-nav-action position-relative text-white text-center text-decoration-none">
+                        <div class="iklima-nav-action-icon">
+                            <i class="bi bi-cart3"></i>
+                            {% if cart_count and cart_count > 0 %}
+                            <span id="basket_item_count" class="badge iklima-cart-badge rounded-pill">{{ cart_count }}</span>
+                            {% else %}
+                            <span id="basket_item_count" class="badge iklima-cart-badge rounded-pill" style="display:none;">0</span>
+                            {% endif %}
+                        </div>
+                        <span class="iklima-nav-action-label">{{ t(key="cart", default="Sepet", lang=current_language) }}</span>
+                    </a>
+
+                    <a href="/my-account/bookmarks" class="iklima-nav-action position-relative text-white text-center text-decoration-none">
+                        <div class="iklima-nav-action-icon">
+                            <i class="bi bi-heart"></i>
+                            {% if bookmark_product_count and bookmark_product_count > 0 %}
+                            <span id="bookmark_product_count" class="badge iklima-cart-badge rounded-pill">{{ bookmark_product_count }}</span>
+                            {% else %}
+                            <span id="bookmark_product_count" class="badge iklima-cart-badge rounded-pill" style="display:none;">0</span>
+                            {% endif %}
+                        </div>
+                        <span class="iklima-nav-action-label">{{ t(key="favorites", default="Favoriler", lang=current_language) }}</span>
+                    </a>
+
+                    {% if is_authenticated %}
+                    <a href="/my-account/orders" class="iklima-nav-action position-relative text-white text-center text-decoration-none">
+                        <div class="iklima-nav-action-icon">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <span class="iklima-nav-action-label">{{ t(key="my_orders", default="Siparişlerim", lang=current_language) }}</span>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#" class="iklima-nav-action text-white text-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" role="button">
+                            <div class="iklima-nav-action-icon">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <span class="iklima-nav-action-label">{{ t(key="account", default="Hesabım", lang=current_language) }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" style="z-index:999999">
+                            <li>
+                                <a class="dropdown-item" href="/my-account/orders">
+                                    <i class="bi bi-box-seam"></i> {{ t(key="my_orders", lang=current_language) }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/my-account/profile">
+                                    <i class="bi bi-person"></i> {{ t(key="my_profile", lang=current_language) }}
+                                </a>
+                            </li>
+                            {% if has_admin_access %}
+                            <li><a class="dropdown-item" href="/admin">
+                                    <i class="bi bi-gear"></i> Admin Panel
+                                </a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="/logout" class="px-2">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                        <i class="bi bi-box-arrow-right"></i> {{ t(key="logout", lang=current_language) }}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                            <a href="/login" class="iklima-nav-action text-white text-center text-decoration-none">
+                                <div class="iklima-nav-action-icon">
+                                    <i class="bi bi-box-arrow-in-right"></i>
+                                </div>
+                                <span class="iklima-nav-action-label">{{ t(key="login", lang=current_language) }}</span>
+                            </a>
+                            <a href="/register" class="iklima-nav-action text-white text-center text-decoration-none" style="color: var(--accent-orange, #ff6b35) !important;">
+                                <div class="iklima-nav-action-icon">
+                                    <i class="bi bi-person-plus"></i>
+                                </div>
+                                <span class="iklima-nav-action-label">{{ t(key="register", lang=current_language) }}</span>
+                            </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Category Strip (Amazon-style) -->
+    {% if global.vocabularies.1.hierarchical_terms %}
+    <div class="category-strip d-none d-lg-block">
+        <div class="container-fluid">
+            <div class="category-strip-inner">
+                {% for category in global.vocabularies.1.hierarchical_terms %}
+                    {% if category.children %}
+                    <div class="category-strip-item has-children dropdown">
+                        <a href="#" class="text-decoration-none" style="color: inherit;" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if category.data.term_icon %}
+                                {{ category.data.term_icon | safe }}
+                            {% elif category.term_icon %}
+                                <i class="{{ category.term_icon }} me-1"></i>
+                            {% endif %}
+                            {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+                            <i class="bi bi-chevron-down"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% for subcategory in category.children %}
+                            <li>
+                                <a class="dropdown-item" href="/{{ current_language }}/products/category/{{ subcategory.data.langs[current_language].slug | default(value=subcategory.slugs[current_language]) }}-{{ subcategory.id }}">
+                                    {{ subcategory.data.langs[current_language].title | default(value=subcategory.titles[current_language]) }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="/{{ current_language }}/products/category/{{ category.data.langs[current_language].slug | default(value=category.slugs[current_language]) }}-{{ category.id }}" class="category-strip-item">
+                        {% if category.data.term_icon %}
+                            {{ category.data.term_icon | safe }}
+                        {% elif category.term_icon %}
+                            <i class="{{ category.term_icon }} me-1"></i>
+                        {% endif %}
+                        {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Offcanvas menu for mobile -->
+<div class="offcanvas offcanvas-start iklima-offcanvas" tabindex="-1" id="navbarOffcanvas" aria-labelledby="navbarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <a class="offcanvas-brand" href="/{{ current_language | default(value="tr") }}">
+            <img src="{{ settings.site_logo }}" alt="Site Logo" height="35" class="light-theme-logo">
+            <img src="{{ settings.site_logo_dark }}" alt="Site Logo Koyu Tema" height="35" class="dark-theme-logo">
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body p-0">
+        <div class="p-3 border-bottom">
+            <form role="search" action="/search" method="get">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-white-50">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input class="form-control bg-transparent border-start-0 ps-0 text-white" type="search" name="q"
+                           placeholder="{{ t(key='ara', default='Ara', lang=current_language) }}..." aria-label="Search">
+                    <button class="btn" type="submit" style="background: var(--accent-orange, #ff6b35); color: #fff;">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-3 border-bottom bg-body-tertiary">
+            <div class="row g-2">
+                <div class="col-6">
+                    <a href="/my-cart" class="btn w-100 d-flex align-items-center justify-content-center gap-2 border" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2) !important; color: #fff;">
+                        <i class="bi bi-cart3" style="color: var(--accent-orange, #ff6b35);"></i>
+                        <span class="small">{{ t(key="cart", default="Sepet", lang=current_language) }}</span>
+                        {% if cart_count and cart_count > 0 %}
+                        <span class="badge rounded-pill" style="background: var(--accent-orange, #ff6b35);">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="/my-account/bookmarks" class="btn w-100 d-flex align-items-center justify-content-center gap-2 border" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2) !important; color: #fff;">
+                        <i class="bi bi-heart" style="color: var(--accent-orange, #ff6b35);"></i>
+                        <span class="small">{{ t(key="favorites", default="Favoriler", lang=current_language) }}</span>
+                        {% if bookmark_product_count and bookmark_product_count > 0 %}
+                        <span class="badge rounded-pill" style="background: var(--accent-orange, #ff6b35);">{{ bookmark_product_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if global.vocabularies.1.hierarchical_terms %}
+        <div class="border-bottom">
+            <div class="accordion accordion-flush" id="categoriesAccordion">
+                {% for category in global.vocabularies.1.hierarchical_terms %}
+                    {% if category.children %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-medium" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#category-{{ category.id }}">
+                                {% if category.data.term_icon %}
+                                    {{ category.data.term_icon | safe }}
+                                {% elif category.term_icon %}
+                                    <i class="{{ category.term_icon }} me-2" style="color: var(--accent-orange, #ff6b35);"></i>
+                                {% else %}
+                                    <i class="bi bi-folder me-2" style="color: var(--accent-orange, #ff6b35);"></i>
+                                {% endif %}
+                                {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+                            </button>
+                        </h2>
+                        <div id="category-{{ category.id }}" class="accordion-collapse collapse"
+                             data-bs-parent="#categoriesAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for subcategory in category.children %}
+                                    <a href="/{{ current_language }}/products/category/{{ subcategory.data.langs[current_language].slug | default(value=subcategory.slugs[current_language]) }}-{{ subcategory.id }}"
+                                       class="list-group-item list-group-item-action py-2 ps-4 border-0">
+                                        <i class="bi bi-chevron-right small me-2 text-muted"></i>
+                                        {{ subcategory.data.langs[current_language].title | default(value=subcategory.titles[current_language]) }}
+                                    </a>
+                                    {% if subcategory.children %}
+                                        {% for subsubcategory in subcategory.children %}
+                                        <a href="/{{ current_language }}/products/category/{{ subsubcategory.data.langs[current_language].slug | default(value=subsubcategory.slugs[current_language]) }}-{{ subsubcategory.id }}"
+                                           class="list-group-item list-group-item-action py-2 ps-5 border-0 small text-white-50">
+                                            <i class="bi bi-dash me-2"></i>
+                                            {{ subsubcategory.data.langs[current_language].title | default(value=subsubcategory.titles[current_language]) }}
+                                        </a>
+                                        {% endfor %}
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <a href="/{{ current_language }}/products/category/{{ category.data.langs[current_language].slug | default(value=category.slugs[current_language]) }}-{{ category.id }}"
+                               class="accordion-button collapsed fw-medium justify-content-start" style="text-decoration: none;">
+                                {% if category.data.term_icon %}
+                                    {{ category.data.term_icon | safe }}
+                                {% elif category.term_icon %}
+                                    <i class="{{ category.term_icon }} me-2" style="color: var(--accent-orange, #ff6b35);"></i>
+                                {% else %}
+                                    <i class="bi bi-folder me-2" style="color: var(--accent-orange, #ff6b35);"></i>
+                                {% endif %}
+                                {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+                            </a>
+                        </h2>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if menu_items %}
+        <div class="border-bottom">
+            <div class="p-3 bg-light border-bottom">
+                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    {{ t(key="menu", default="Menü", lang=current_language) }}
+                </small>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for item in menu_items %}
+                <a href="{{ item.url }}" class="list-group-item list-group-item-action py-3" data-menu-url="{{ item.url }}">
+                    <i class="bi bi-circle-fill me-3" style="font-size: 6px; vertical-align: middle; color: var(--accent-orange, #ff6b35);"></i>
+                    {{ item.title }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="border-bottom">
+            <div class="p-3 bg-light border-bottom">
+                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    {{ t(key="settings", default="Ayarlar", lang=current_language) }}
+                </small>
+            </div>
+            <div class="p-3">
+                <button id="theme-toggle-offcanvas" class="btn w-100 d-flex align-items-center justify-content-center gap-2 mb-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                    <i class="bi" id="theme-icon-offcanvas"></i>
+                    <span id="theme-text-offcanvas"></span>
+                </button>
+
+                {% if supported_languages %}
+                <div class="d-flex gap-2 justify-content-center">
+                    {% for lang_code, lang_name in supported_languages %}
+                    <a href="/set-language/{{ lang_code }}"
+                        class="btn btn-sm {% if current_language == lang_code %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        {{ lang_code | upper }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-3">
+            {% if is_authenticated %}
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: rgba(255,107,53,0.2);">
+                            <i class="bi bi-person fs-4" style="color: var(--accent-orange, #ff6b35);"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">{% if session_data.first_name %}{{ session_data.first_name }}{% else %}{{ session_data.username }}{% endif %}</div>
+                            <small class="text-white-50">{{ session_data.email }}</small>
+                        </div>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% if has_b2b_access %}
+                        <a href="/{{current_language}}/b2b/my-orders" class="list-group-item list-group-item-action py-2 px-0 border-0 bg-transparent">
+                            <i class="bi bi-box-seam me-2" style="color: var(--accent-orange, #ff6b35);"></i>{{ t(key="my_orders", lang=current_language) }}
+                        </a>
+                        {% else %}
+                        <a href="/my-account/orders" class="list-group-item list-group-item-action py-2 px-0 border-0 bg-transparent">
+                            <i class="bi bi-box-seam me-2" style="color: var(--accent-orange, #ff6b35);"></i>{{ t(key="my_orders", lang=current_language) }}
+                        </a>
+                        {% endif %}
+                        <a href="/my-account/profile" class="list-group-item list-group-item-action py-2 px-0 border-0 bg-transparent">
+                            <i class="bi bi-person me-2" style="color: var(--accent-orange, #ff6b35);"></i>{{ t(key="my_profile", lang=current_language) }}
+                        </a>
+                        {% if has_admin_access %}
+                        <a href="/admin" class="list-group-item list-group-item-action py-2 px-0 border-0 bg-transparent">
+                            <i class="bi bi-gear me-2" style="color: var(--accent-orange, #ff6b35);"></i>Admin Panel
+                        </a>
+                        {% endif %}
+                        {% if has_b2b_access %}
+                        <a href="/{{ current_language }}/b2b" class="list-group-item list-group-item-action py-2 px-0 border-0 bg-transparent">
+                            <i class="bi bi-list-ul me-2" style="color: var(--accent-orange, #ff6b35);"></i>B2B Panel
+                        </a>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="/logout" class="mt-3">
+                        <button type="submit" class="btn w-100" style="background: rgba(220,53,69,0.2); border: 1px solid rgba(220,53,69,0.3); color: #dc3545;">
+                            <i class="bi bi-box-arrow-right me-2"></i>{{ t(key="logout", lang=current_language) }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center mb-3">
+                <i class="bi bi-person-circle fs-1 text-white-50"></i>
+                <p class="text-white-50 small mt-2 mb-3">{{ t(key="login_prompt", default="Hesabınıza giriş yapın veya yeni bir hesap oluşturun", lang=current_language) }}</p>
+            </div>
+            <div class="d-grid gap-2">
+                <a class="btn" href="/login" style="background: var(--accent-orange, #ff6b35); border: none; color: #fff;">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>{{ t(key="login", lang=current_language) }}
+                </a>
+                <a class="btn" href="/register" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                    <i class="bi bi-person-plus me-2"></i>{{ t(key="register", lang=current_language) }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('a[data-menu-url]');
+            menuLinks.forEach(link => {
+                const menuUrl = link.getAttribute('data-menu-url');
+                if (menuUrl && currentPath === menuUrl &&
+                    !link.closest('.mega-menu-dropdown') &&
+                    !link.classList.contains('mega-menu-toggle') &&
+                    !link.classList.contains('mega-menu-link') &&
+                    !link.classList.contains('mega-menu-sublink') &&
+                    !link.classList.contains('category-strip-item')) {
+                    link.classList.add('active');
+                }
+            });
+
+            updateOffcanvasThemeButton();
+        });
+
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-bs-theme') {
+                    updateOffcanvasThemeButton();
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-bs-theme']
+        });
+
+        function updateOffcanvasThemeButton() {
+            const themeIcon = document.getElementById('theme-icon-offcanvas');
+            const themeText = document.getElementById('theme-text-offcanvas');
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+            if (themeIcon && themeText) {
+                if (isDark) {
+                    themeIcon.className = 'bi bi-moon-fill';
+                    themeText.textContent = '{{ t(key="dark_mode", default="Karanlık Tema", lang=current_language) }}';
+                } else {
+                    themeIcon.className = 'bi bi-sun-fill';
+                    themeText.textContent = '{{ t(key="light_mode", default="Aydınlık Tema", lang=current_language) }}';
+                }
+            }
+        }
+
+        window.updateOffcanvasThemeButton = updateOffcanvasThemeButton;
+
+        const offcanvasThemeBtn = document.getElementById('theme-toggle-offcanvas');
+        if (offcanvasThemeBtn) {
+            offcanvasThemeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.toggleTheme) {
+                    window.toggleTheme();
+                } else {
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateOffcanvasThemeButton();
+                }
+            });
+        }
+
+        const offcanvas = document.getElementById('navbarOffcanvas');
+        if (offcanvas) {
+            offcanvas.addEventListener('show.bs.offcanvas', function () {
+                updateOffcanvasThemeButton();
+            });
+        }
+
+        updateOffcanvasThemeButton();
+
+        // Category strip hover dropdown
+        document.querySelectorAll('.category-strip-item.has-children').forEach(function(item) {
+            item.addEventListener('mouseenter', function() {
+                document.querySelectorAll('.category-strip-item.has-children.show').forEach(function(el) {
+                    el.classList.remove('show');
+                    var menu = el.querySelector('.dropdown-menu');
+                    if (menu) menu.classList.remove('show');
+                });
+                item.classList.add('show');
+                var menu = item.querySelector('.dropdown-menu');
+                if (menu) menu.classList.add('show');
+            });
+            item.addEventListener('mouseleave', function(e) {
+                if (!item.contains(e.relatedTarget)) {
+                    setTimeout(function() {
+                        item.classList.remove('show');
+                        var menu = item.querySelector('.dropdown-menu');
+                        if (menu) menu.classList.remove('show');
+                    }, 100);
+                }
+            });
+        });
+    })();
+</script>

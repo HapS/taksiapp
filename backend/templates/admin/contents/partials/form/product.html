@@ -1,0 +1,515 @@
+<div class="card mb-4">
+    <div class="card-body" v-if="form.content_type === 'product'">
+
+        <!-- Base Price Section -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h4 class="mb-0">Ürün Özellikleri</h4>
+                <p class="small text-muted mb-4">Ürünün temel özellikleri, eğer ürünün varyantları var ise, bazı özellikler pasif hale gelecektir örneğin fiyat,sku,stok </p>
+
+            </div>
+
+            <div class="col-md-2 mb-4">
+                <label for="currency" class="form-label">Para Birimi <span class="text-danger">*</span></label>
+                <select
+                    id="currency"
+                    class="form-select form-select-sm"
+                    v-model="form.product.currency"
+                    required>
+                    <option value="TRY">TRY - Türk Lirası</option>
+                    <option value="USD">USD - Amerikan Doları</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - İngiliz Sterlini</option>
+                    <option value="CHF">CHF - İsviçre Frangı</option>
+                    <option value="AUD">AUD - Avustralya Doları</option>
+                    <option value="CAD">CAD - Kanada Doları</option>
+                    <option value="AZN">AZN - Azerbaycan Manatı</option>
+                    <option value="JPY">JPY - Japon Yeni</option>
+                </select>
+                <small class="text-muted">Para birimi (örn: TRY, USD)</small>
+            </div>
+            <div class="col-md-2 mb-4">
+                <label for="price" class="form-label">Orijinal Fiyat <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input
+                        type="number"
+                        class="form-control form-control-sm"
+                        id="price"
+                        v-model.number="form.product.price"
+                        placeholder="0.00"
+                        step="0.01"
+                        required
+                        :disabled="form.product.variants && form.product.variants.length > 0"
+                        >
+                </div>
+                <small class="text-muted">Ürünün orijinal fiyatı (indirim öncesi)</small>
+            </div>
+            <div class="col-md-2 mb-4">
+                <label for="discount_percentage" class="form-label">İndirim (%)</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="discount_percentage"
+                    v-model.number="form.product.discount_percentage"
+                    placeholder="0"
+                    step="1"
+                    min="0"
+                    max="100"
+                    :disabled="form.product.variants && form.product.variants.length > 0">
+                <small class="text-muted">İndirim oranı (%)</small>
+            </div>
+            <!-- KDV Oranı -->
+            <div class="col-md-1 mb-4">
+                <label for="vat_rate" class="form-label">KDV (%)</label>
+                <select
+                    id="vat_rate"
+                    class="form-select form-select-sm"
+                    v-model.number="form.product.vat_rate">
+                    <option value="1">%1</option>
+                    <option value="8">%8</option>
+                    <option value="20" selected>%20</option>
+                </select>
+                <small class="text-muted">Vergi oranı</small>
+            </div>
+
+            <!-- Barkod -->
+            <div class="col-md-2 mb-4">
+                <label for="barcode" class="form-label">Barkod (EAN-13)</label>
+                <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    id="barcode"
+                    v-model="form.product.barcode"
+                    placeholder="örn: 8690123456789..."
+                    maxlength="13">
+                <small class="text-muted">13 haneli EAN barkod</small>
+            </div>
+
+            <div class="col-md-1 mb-4">
+                <label for="stock" class="form-label">Stok <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input
+                        type="number"
+                        class="form-control form-control-sm"
+                        id="stock"
+                        v-model.number="form.product.stock"
+                        placeholder="0"
+                        step="1"
+                        required
+                        :disabled="form.product.variants && form.product.variants.length > 0">
+
+                </div>
+                <small class="text-muted">Stok miktarı</small>
+            </div>
+
+            <div class="col-md-2 mb-4">
+                <label for="sku" class="form-label">SKU <span class="text-danger">*</span></label>
+                <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    id="sku"
+                    v-model="form.product.sku"
+                    placeholder="Ürün SKU kodu (örn: PROD-001)"
+                    required
+                    :disabled="form.product.variants && form.product.variants.length > 0">
+                <small class="text-muted">SKU</small>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h4 class="mb-0">B2B Ürün Özellikleri</h4>
+                <p class="small text-muted mb-4">Toptan satışı için ürün bilgilerini giriniz.</p>
+            </div>
+
+
+            <div class="col-md-2 mb-4">
+                <label for="price" class="form-label">Fiyat B2b <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input
+                        type="number"
+                        class="form-control form-control-sm"
+                        id="b2b_price"
+                        v-model.number="form.product.b2b_price"
+                        placeholder="0.00"
+                        step="0.01"
+                        required
+                        :disabled="form.product.variants && form.product.variants.length > 0"
+                        >
+                </div>
+                <small class="text-muted">B2b Ürünün satış fiyatı(Vergi Dahil)</small>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- Pazaryeri Entegrasyon Alanları -->
+        <div class="row mb-4">
+            <div class="col-md-12 mb-3">
+                <h4 class="mb-0 pb-0">Nakliye Bilgileri</h4>
+            </div>
+
+            <!-- Ağırlık -->
+            <div class="col-md-2 mb-3">
+                <label for="weight" class="form-label">Ağırlık (gram)</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="weight"
+                    v-model.number="form.product.weight"
+                    placeholder="örn: 5700..."
+                    step="1">
+                <small class="text-muted">Gerçek ağırlık (gram)</small>
+            </div>
+
+            <!-- Desi Ağırlığı -->
+            <div class="col-md-2 mb-3">
+                <label for="dimensional_weight" class="form-label">Desi Ağırlığı (kg)</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="dimensional_weight"
+                    v-model.number="form.product.dimensional_weight"
+                    placeholder="örn: 5.7..."
+                    step="0.1">
+                <small class="text-muted">Hacimsel ağırlık</small>
+            </div>
+
+
+            <div class="col-md-2 mb-3">
+                <label for="width" class="form-label">Genişlik</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="width"
+                    :value="form.product.dimensions?.width || ''"
+                    placeholder="örn: 33.5..."
+                    step="0.1"
+                    @input="if (!form.product.dimensions) form.product.dimensions = {}; form.product.dimensions.width = $event.target.value ? parseFloat($event.target.value) : null">
+                <small class="text-muted">cm</small>
+            </div>
+            <div class="col-md-2 mb-3">
+                <label for="height" class="form-label">Yükseklik</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="height"
+                    :value="form.product.dimensions?.height || ''"
+                    placeholder="örn: 57..."
+                    step="0.1"
+                    @input="if (!form.product.dimensions) form.product.dimensions = {}; form.product.dimensions.height = $event.target.value ? parseFloat($event.target.value) : null">
+                <small class="text-muted">cm</small>
+            </div>
+            <div class="col-md-2 mb-3">
+                <label for="depth" class="form-label">Derinlik</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="depth"
+                    :value="form.product.dimensions?.depth || ''"
+                    placeholder="örn: 33.5..."
+                    step="0.1"
+                    @input="if (!form.product.dimensions) form.product.dimensions = {}; form.product.dimensions.depth = $event.target.value ? parseFloat($event.target.value) : null">
+                <small class="text-muted">cm</small>
+            </div>
+
+            <!-- Teslimat Süresi (Gün) - Pazaryeri için -->
+            <div class="col-md-2 mb-3">
+                <label for="delivery_duration" class="form-label text-success">Teslimat Süresi (Gün)</label>
+                <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="delivery_duration"
+                    v-model.number="form.product.delivery_duration"
+                    placeholder="örn: 3..."
+                    min="1"
+                    max="30">
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Product Options Section -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Ürün Seçenekleri</h4>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-danger me-2" @click="clearProductOptions"
+                            v-if="form.product.options && form.product.options.length > 0"
+                            title="Tüm seçenekleri temizle">
+                        <i class="bi bi-trash"></i> Temizle
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" @click="addProductOption">
+                        <i class="bi bi-plus-circle"></i> Seçenek Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="form.product.options && form.product.options.length > 0" class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Seçenek Adı</th>
+                            <th style="width: 60%;">Değerler</th>
+                            <th style="width: 10%;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(option, index) in form.product.options" :key="index">
+                            <td>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    v-model="option.name"
+                                    placeholder="Seçenek Adı (örn: Beden, Renk)">
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    v-model="option.values"
+                                    placeholder="Değerler (virgülle ayırın: S, M, L, XL)">
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger"
+                                    @click="removeProductOption(index)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-else class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Henüz seçenek eklenmedi. Varyant oluşturmak için seçenekler ekleyin.
+                <br>
+                <small class="text-muted">
+                    <strong>İpucu:</strong> Özellikler sekmesinden otomatik varyant oluşturabilirsiniz.
+                </small>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Product Variants Section -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Ürün Varyantları</h4>
+                <div>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary me-2"
+                        @click="generateVariants"
+                        :disabled="!form.product.options || form.product.options.length === 0"
+                        title="Mevcut varyantlar korunur, sadece yeni kombinasyonlar eklenir">
+                        <i class="bi bi-gear"></i> Varyantları Oluştur
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" @click="addVariant">
+                        <i class="bi bi-plus-circle"></i> Manuel Varyant Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="form.product.variants && form.product.variants.length > 0" class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Görseller</th>
+                            <th>Seçenekler</th>
+                            <th>SKU</th>
+                            <th>Barkod</th>
+                            <th>Orijinal Fiyat</th>
+                            <th>B2b Fiyat</th>
+                            <th>İndirim (%)</th>
+                            <th>Stok</th>
+                            <th>Ağırlık (g)</th>
+                            <th>Durum</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(variant, index) in form.product.variants" :key="index">
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary position-relative"
+                                    @click="openVariantMediaModal(index)"
+                                    :title="'Görseller (' + (variant.media && variant.media.cover ? variant.media.cover.length : 0) + ')'">
+                                    <i class="bi bi-images"></i>
+                                    <span
+                                        v-if="variant.media && variant.media.cover && variant.media.cover.length > 0"
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                                        [[ variant.media.cover.length ]]
+                                    </span>
+                                </button>
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    v-model="variant.option_values_display"
+                                    placeholder="S / Mavi"
+                                    readonly>
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    v-model="variant.sku"
+                                    placeholder="Opsiyonel SKU kodu">
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm"
+                                    v-model="variant.barcode"
+                                    placeholder="örn: 8690..."
+                                    maxlength="13">
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input
+                                        type="number"
+                                        class="form-control form-control-sm"
+                                        v-model.number="variant.price"
+                                        step="0.01">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input
+                                        type="number"
+                                        class="form-control form-control-sm"
+                                        v-model.number="variant.b2b_price"
+                                        step="0.01">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input
+                                        type="number"
+                                        class="form-control form-control-sm"
+                                        v-model.number="variant.discount_percentage"
+                                        step="1"
+                                        min="0"
+                                        max="100"
+                                        placeholder="0">
+                                </div>
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    v-model.number="variant.stock"
+                                    min="0">
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    v-model.number="variant.weight"
+                                    placeholder="örn: 500..."
+                                    min="0">
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        v-model="variant.is_active">
+                                </div>
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger"
+                                    @click="removeVariant(index)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-else class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Henüz varyant eklenmedi.
+                <br>
+                <small class="text-muted">
+                    <strong>Not:</strong> Yeni oluşturulan varyantlarda SKU boş bırakılır, isteğe bağlı olarak doldurabilirsiniz.
+                </small>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Variant Media Modal -->
+<div class="modal fade" id="variantMediaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Varyant Görselleri
+                    <span v-if="editingVariant !== null && form.product.variants[editingVariant]" class="badge bg-secondary ms-2">
+                        [[ form.product.variants[editingVariant].option_values_display ]]
+                    </span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div v-if="editingVariant !== null && form.product.variants[editingVariant]">
+                    <!-- Upload Section -->
+                    <div class="mb-4">
+                        <label class="form-label">Görsel Yükle</label>
+                        <input
+                            type="file"
+                            class="form-control form-control-sm"
+                            @change="handleVariantMediaUpload($event, editingVariant)"
+                            accept="image/*"
+                            multiple>
+                        <div v-if="uploadingVariantMedia" class="progress mt-2">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%">
+                                Yükleniyor...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Media -->
+                    <div v-if="form.product.variants[editingVariant].media && form.product.variants[editingVariant].media.cover && form.product.variants[editingVariant].media.cover.length > 0">
+                        <label class="form-label">Mevcut Görseller</label>
+                        <div class="row g-2">
+                            <div
+                                v-for="(media, mIndex) in form.product.variants[editingVariant].media.cover"
+                                :key="media.id || mIndex"
+                                class="col-md-3">
+                                <div class="card">
+                                    <img :src="media.url" class="card-img-top" :alt="media.file_name" style="height: 150px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        <small class="text-muted d-block text-truncate" :title="media.file_name">
+                                            [[ media.file_name ]]
+                                        </small>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-danger w-100 mt-1"
+                                            @click="removeVariantMedia(editingVariant, mIndex)">
+                                            <i class="bi bi-trash"></i> Kaldır
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Bu varyant için henüz görsel eklenmedi.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>

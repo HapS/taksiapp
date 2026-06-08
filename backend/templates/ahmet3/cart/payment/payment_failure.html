@@ -1,0 +1,83 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block title %}{{ title | default(value="Ödeme Başarısız") }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 20px;">
+                <div class="card-header bg-danger text-white text-center py-4 border-0">
+                    <div class="mb-3">
+                        <i class="bi bi-exclamation-octagon-fill" style="font-size: 4.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0">{{ title }}</h2>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <h4 class="text-danger fw-semibold mb-3">{{ message }}</h4>
+                        <p class="text-muted fs-5">
+                            Ödeme işlemi gerçekleştirilemedi. Lütfen bilgilerinizi kontrol edip tekrar deneyiniz.
+                        </p>
+                    </div>
+
+                    {% if error_details %}
+                    <div class="alert alert-danger border-0 bg-danger-subtle rounded-4 p-4 mb-5">
+                        <div class="d-flex">
+                            <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Hata Detayı:</h6>
+                                <p class="mb-0">{{ error_details }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="bg-light rounded-4 p-4 mb-5 border border-light-subtle">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">
+                            <i class="bi bi-info-square me-2"></i>Sipariş Özeti
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="text-muted d-block small text-uppercase fw-bold">Sipariş Numarası</span>
+                                <span class="fw-semibold text-dark">#{{ cart.order_id }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block small text-uppercase fw-bold">Toplam Tutar</span>
+                                <span class="fw-semibold text-dark">{{ total_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-4 small">
+                            Sorun devam ederse bankanızla veya müşteri hizmetlerimizde iletişime geçebilirsiniz.
+                        </p>
+                        <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                            <a href="/payment/credit-card/{{ cart.payment_url }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm transition-hover">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Tekrar Dene
+                            </a>
+                            <a href="/my-cart" class="btn btn-outline-secondary btn-lg px-4 rounded-pill transition-hover">
+                                <i class="bi bi-cart me-2"></i>Sepete Dön
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: all 0.1s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
+{% endblock %}

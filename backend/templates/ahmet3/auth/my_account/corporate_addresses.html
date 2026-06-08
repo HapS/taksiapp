@@ -1,0 +1,305 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+
+<div class="container mt-1" id="app">
+    <div class="row">
+
+        <div class="col-lg-3 col-xl-3 col-xxl-3 d-none d-sm-block d-sm-none d-md-block d-md-none d-lg-block pt-3 pb-3"
+            id="sol-menu">
+            {% include '@@theme@@/auth/my_account/sidebar.html' %}
+        </div>
+
+        <div class="col-lg-9 col-xl-9 col-xxl-9 col-sm-12 col-md-12 col-xs-12  main-content pt-3 pb-3">
+            <div class="row">
+
+                <div class="col-md-12" v-if="loading">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12" v-if="!loading">
+
+                    <div class="card mb-4">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">Fatura Adreslerim</h4>
+                            <button type="button" class="btn btn-primary btn-sm" @click="addAddress">
+                                <i class="bi bi-plus-circle-dotted"></i> Adres Ekle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-2" v-if="addeditem">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-1 mt-1">Yeni Fatura Adresi Ekle / Düzenle</h6>
+                            <button type="button" class="btn-close" aria-label="Close" @click="toggleAddForm"></button>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="address_title" class="form-label mb-0">Adres Tanımı (Örn: Merkez
+                                            Ofis)</label>
+                                        <input type="text" class="form-control" id="address_title"
+                                            v-model="selectedObjects.title">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="company_name" class="form-label mb-0">Şirket Ünvanı</label>
+                                        <input type="text" class="form-control" id="company_name"
+                                            v-model="selectedObjects.company_name">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tax_office" class="form-label mb-0">Vergi Dairesi</label>
+                                        <input type="text" class="form-control" id="tax_office"
+                                            v-model="selectedObjects.tax_office">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tax_number" class="form-label mb-0">Vergi Numarası</label>
+                                        <input type="text" class="form-control" id="tax_number"
+                                            v-model="selectedObjects.tax_number">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm" @click="saveAddress" v-if="!edit">
+                                    <i class="bi bi-save"></i> Kaydet
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm" @click="updateAddress" v-else>
+                                    <i class="bi bi-save"></i> Güncelle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 bg-none">
+                        <div class="card-body p-0">
+                            <div class="row row-cols-1 row-cols-md-12 g-4" v-if="data.length == 0">
+                                <div class="col mb-2">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-0 text-center text-muted">Fatura Adresi Bulunamadı
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row row-cols-1 row-cols-md-2 g-4" v-if="data.length > 0">
+                                <div class="col mb-2" v-for="item in data" :key="item.id">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="card-title mb-0">[[ item.title ]]</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text fw-bold">[[ item.company_name ]]</p>
+                                            <p class="card-text mb-0 small">Vergi Dairesi: [[ item.tax_office ]]</p>
+                                            <p class="card-text mb-0 small">Vergi No: [[ item.tax_number ]]</p>
+                                        </div>
+
+                                        <div class="card-footer">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                    @click="deleteAddress(item.id)">
+                                                    <i class="bi bi-trash3"></i> Sil
+                                                </button>
+                                                <button type="button" class="btn btn-warning btn-sm"
+                                                    @click="editAddress(item)">
+                                                    <i class="bi bi-pencil-square"></i> Düzenle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    const { createApp, ref, onMounted } = Vue
+    createApp({
+        delimiters: ['[[', ']]'],
+        setup() {
+            const data = ref([])
+            const loading = ref(true)
+            const addeditem = ref(false)
+            const edit = ref(false)
+
+            const selectedObjects = ref({
+                id: null,
+                title: "",
+                company_name: "",
+                tax_office: "",
+                tax_number: ""
+            })
+
+            onMounted(() => {
+                InitData()
+            })
+
+            function toggleAddForm() {
+                addeditem.value = !addeditem.value
+                edit.value = false
+                resetForm()
+            }
+
+            function addAddress() {
+                addeditem.value = true
+                edit.value = false
+                resetForm()
+            }
+
+            function resetForm() {
+                selectedObjects.value = {
+                    id: null,
+                    title: "",
+                    company_name: "",
+                    tax_office: "",
+                    tax_number: ""
+                }
+            }
+
+            async function InitData() {
+                loading.value = true
+                try {
+                    const response = await fetch("/api/user/corporate");
+                    const res = await response.json();
+
+                    if (res.status === "success") {
+                        data.value = res.data;
+                    }
+                } catch (error) {
+                    console.error("Fetch error: ", error);
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            async function saveAddress() {
+                try {
+                    const response = await fetch("/api/user/corporate", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(selectedObjects.value)
+                    });
+
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        Swal.fire('Başarılı', 'Adres başarıyla eklendi', 'success');
+                        addeditem.value = false;
+                        InitData();
+                    } else {
+                        Swal.fire('Hata', res.message || 'Lütfen bilgilerinizi kontrol ediniz', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Hata', 'Sunucu hatası', 'error');
+                }
+            }
+
+            async function updateAddress() {
+                try {
+                    const response = await fetch(`/api/user/corporate/${selectedObjects.value.id}`, {
+                        method: "POST", // Using POST for update based on routes configuration
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(selectedObjects.value)
+                    });
+
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        Swal.fire('Başarılı', 'Adres güncellendi', 'success');
+                        addeditem.value = false;
+                        InitData();
+                    } else {
+                        Swal.fire('Hata', res.message || 'Hata oluştu', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Hata', 'Sunucu hatası', 'error');
+                }
+            }
+
+            function deleteAddress(id) {
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu adresi silmek istediğinize emin misiniz?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, Sil',
+                    cancelButtonText: 'İptal'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/user/corporate/${id}`, {
+                                method: "DELETE"
+                            });
+                            const res = await response.json();
+                            if (res.status === "success") {
+                                Swal.fire('Silindi', 'Adres silindi', 'success');
+                                InitData();
+                            } else {
+                                Swal.fire('Hata', res.message, 'error');
+                            }
+                        } catch (error) {
+                            Swal.fire('Hata', 'Silme işlemi başarısız', 'error');
+                        }
+                    }
+                })
+            }
+
+            function editAddress(item) {
+                edit.value = true;
+                addeditem.value = true;
+                selectedObjects.value = {
+                    id: item.id,
+                    title: item.title,
+                    company_name: item.company_name,
+                    tax_office: item.tax_office,
+                    tax_number: item.tax_number
+                };
+            }
+
+            return {
+                data,
+                loading,
+                addeditem,
+                edit,
+                selectedObjects,
+                addAddress,
+                toggleAddForm,
+                saveAddress,
+                updateAddress,
+                deleteAddress,
+                editAddress
+            }
+        }
+    }).mount('#app')
+</script>
+{% endblock %}

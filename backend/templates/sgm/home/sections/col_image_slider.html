@@ -1,0 +1,354 @@
+<!-- Full Width Hero Slider Section - Swiper -->
+{% set media_data = section.items.0.data.langs[current_language].media %}
+{% set videos = media_data.video | default(value=[]) %}
+{% set gallery = media_data.gallery | default(value=[]) %}
+{% set slider_id = section.id | replace(from=".", to="_") %}
+{% set has_content = (videos | length > 0) or (gallery | length > 0) %}
+
+{% if has_content %}
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+<style>
+.fluid-slider-wrapper-{{ slider_id }} {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+@media (max-width: 991.98px) {
+    .fluid-slider-{{ slider_id }} {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+    }
+}
+
+.fluid-slider-{{ slider_id }} .swiper {
+    width: 100%;
+    height: auto !important; /* Ensure no other rule forces a fixed height */
+    aspect-ratio: 1920 / 923 !important; /* Sadece oranı sabitle - yüksekliktan kaçınıyoruz */
+    max-height: 100vh; /* Güvenlik amaçlı maksimum sınır */
+    position: relative;
+    overflow: hidden;
+}
+
+
+
+.fluid-slider-{{ slider_id }} .swiper-slide {
+    position: relative;
+    overflow: hidden;
+    height: 100%; /* Slide container swiper yüksekliğini kaplasın */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 8%;
+}
+
+/* Image - No Ken Burns/Zoom Effect */
+.fluid-slider-{{ slider_id }} .swiper-slide img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    z-index: 1;
+}
+
+.fluid-slider-{{ slider_id }} .slide-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    cursor: pointer;
+}
+
+.fluid-slider-{{ slider_id }} .video-slide video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* Premium Caption Design */
+.fluid-slider-{{ slider_id }} .slide-content {
+    position: relative;
+    z-index: 10;
+    text-align: left;
+    color: #fff;
+    padding: 0;
+    max-width: 800px;
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.fluid-slider-{{ slider_id }} .swiper-slide-active .slide-content {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.fluid-slider-{{ slider_id }} .slide-content h2 {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+.fluid-slider-{{ slider_id }} .slide-content p {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    margin-bottom: 0;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+/* Navigation Buttons - Bottom Right Position */
+.fluid-slider-{{ slider_id }} .swiper-button-next,
+.fluid-slider-{{ slider_id }} .swiper-button-prev {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    top: auto;
+    left: auto;
+    transform: none;
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    border-radius: 0.35rem;
+    border: none;
+    transition: all 0.3s ease;
+    z-index: 20;
+}
+
+.fluid-slider-{{ slider_id }} .swiper-button-prev {
+    right: 68px;
+}
+
+.fluid-slider-{{ slider_id }} .swiper-button-next:hover,
+.fluid-slider-{{ slider_id }} .swiper-button-prev:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.fluid-slider-{{ slider_id }} .swiper-button-next::after,
+.fluid-slider-{{ slider_id }} .swiper-button-prev::after {
+    font-size: 16px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 991.98px) {
+    .fluid-slider-wrapper-{{ slider_id }} {
+        position: relative;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        background: #000;
+    }
+
+    .fluid-slider-wrapper-{{ slider_id }} * {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper {
+        display: flex;
+        flex-wrap: nowrap;
+        background: #000;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper-slide {
+        width: 100%;
+        height: auto;
+        min-height: 200px;
+        flex-shrink: 0;
+        background: #000;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper-slide img {
+        object-fit: unset;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        background: #000;
+    }
+
+    .fluid-slider-{{ slider_id }} .slide-content {
+        padding: 0.5rem 5%;
+        background: #000;
+    }
+
+    .fluid-slider-{{ slider_id }} .slide-content h2 {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .fluid-slider-{{ slider_id }} .slide-content p,
+    .fluid-slider-{{ slider_id }} .slide-content .btn {
+        display: none;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper-button-next,
+    .fluid-slider-{{ slider_id }} .swiper-button-prev {
+        width: 28px;
+        height: 28px;
+        bottom: 8px;
+        right: 8px;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper-button-prev {
+        right: 40px;
+    }
+
+    .fluid-slider-{{ slider_id }} .swiper-pagination {
+        bottom: 12px;
+        right: 76px;
+    }
+}
+
+/* Pagination Dots - Match Navigation Style */
+.fluid-slider-{{ slider_id }} .swiper-pagination-bullet {
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+.fluid-slider-{{ slider_id }} .swiper-pagination-bullet-active {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Scroll Indicator */
+.fluid-slider-{{ slider_id }} .scroll-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: #fff;
+    /*animation: bounce 2s infinite;*/
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
+    40% {transform: translateX(-50%) translateY(-10px);}
+    60% {transform: translateX(-50%) translateY(-5px);}
+}
+</style>
+
+<div class="fluid-slider-wrapper-{{ slider_id }}" style="background-color: {{ section.background_color | default(value='transparent') }};">
+    <div class="fluid-slider-{{ slider_id }}">
+        <div id="swiper-fluid-{{ slider_id }}" class="swiper">
+            <div class="swiper-wrapper">
+                {# Videos first #}
+                {% for video in videos %}
+                <div class="swiper-slide video-slide">
+                    {% if video.link %}
+                    <a href="{{ video.link }}" class="slide-link"></a>
+                    {% endif %}
+                    <video autoplay muted loop playsinline preload="auto">
+                        <source src="{{ video.url }}" type="{{ video.mime_type | default(value='video/mp4') }}">
+                    </video>
+                    {% if video.title or video.description %}
+                    <div class="slide-content">
+                        <a href="{{ video.link | default(value='#') }}" class="text-decoration-none text-white">
+                        {% if video.title %}
+                        <h2>{{ video.title }}</h2>
+                        {% endif %}
+                        {% if video.description %}
+                        <p>{{ video.description }}</p>
+                        {% endif %}
+                        {% if video.link %}
+                            <span class="btn btn-hero text-white mt-3">Keşfet <i class="bi bi-arrow-right ms-2"></i></span>
+                        {% endif %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {# Then images #}
+                {% for image in gallery %}
+                <div class="swiper-slide">
+                    {% set link = image.link | default(value='') %}
+                    <a href="{{ link }}" class="slide-link{% if not link %} d-none{% endif %}"></a>
+                    <img src="{{ image.url | thumb(size="1920x923", crop="center") }}" alt="{{ image.title | default(value='') }}">
+                    {% if image.title or image.description %}
+                    <div class="slide-content">
+                        <a href="{{ link }}" class="text-decoration-none text-white">
+                            {% if image.title %}
+                            <h2>{{ image.title }}</h2>
+                            {% endif %}
+                            {% if image.description %}
+                            <p>{{ image.description }}</p>
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Controls - Bottom Right -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+(function initFluidSwiper() {
+    if (typeof Swiper === 'undefined') {
+        setTimeout(initFluidSwiper, 100);
+        return;
+    }
+
+    const swiperId = '#swiper-fluid-{{ slider_id }}';
+    const swiper = new Swiper(swiperId, {
+        loop: true,
+        speed: 1000,
+        effect: 'fade',
+        fadeEffect: {
+            crossFade: true
+        },
+        autoplay: {
+            delay: 6000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: swiperId + ' .swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: swiperId + ' .swiper-button-next',
+            prevEl: swiperId + ' .swiper-button-prev',
+        },
+    });
+})();
+</script>
+{% else %}
+<div class="container py-5 text-center text-muted">
+    <i class="bi bi-images fs-1"></i>
+    <p>Görsel bulunamadı</p>
+</div>
+{% endif %}

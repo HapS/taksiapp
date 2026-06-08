@@ -1,0 +1,8 @@
+<!-- Hero Banner Section -->
+<div style="background-color: {{ section.background_color | default(value='transparent') }};">
+  <div class="container">
+    {% for item in section.items %}
+        <img src="{{ item.data.langs[current_language].media.cover[0].url }}" class="img-fluid rounded" alt="{{ item.title }}">
+    {% endfor %}
+  </div>
+</div>

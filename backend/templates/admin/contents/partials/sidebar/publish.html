@@ -1,0 +1,154 @@
+<!-- Publish Settings -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0"><i class="bi bi-gear"></i> Yayın Ayarları</h6>
+    </div>
+    <div class="card-body">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.publish" id="publishSwitch" />
+            <label class="form-check-label small fw-bold" for="publishSwitch">
+                [[ form.publish ? 'Yayında' : 'Taslak' ]]
+            </label>
+            <div class="text-muted small">
+                [[ form.publish ? 'Bu sayfa sitede görünür olacak' : 'Bu sayfa sitede görünmeyecek' ]]
+            </div>
+        </div>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.settings.kapak_resmi_goster"
+                id="showCoverImageSwitch" v-if="form.settings" />
+            <label class="form-check-label small fw-bold" for="showCoverImageSwitch">
+                [[ form.settings.kapak_resmi_goster ? 'Kapak Resmi Göster' : 'Kapak Resmi Gizle' ]]
+            </label>
+            <div class="text-muted small">
+                Sayfa kapak resmini sayfada gösterir.
+            </div>
+        </div>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.settings.title"
+                id="showCoverImageSwitch2" v-if="form.settings" />
+            <label class="form-check-label small fw-bold" for="showCoverImageSwitch2">
+                [[ form.settings.title ? 'Kapakta Başlık Göster' : 'Kapak Başlık Gizle' ]]
+            </label>
+            <div class="text-muted small">
+                Sayfa kapak başlığını sayfada gösterir.
+            </div>
+        </div>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.settings.description"
+                id="showCoverImageSwitch3" v-if="form.settings" />
+            <label class="form-check-label small fw-bold" for="showCoverImageSwitch3">
+                [[ form.settings.description ? 'Kapakta Kısa Açıklama Göster' : 'Kapak Kısa Açıklama Gizle' ]]
+            </label>
+            <div class="text-muted small">
+                Sayfa kapak kısa açıklamasını sayfada gösterir.
+            </div>
+        </div>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.gcx" id="globalContextSwitch" />
+            <label class="form-check-label small fw-bold" for="globalContextSwitch">
+                [[ form.gcx ? 'Global Context Aktif' : 'Global Context Pasif' ]]
+            </label>
+            <div class="text-muted small">
+                Bu içerik tüm sayfalarda global context olarak kullanılabilir.
+            </div>
+        </div>
+        <hr v-if="!isEditing">
+        <div class="mb-0" v-if="!isEditing">
+            <label class="form-label fw-semibold small">Tür</label>
+            <select class="form-select form-select-sm" v-model="form.content_type" @change="onContentTypeChange">
+                <option value="page">Sayfa</option>
+                <option value="blog">Blog</option>
+                <option value="news">Haber</option>
+                <option value="product">Ürün</option>
+                <option value="form">Form</option>
+            </select>
+            <div class="form-text">İçerik türünü değiştirdiğinizde kategoriler yeniden yüklenecek</div>
+        </div>
+        <hr>
+        <div class="mb-3">
+            <label class="form-label fw-semibold small">Şablon</label>
+            <select class="form-select form-select-sm" v-model="form.template">
+                <option v-for="tpl in availableTemplates" :key="tpl" :value="tpl">[[ tpl ]]</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold small">İkon</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text" v-if="form.icon" v-html="form.icon"></span>
+                <input type="text" class="form-control form-control-sm" v-model="form.icon" placeholder='<i class="bi bi-star"></i>' />
+                <button class="btn btn-outline-secondary" type="button" @click="form.icon = ''" title="Temizle"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="form-text">HTML ikon kodu yapıştırın. Örnek: &lt;i class="bi bi-star"&gt;&lt;/i&gt;</div>
+        </div>
+        <div class="mb-0">
+            <label class="form-label fw-semibold small mb-2">Renkler</label>
+            <div class="d-flex gap-2 align-items-center mb-2">
+                <div class="flex-grow-1">
+                    <label class="form-label small text-muted mb-0">Renk 1</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text p-0" style="width:32px">
+                            <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color1" style="width:28px;height:28px;cursor:pointer" />
+                        </span>
+                        <input type="text" class="form-control form-control-sm" v-model="form.color1" placeholder="#ffffff" />
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 align-items-center mb-2">
+                <div class="flex-grow-1">
+                    <label class="form-label small text-muted mb-0">Renk 2</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text p-0" style="width:32px">
+                            <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color2" style="width:28px;height:28px;cursor:pointer" />
+                        </span>
+                        <input type="text" class="form-control form-control-sm" v-model="form.color2" placeholder="#000000" />
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="flex-grow-1">
+                    <label class="form-label small text-muted mb-0">Renk 3</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text p-0" style="width:32px">
+                            <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color3" style="width:28px;height:28px;cursor:pointer" />
+                        </span>
+                        <input type="text" class="form-control form-control-sm" v-model="form.color3" placeholder="#0d6efd" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form Settings (only for form content type) -->
+<div v-if="form.content_type === 'form'" class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0"><i class="bi bi-ui-checks"></i> Form Ayarları</h6>
+    </div>
+    <div class="card-body">
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" v-model="form.form_settings.allowAnonymous" id="allowAnonymousSwitch" />
+            <label class="form-check-label small fw-bold" for="allowAnonymousSwitch">
+                Anonim kullanıcılar doldurabilir
+            </label>
+            <div class="text-muted small">
+                Giriş yapmayan kullanıcılar da formu doldurabilir.
+            </div>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" v-model="form.form_settings.sendEmail" id="sendEmailSwitch" />
+            <label class="form-check-label small fw-bold" for="sendEmailSwitch">
+                Form gönderildiğinde e-posta gönder
+            </label>
+            <div class="text-muted small">
+                Form doldurulduğunda otomatik e-posta gönderilir.
+            </div>
+        </div>
+
+
+    </div>
+</div>

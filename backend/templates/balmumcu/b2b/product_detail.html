@@ -1,0 +1,481 @@
+{% extends "@@theme@@/b2b/b2b_base.html" %}
+
+{% block title %}{{ result.title }} - B2B{% endblock %}
+
+{% block content %}
+<!-- Prepare Media Arrays -->
+{% set_global cover_images = [] %}
+{% set_global gallery_images = [] %}
+
+{% if result.data.langs %}
+    {% set lang_data = result.data.langs[result.language] %}
+    {% if lang_data and lang_data.media %}
+        {% if lang_data.media.cover %}
+            {% set_global cover_images = lang_data.media.cover %}
+        {% endif %}
+        {% if lang_data.media.gallery %}
+            {% set_global gallery_images = lang_data.media.gallery %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+<!-- Prepare Product Data -->
+{% set_global product_data = result.product %}
+{% set_global has_variants = false %}
+{% if product_data and product_data.variants and product_data.variants | length > 0 %}
+    {% set_global has_variants = true %}
+{% endif %}
+
+<!-- Breadcrumb -->
+{% if breadcrumb %}
+<div class="bg-body-secondary border-bottom">
+    <div class="container py-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="/{{ current_language }}/b2b">B2B Ana Sayfa</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="/{{ current_language }}/b2b/products">Tüm Ürünler</a>
+                </li>
+                {% for cat in breadcrumb %}
+                    <li class="breadcrumb-item{% if loop.last %} {% endif %}">
+                        <a href="/{{ current_language }}/b2b/products?category_id={{ cat.id }}">{{ cat.title }}</a>
+                    </li>
+                {% endfor %}
+                <li class="breadcrumb-item active" aria-current="page">{{ result.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endif %}
+
+<!-- Product Detail -->
+<div class="container my-4" id="productApp">
+    <div class="row g-4">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="product-gallery">
+                <!-- Main Image -->
+                <div class="main-image-container mb-3 bg-body-tertiary rounded border">
+                    {% if cover_images | length > 0 %}
+                        <img id="mainProductImage"
+                             src="{{ cover_images[0].url | thumb(size="800x800", crop="center")}}"
+                             class="d-block w-100 p-4"
+                             alt="{{ result.title }}"
+                             style="max-height: 500px; object-fit: contain;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-body-tertiary text-muted" style="height: 500px;">
+                            <div class="text-center">
+                                <i class="bi bi-image fs-1"></i>
+                                <p class="mt-2">Görsel Yok</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Thumbnails -->
+                {% if cover_images | length > 1 or gallery_images | length > 0 %}
+                <div class="thumbnails-container">
+                    <div class="d-flex gap-2 overflow-x-auto">
+                        {% for img in cover_images %}
+                        <img src="{{ img.url | thumb(size="100x100", crop="center")}}"
+                             class="thumbnail border rounded cursor-pointer"
+                             style="width: 80px; height: 80px; object-fit: cover;"
+                             onclick="document.getElementById('mainProductImage').src='{{ img.url | thumb(size="800x800", crop="center")}}'">
+                        {% endfor %}
+                        {% for img in gallery_images %}
+                        <img src="{{ img.url | thumb(size="100x100", crop="center")}}"
+                             class="thumbnail border rounded cursor-pointer"
+                             style="width: 80px; height: 80px; object-fit: cover;"
+                             onclick="document.getElementById('mainProductImage').src='{{ img.url | thumb(size="800x800", crop="center")}}'">
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <h1 class="h3 mb-3">{{ result.title }}</h1>
+
+            <!-- Price -->
+            <div class="price-section mb-4">
+                {% if result.b2b_display_price_formatted %}
+                <div class="d-flex align-items-baseline gap-3">
+                    <span class="h2 text-success mb-0">{{ result.b2b_display_price_formatted }}</span>
+                    {% if result.display_old_price_formatted %}
+                    <span class="text-decoration-line-through text-muted">{{ result.display_old_price_formatted }}</span>
+                    {% endif %}
+                </div>
+                {% if result.discount_percentage %}
+                <span class="badge bg-danger">%{{ result.discount_percentage | round(precision=0) }} İndirim</span>
+                {% endif %}
+                {% else %}
+                <p class="text-muted">Fiyat bilgisi mevcut değil</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            {% if result.description %}
+            <div class="description mb-4">
+                <p class="text-muted">{{ result.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Variants -->
+            {% if has_variants %}
+            <div class="variant-options mb-4 p-4 bg-body-tertiary rounded-4 border border-subtle">
+                <h6 class="mb-3">Varyant Seçimi</h6>
+                <div id="variantOptionsContainer"></div>
+                <div id="selectedVariantInfo" class="mt-3" style="display: none;">
+                    <div class="alert alert-info mb-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>Seçili Varyant:</strong> <span id="selectedVariantName"></span><br>
+                                <strong>Fiyat:</strong> <span id="selectedVariantPrice" class="text-success"></span>
+                                <span id="selectedVariantSKU" class="text-muted small"></span>
+                            </div>
+                            <span id="selectedVariantStock" class="badge"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quantity -->
+            <div class="quantity-section mb-4">
+                <label class="form-label">Miktar</label>
+                <div class="input-group" style="max-width: 200px;">
+                    <button class="btn btn-outline-secondary" @click="decreaseQuantity" :disabled="quantity <= 1">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="number" class="form-control text-center" v-model.number="quantity" min="1">
+                    <button class="btn btn-outline-secondary" @click="increaseQuantity">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add to Cart -->
+            <div class="actions mb-4">
+                <button class="btn btn-primary btn-lg" @click="addToCart" :disabled="adding">
+                    <i class="bi bi-cart-plus me-2"></i>
+                    [[ adding ? 'Ekleniyor...' : 'Sepete Ekle' ]]
+                </button>
+            </div>
+
+            <!-- Company Info -->
+            <div class="company-info border-top pt-4">
+                <h6 class="mb-3">Şirket Bilgileri</h6>
+                <div class="small text-muted">
+                    <p class="mb-1"><i class="bi bi-building me-2"></i>Şirket: <strong>[[ companyInfo.company_name || '—' ]]</strong></p>
+                    <p class="mb-1"><i class="bi bi-credit-card me-2"></i>Kullanılabilir Kredi: <strong class="text-success">[[ companyInfo.available_credit_formatted || '—' ]]</strong></p>
+                    <p class="mb-0"><i class="bi bi-percent me-2"></i>İndirim Oranı: <strong>[[ companyInfo.discount_percentage || 0 ]]%</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">
+                        Ürün Açıklaması
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content border border-top-0 p-4">
+                <div class="tab-pane fade show active" id="description">
+                    {{ result.body | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+// Product variants data from backend
+const productVariantsData = {{ product_data.variants | default(value="[]") | json_encode() | safe }};
+
+createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+        const quantity = ref(1);
+        const adding = ref(false);
+        const companyInfo = ref({});
+        const selectedOptions = ref({});
+        const currentVariant = ref(null);
+
+        const productId = {{ result.id }};
+        const hasVariants = {% if has_variants %}true{% else %}false{% endif %};
+        const productVariants = ref(productVariantsData);
+
+        // Get unique option names and values
+        const getUniqueOptions = () => {
+            if (!productVariants.value || productVariants.value.length === 0) return [];
+
+            const optionsMap = {};
+            productVariants.value.forEach(variant => {
+                if (variant.option_values && typeof variant.option_values === 'object') {
+                    Object.entries(variant.option_values).forEach(([key, value]) => {
+                        if (!optionsMap[key]) {
+                            optionsMap[key] = new Set();
+                        }
+                        if (value) optionsMap[key].add(value.trim());
+                    });
+                }
+            });
+
+            return Object.entries(optionsMap).map(([name, values]) => ({
+                name,
+                values: Array.from(values)
+            }));
+        };
+
+        const uniqueOptions = computed(() => getUniqueOptions());
+
+        const increaseQuantity = () => {
+            quantity.value++;
+        };
+
+        const decreaseQuantity = () => {
+            if (quantity.value > 1) {
+                quantity.value--;
+            }
+        };
+
+        const isOptionAvailable = (optionName, value) => {
+            return productVariants.value.some(variant => {
+                if (!variant.option_values) return false;
+
+                const variantValue = variant.option_values[optionName];
+                if (!variantValue || variantValue.trim() !== value.trim()) return false;
+
+                // Check if other selected options match
+                return Object.keys(selectedOptions.value).every(key => {
+                    if (key === optionName) return true;
+                    if (!selectedOptions.value[key]) return true;
+
+                    const vValue = variant.option_values[key];
+                    return vValue && vValue.trim() === selectedOptions.value[key].trim();
+                });
+            });
+        };
+
+        const selectOption = (optionName, value) => {
+            selectedOptions.value[optionName] = value;
+            updateVariant();
+            renderOptions();
+        };
+
+        const updateVariant = () => {
+            const allSelected = uniqueOptions.value.every(opt => selectedOptions.value[opt.name]);
+
+            if (!allSelected) {
+                currentVariant.value = null;
+                document.getElementById('selectedVariantInfo').style.display = 'none';
+                return;
+            }
+
+            // Find matching variant
+            const matchingVariant = productVariants.value.find(variant => {
+                if (!variant.option_values) return false;
+
+                return uniqueOptions.value.every(opt => {
+                    const selectedValue = selectedOptions.value[opt.name];
+                    const variantValue = variant.option_values[opt.name];
+                    return variantValue && variantValue.trim() === selectedValue.trim();
+                });
+            });
+
+            if (matchingVariant) {
+                currentVariant.value = matchingVariant;
+                showVariantInfo(matchingVariant);
+            } else {
+                currentVariant.value = null;
+                document.getElementById('selectedVariantInfo').style.display = 'none';
+            }
+        };
+
+        const showVariantInfo = (variant) => {
+            const info = document.getElementById('selectedVariantInfo');
+            const name = document.getElementById('selectedVariantName');
+            const price = document.getElementById('selectedVariantPrice');
+            const sku = document.getElementById('selectedVariantSKU');
+            const stock = document.getElementById('selectedVariantStock');
+
+            name.textContent = variant.name || 'Seçili Varyant';
+            price.textContent = variant.b2b_display_price_formatted || variant.display_price_formatted || '—';
+            sku.textContent = variant.sku ? ` (SKU: ${variant.sku})` : '';
+
+            if (variant.stock > 10) {
+                stock.textContent = 'Stokta Var';
+                stock.className = 'badge bg-success';
+            } else if (variant.stock > 0) {
+                stock.textContent = `Son ${variant.stock} Ürün`;
+                stock.className = 'badge bg-warning';
+            } else {
+                stock.textContent = 'Tükendi';
+                stock.className = 'badge bg-danger';
+            }
+
+            info.style.display = 'block';
+
+            // Update main product image if variant has cover image
+            if (variant.media && variant.media.cover && variant.media.cover.length > 0) {
+                const mainImage = document.getElementById('mainProductImage');
+                if (mainImage) {
+                    const getThumbnail = (path, size = '800x', crop = 'center') => {
+                        if (!path) return '/static/no_image.png';
+                        let cleanPath = path;
+                        if (path.startsWith('/media/uploads/')) {
+                            cleanPath = path.substring(15);
+                        } else if (path.startsWith('media/uploads/')) {
+                            cleanPath = path.substring(14);
+                        } else if (path.startsWith('/media/')) {
+                            cleanPath = path.substring(7);
+                        }
+                        return `/media/thumb/${size}/${crop}/${cleanPath}`;
+                    };
+
+                    setTimeout(() => {
+                        mainImage.src = getThumbnail(variant.media.cover[0].url, '800x', 'center');
+                        mainImage.alt = variant.media.cover[0].title || variant.sku;
+                    }, 0);
+                }
+            }
+        };
+
+        const renderOptions = () => {
+            const container = document.getElementById('variantOptionsContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            uniqueOptions.value.forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'mb-3';
+
+                const label = document.createElement('label');
+                label.className = 'form-label fw-semibold';
+                label.textContent = option.name;
+                optionDiv.appendChild(label);
+
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'btn-group d-flex flex-wrap gap-2';
+                btnGroup.setAttribute('role', 'group');
+
+                option.values.forEach(value => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = value;
+
+                    const isSelected = selectedOptions.value[option.name] === value;
+                    const isAvailable = isOptionAvailable(option.name, value);
+
+                    if (!isAvailable) {
+                        btn.className = 'btn btn-outline-secondary text-decoration-line-through';
+                        btn.disabled = true;
+                    } else {
+                        btn.className = isSelected ? 'btn btn-primary' : 'btn btn-outline-primary';
+                    }
+
+                    btn.onclick = () => selectOption(option.name, value);
+                    btnGroup.appendChild(btn);
+                });
+
+                optionDiv.appendChild(btnGroup);
+                container.appendChild(optionDiv);
+            });
+        };
+
+        const addToCart = async () => {
+            if (hasVariants && !currentVariant.value) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Uyarı!',
+                    text: 'Lütfen varyant seçin.'
+                });
+                return;
+            }
+
+            adding.value = true;
+            try {
+                // Use global executeAddToCart function (same as B2C)
+                // B2B pricing will be applied automatically by backend
+                if (typeof window.executeAddToCart === 'function') {
+                    await window.executeAddToCart(
+                        productId,
+                        currentVariant.value ? currentVariant.value.option_values_display : null,
+                        quantity.value
+                    );
+                    // Reset after successful add
+                    quantity.value = 1;
+                } else {
+                    console.error('Global executeAddToCart function not found. Make sure add-to-cart.js is loaded.');
+                    throw new Error('Sepete ekleme fonksiyonu bulunamadı');
+                }
+            } catch (error) {
+                console.error('Add to cart error:', error);
+            } finally {
+                adding.value = false;
+            }
+        };
+
+        const loadCompanyInfo = async () => {
+            try {
+                const response = await fetch('/b2b/api/my-company');
+                if (response.ok) {
+                    const data = await response.json();
+                    companyInfo.value = data;
+                }
+            } catch (error) {
+                console.error('Company info load error:', error);
+            }
+        };
+
+        onMounted(() => {
+            loadCompanyInfo();
+            if (hasVariants) {
+                renderOptions();
+            }
+        });
+
+        return {
+            quantity,
+            adding,
+            companyInfo,
+            increaseQuantity,
+            decreaseQuantity,
+            addToCart
+        };
+    }
+}).mount('#productApp');
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.thumbnail {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.thumbnail:hover {
+    opacity: 0.7;
+    transform: scale(1.05);
+}
+.btn.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+</style>
+{% endblock %}

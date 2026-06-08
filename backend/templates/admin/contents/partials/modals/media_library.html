@@ -1,0 +1,104 @@
+<!-- Media Library Modal -->
+<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mediaLibraryModalLabel">Medya Kütüphanesi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control form-control-sm" v-model="libraryFilters.search"
+                            @input="debounceLibrarySearch" placeholder="Dosya ara...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" v-model="libraryFilters.media_type"
+                            @change="loadLibraryMedia">
+                            <option value="">Tüm Tipler</option>
+                            <option value="image">📷 Resimler</option>
+                            <option value="video">🎬 Videolar</option>
+                            <option value="audio">🎵 Ses Dosyaları</option>
+                            <option value="document">📄 Dökümanlar (PDF, Word, Excel)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div v-if="loadingLibrary" class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- Media Grid -->
+                <div v-else-if="libraryMedia.length > 0" class="row g-2" style="max-height: 400px; overflow-y: auto;">
+                    <div v-for="media in libraryMedia" :key="media.id" class="col-lg-2 col-md-3 col-sm-4 col-6">
+                        <div class="card h-100 library-media-item"
+                            :class="{ 'border-primary': selectedLibraryMedia.includes(media.id) }"
+                            @click="toggleLibraryMedia(media)" style="cursor: pointer;">
+                            <div class="position-relative">
+                                <img v-if="media.media_type === 'image'" :src="get_media_images_thumbnail(media.url)" class="card-img-top"
+                                    style="height: 120px; object-fit: cover;" :alt="media.file_name">
+                                <div v-else
+                                    class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center"
+                                    style="height: 120px;">
+                                    <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]"
+                                        class="fs-2"></i>
+                                    <small class="text-muted mt-1 text-truncate px-2"
+                                        style="max-width: 100%; font-size: 0.7rem;">[[
+                                        media.file_name ]]</small>
+                                </div>
+                                <div v-if="selectedLibraryMedia.includes(media.id)"
+                                    class="position-absolute top-0 end-0 m-2">
+                                    <i class="bi bi-check-circle-fill text-primary fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="card-body p-2">
+                                <p class="card-text small mb-0 text-truncate" :title="media.file_name">
+                                    [[ media.file_name ]]
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="text-center text-muted py-4">
+                    <i class="bi bi-images"></i> Medya bulunamadı
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="libraryMeta.total_pages > 1" class="d-flex justify-content-center mt-3">
+                    <nav>
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item" :class="{ disabled: libraryFilters.page <= 1 }">
+                                <button class="page-link" @click="changeLibraryPage(libraryFilters.page - 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">[[ libraryFilters.page ]] / [[ libraryMeta.total_pages ]]</span>
+                            </li>
+                            <li class="page-item" :class="{ disabled: libraryFilters.page >= libraryMeta.total_pages }">
+                                <button class="page-link" @click="changeLibraryPage(libraryFilters.page + 1)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> İptal
+                </button>
+                <button type="button" class="btn btn-primary" @click="addSelectedMediaToPage"
+                    :disabled="selectedLibraryMedia.length === 0">
+                    <i class="bi bi-plus-circle"></i> Seçilenleri Ekle ([[ selectedLibraryMedia.length ]])
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

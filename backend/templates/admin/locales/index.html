@@ -1,0 +1,390 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dil Dosyası Yönetimi - Admin Panel{% endblock %}
+
+{% block content %}
+<div id="locales-app" class="container-fluid mt-2" v-cloak>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <div>
+            <h4 class="h4 mb-0 pb-0 fw-bolder">Dil Dosyası Yönetimi</h4>
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 small text-muted">Tema:</label>
+            <select v-model="selectedTheme" @change="changeTheme" class="form-select form-select-sm" style="width: auto;">
+                {% for theme in available_themes %}
+                    {% if theme.name != 'admin' %}
+                        <option value="{{ theme.name }}">{{ theme.display_name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Locales ToolCard -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Search and Actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="flex-grow-1 me-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input v-model="searchQuery" type="text" class="form-control border-start-0" placeholder="Anahtar veya kelime ara...">
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-muted small">
+                        <span class="badge bg-secondary badge-pill">[[ Object.keys(keys).length ]] Anahtar</span>
+                        <span class="badge bg-dark badge-pill ms-1">[[ languages.length ]] Dil</span>
+                    </div>
+                    <button @click="openAddModal" class="btn btn-dark btn-sm">
+                        <i class="bi bi-plus-circle-dotted me-1"></i>
+                        Yeni Kelime Ekle
+                    </button>
+                    <button @click="syncLocales" class="btn btn-outline-secondary btn-sm ms-2" title="Senkronize Et">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-sm mb-0">
+                    <thead class="table-dark small">
+                        <tr>
+                            <th style="width: 20%">Anahtar (Key)</th>
+                            <th v-for="lang in languages" :key="lang" class="text-capitalize">
+                                [[ langNames[lang] || lang ]]
+                            </th>
+                            <th class="text-end" style="width: 100px">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="align-middle small">
+                        <tr v-for="(trans, key) in filteredKeys" :key="key">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-key-fill text-muted me-2 small"></i>
+                                    <code class="text-primary fw-bold">[[ key ]]</code>
+                                </div>
+                            </td>
+                            <td v-for="lang in languages" :key="lang">
+                                <div class="translation-cell p-1 rounded" @click="editCell(key, lang)">
+                                    <template v-if="editingCell.key === key && editingCell.lang === lang">
+                                        <input
+                                            v-model="editingCell.value"
+                                            class="form-control form-control-sm"
+                                            @blur="saveCell"
+                                            @keyup.enter="saveCell"
+                                            @keyup.esc="cancelEdit"
+                                            ref="cellInput"
+                                        >
+                                    </template>
+                                    <template v-else>
+                                        <div class="d-flex align-items-center">
+                                            <span :class="{'text-muted opacity-50 fst-italic': !trans[lang]}">
+                                                [[ trans[lang] || '(boş)' ]]
+                                            </span>
+                                            <i v-if="!trans[lang]" class="bi bi-exclamation-triangle-fill text-warning ms-1" style="font-size: 0.7rem;" title="Eksik çeviri"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button @click="openEditModal(key, trans)" class="btn btn-primary" title="Düzenle">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button @click="deleteKey(key)" class="btn btn-danger" title="Sil">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-if="Object.keys(filteredKeys).length === 0">
+                            <td :colspan="languages.length + 2" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-search display-6 d-block mb-3"></i>
+                                    <p v-if="searchQuery">Arama kriterine uygun sonuç bulunamadı.</p>
+                                    <p v-else>Henüz hiç çeviri eklenmemiş.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal (Matching Dashboard Aesthetic) -->
+    <div class="modal fade" id="localeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h5 class="modal-title small fw-bold">[[ isEditing ? 'Kelime Düzenle' : 'Yeni Kelime Ekle' ]]</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form @submit.prevent="saveLocale">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bolder">ANAHTAR (KEY)</label>
+                            <input v-model="form.key" type="text" class="form-control form-control-sm" placeholder="örn: login_welcome_text" required :disabled="isEditing">
+                            <div class="form-text x-small">Küçük harf, rakam ve alt tire kullanın.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div v-for="lang in languages" :key="lang" class="col-12">
+                                <label class="form-label small fw-bolder text-uppercase">[[ langNames[lang] || lang ]]</label>
+                                <textarea v-model="form.translations[lang]" class="form-control form-control-sm" rows="3" :placeholder="langNames[lang] + ' karşılığı...'"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-light btn-sm me-2" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-dark btn-sm px-4" :disabled="saving">
+                                <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                                [[ isEditing ? 'Güncelle' : 'Kaydet' ]]
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.translation-cell {
+    cursor: pointer;
+    min-height: 28px;
+    transition: all 0.2s;
+}
+.translation-cell:hover {
+    background-color: #f1f3f5;
+}
+[v-cloak] { display: none; }
+.x-small { font-size: 0.75rem; }
+.badge-pill { border-radius: 50rem; padding-left: 0.6em; padding-right: 0.6em; }
+.breadcrumb-item a { text-decoration: none; color: inherit; }
+.breadcrumb-item a:hover { color: #0d6efd; }
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        compilerOptions: {
+            delimiters: ['[[', ']]']
+        },
+        data() {
+            return {
+                keys: {},
+                languages: [],
+                langNames: {{ supported_languages | json_encode | safe }},
+                searchQuery: '',
+                selectedTheme: 'base',
+                form: {
+                    key: '',
+                    translations: {}
+                },
+                isEditing: false,
+                saving: false,
+                editingCell: {
+                    key: null,
+                    lang: null,
+                    value: ''
+                }
+            }
+        },
+        computed: {
+            filteredKeys() {
+                if (!this.searchQuery) return this.keys;
+
+                const query = this.searchQuery.toLowerCase();
+                const filtered = {};
+
+                for (const [key, trans] of Object.entries(this.keys)) {
+                    const matchesKey = key.toLowerCase().includes(query);
+                    const matchesValue = Object.values(trans).some(v => (v || '').toLowerCase().includes(query));
+
+                    if (matchesKey || matchesValue) {
+                        filtered[key] = trans;
+                    }
+                }
+
+                return filtered;
+            }
+        },
+        mounted() {
+            this.fetchLocales();
+        },
+        methods: {
+            async fetchLocales() {
+                try {
+                    const url = `/admin/api/locales?theme=${this.selectedTheme}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    this.keys = data.keys;
+                    this.languages = data.languages;
+                } catch (error) {
+                    console.error('Error fetching locales:', error);
+                }
+            },
+            changeTheme() {
+                this.fetchLocales();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Tema Değişti',
+                    text: `${this.selectedTheme} tema dil dosyaları yüklendi.`,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            },
+            syncLocales() {
+                this.fetchLocales();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Yenilendi',
+                    text: 'Dil dosyaları tekrar yüklendi.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            },
+            openAddModal() {
+                this.isEditing = false;
+                this.form.key = '';
+                this.form.translations = {};
+                this.languages.forEach(lang => {
+                    this.form.translations[lang] = '';
+                });
+                const modal = new bootstrap.Modal(document.getElementById('localeModal'));
+                modal.show();
+            },
+            openEditModal(key, translations) {
+                this.isEditing = true;
+                this.form.key = key;
+                this.form.translations = { ...translations };
+                const modal = new bootstrap.Modal(document.getElementById('localeModal'));
+                modal.show();
+            },
+            async saveLocale() {
+                this.saving = true;
+                try {
+                    const url = `/admin/api/locales?theme=${this.selectedTheme}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            key: this.form.key,
+                            translations: this.form.translations
+                        })
+                    });
+
+                    if (response.ok) {
+                        await this.fetchLocales();
+                        bootstrap.Modal.getInstance(document.getElementById('localeModal')).hide();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Kaydedildi',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire('Hata', 'Kaydedilirken bir hata oluştu.', 'error');
+                } finally {
+                    this.saving = false;
+                }
+            },
+            async deleteKey(key) {
+                const result = await Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: `"${key}" anahtarı tamamen silinecek!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const url = `/admin/api/locales/delete?theme=${this.selectedTheme}`;
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ key })
+                        });
+
+                        if (response.ok) {
+                            await this.fetchLocales();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Silindi',
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        }
+                    } catch (error) {
+                        Swal.fire('Hata', 'Silinirken bir hata oluştu.', 'error');
+                    }
+                }
+            },
+            editCell(key, lang) {
+                this.editingCell.key = key;
+                this.editingCell.lang = lang;
+                this.editingCell.value = this.keys[key][lang];
+
+                this.$nextTick(() => {
+                    if (this.$refs.cellInput && this.$refs.cellInput[0]) {
+                        this.$refs.cellInput[0].focus();
+                    }
+                });
+            },
+            async saveCell() {
+                if (this.editingCell.key === null) return;
+
+                const { key, lang, value } = this.editingCell;
+                if (this.keys[key][lang] === value) {
+                    this.cancelEdit();
+                    return;
+                }
+
+                const translations = { ...this.keys[key] };
+                translations[lang] = value;
+
+                try {
+                    const url = `/admin/api/locales?theme=${this.selectedTheme}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key, translations })
+                    });
+
+                    if (response.ok) {
+                        this.keys[key][lang] = value;
+                    }
+                } finally {
+                    this.cancelEdit();
+                }
+            },
+            cancelEdit() {
+                this.editingCell.key = null;
+                this.editingCell.lang = null;
+                this.editingCell.value = '';
+            }
+        }
+    }).mount('#locales-app');
+</script>
+{% endblock %}

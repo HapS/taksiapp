@@ -1,0 +1,538 @@
+profile_kullanici_adi: ''
+Red_Sebebi: ''
+İade_Talebiniz_İnceleniyor: ''
+profile_tum_siparislerim: ''
+Kargo_Şirketi_Placeholder: ''
+profile_kullanici_bilgilerim: Kullanıcı Bilgilerim En
+'Sipariş_Numarası:': ''
+Kaydet: ''
+login: Login
+Sipariş_durumunuzu_xxx_sayfasından_takip_edebilirsiniz.: ''
+Siparişi_Onayla_ve_Tamamla: ''
+Süresi_Dolan_Krediler: ''
+Sonraki_Bakiye: ''
+contact_validation_error: Please fill in the required fields.
+kullanici_adi_veya_email: ''
+register_sifre_tekrar: ''
+register_email_gecersiz: Invalid email address format
+order_details: Order Details
+Bitiş: ''
+back_to_login: Back to Login
+Kargo_Takip_No: ''
+Sepeti_Temizle: ''
+profile: Profile EN
+'Kupon_kodu_girin:': ''
+Tamam: ''
+invalid_token: Invalid or expired reset link.
+Siparişiniz_Başarıyla_Alındı!: ''
+register_soyad: ''
+Yapilan_Toplam_Odeme: ''
+register_email_zaten_kayitli: This email address is already registered
+İyzico_ödeme_formu_yüklenemedi._Lütfen_tekrar_deneyin.: ''
+profile_kargo_adreslerim: ''
+Kullanılan_Krediler: ''
+site_name: Site Name
+Siparişiniz_başarıyla_alındı_ve_işleme_koyuldu._Detayları_aşağıda_bulabilirsiniz.: ''
+Kayıtlı_adresiniz_yok: ''
+Tüm_hakları_saklıdır_mail_base: ''
+Takip_No_Zorunlu: ''
+pages: ''
+Ödeme_Bilgileri: ''
+'Ara_Toplam:': ''
+İade_Onay_Bekliyor: ''
+reset_password_title: Set New Password
+mail_failed: An error occurred while sending the email.
+send_reset_link: Send Reset Link
+blog_yazilari: Blog Posts
+İade_Teslim_Alındı: ''
+Kargo_Ücreti_Açıklama: ''
+Sipariş_vermek_için_ödeme_yöntemi_seçmelisiniz.: ''
+incele: View Details
+'Kargo_Ücreti:': ''
+İade_Tutarı: ''
+Promosyon: ''
+Henüz_siparişiniz_yok: ''
+register_kayit_ol: ''
+Evet_İptal_Et: ''
+urun: Product
+Borc_Yok: ''
+profile_ad: ''
+google_ile_giris_yap: Google ile Giriş Yap
+profile_profil_bilgileri: Kullanıcı Bilgilerim En
+Kargo_Bilgisi_Açıklama: ''
+b2b_dashboard_link: ''
+profile_yetki: ''
+Ödeme_Dekontu: ''
+Kargo_Bilgisi_Gönder: ''
+Kredi_Islem_Gecmisi: ''
+EFT_/_Banka_Transferi: ''
+Ad: ''
+wasnt_you_desc: For your account security, please contact us immediately. You can ignore this email, your password will not be changed.
+'Vergi_Dairesi:': ''
+Kargo_Tipi: ''
+orders: Orders
+Vergi_Dairesi: ''
+Para_Birimi: ''
+kurumsal: ''
+İade_Kargoda_Detay: ''
+contact_yeni_form_doldur: Fill New Form
+Sipariş_Takibi: ''
+profile_favorilerim: ''
+sipariş: ''
+İptal_Sonrası_Toplam: ''
+Kargo_Bilgisi_Kaydedildi: ''
+Güvenli_Alışveriş: ''
+Ödeme_işlemini_tamamlayabilmek_için_aşağıdaki_bilgileri_doldurmanız_gerekmektedir.: ''
+B2B_kredili_ödemeniz_başarıyla_tamamlandı.: ''
+Tümü: ''
+register_eposta: ''
+İptal: ''
+İade_İptal_Edildi: ''
+İlçe: ''
+İade_Bekliyor: ''
+Bekleyen: ''
+'IBAN:': ''
+Vadeli_Siparisler: ''
+new_password: New Password
+İptal_Talebi_Geri_Alındı: ''
+Vadeli Alışverişlerim: ''
+Ücretsiz_Kargo_Limiti: ''
+aranacak_kelime: Search keyword...
+footer_slogan: Bilge İklimlendirme 2026 All Rights Reserved.
+'Banka:': ''
+Şirket_Kredi_Durumu: ''
+Toplam_Kredi_İndirimi: ''
+Kredi_Islemleri: ''
+Adet: ''
+Yanlış_Ürün_Gönderildi: ''
+Kredi_kullanılmıyor: ''
+Kargo_Takip: ''
+profile_updated: ''
+Telefon_Numarası: ''
+sifre: ''
+password_changed_successfully: ''
+password_update_failed: ''
+Bağlantı_Hatası: ''
+İade_Tamamlandı: ''
+sonuc_bulunamadi: No results found
+Kargo: ''
+Henuz_islem_yok: ''
+Kapat: ''
+favorites: ''
+Banka_Transferi: ''
+sayfa: Page
+products: Products
+Telefon: ''
+security_notice: For your security, do not share this link with anyone.
+reset_failed: Password reset process failed.
+İade_Talebi_Detay: ''
+checkout: Checkout
+profile_kredilerim: ''
+Düzenle: ''
+İade: ''
+ara: Search
+Kredi_Limiti: ''
+forgot_password_title: Forgot your password?
+footer_ana_sayfa: ''
+İade_Onaylandı_Kargo_Bekleniyor: ''
+Ödeme_Yöntemi: ''
+Fatura_Türü: ''
+Tamamlandı: ''
+Takip_No_Placeholder: ''
+profile_web_sitesi: ''
+Diğer: ''
+İptal_Açıklama: ''
+farkli_kelime_deneyin: Please try varying your search terms.
+İade_Bilgisi_Bulunamadı: ''
+'TC_Kimlik_No:': ''
+Sebep_Seçiniz: ''
+Siparislerim: ''
+Sebep: ''
+Soyad: ''
+contact_submit_success: Your message has been sent successfully. Thank you!
+Hediye: ''
+cart_hizli_teslimat: ''
+B2B_Kredili_Ödeme: ''
+tumu: All
+admin_panel: Admin Panel
+PDF,_PNG,_JPG_formatlarında_dosya_yükleyebilirsiniz._(Max:_5MB): ''
+categories: ''
+Kullanım_Geçmişi: ''
+register_sifre: ''
+order_management: Order Management
+b2b_products_link: ''
+Siparişiniz_hazırlanmaya_başlandı_ve_en_kısa_sürede_kargoya_verilecektir.: ''
+Önemli_Bilgiler: ''
+Kargoda: ''
+sayfalar: Pages
+İade_Edilecek_Adet: ''
+register_hesap_olustur: ''
+Teslimat_/_Fatura_Adresleri: ''
+'Ücretsiz_kargo_icin:': ''
+Dekont_Yükleme: ''
+Kredi_doğrulama_hatası: ''
+Adres_Tanımı_(Ev,_İş_vb.: ''
+my_cart: My Cart
+Siparişiniz_başarıyla_oluşturuldu: ''
+Banka_Transferi_Bilgileri: ''
+İade_Talebi_Oluştur: ''
+Kredilerim: ''
+profile_cikis_yap: ''
+page_title_my_orders: My Orders
+hello: Hello
+Kullanılabilir_kredilerinizi_ve_geçmiş_kullanımlarınızı_görüntüleyin: ''
+Timeline_Yenile: ''
+Kullanılabilir_Kredi: ''
+Ürün_Açıklamaya_Uygun_Değil: ''
+profile_konum: ''
+Sipariş_Numarası: ''
+Açıklama: ''
+Kargoya_Verildi: ''
+login_basariyla_cikis_yaptiniz: ''
+page_title_my_cart: My Cart
+page_title_my_profile: My Profile
+'Toplam_İndirim:': ''
+profile_fatura_adreslerim: ''
+Sipariş_vermek_için_fatura_adresi_seçmelisiniz.: ''
+Rust_+_Axum_+_Tera_+_PostgreSQL_ile_güçlendirilmiş_modern_web_uygulaması: Bilge İklimlendirme 2026 All Rights Reserved.
+İade_Et: ''
+Sipariş_vermek_için_teslimat_adresi_seçmelisiniz.: ''
+daha_ekleyin: ''
+Ödeme_Dekontu_Yükle: ''
+Hesap_Bilgileri: ''
+Adresler_yükleniyor...: ''
+kategoriler_mega_menu: Categories
+register_zayif_sifre: Password is too weak (must be at least 6 characters with uppercase, lowercase, and numbers)
+Ürün: ''
+'Ürünler:': ''
+passwords_do_not_match: ''
+Alıcı: ''
+Kapıda_Ödeme: ''
+Kampanya_ve_İndirimler: ''
+Firmamizin_Size_Borcu: ''
+PDF,_PNG,_JPG_formatlarında_yükleyebilirsiniz: ''
+my_account: My Account
+profile_yeni_sifre_tekrar: ''
+wasnt_you: 'If this wasn''t you:'
+Hayır: ''
+Email: ''
+Kullanılan_Kredi: ''
+footer_text: '2026 All rights reserved.'
+my_favorites: My Favorites
+Tip: ''
+kargo_secenekleri: ''
+Fatura_Adresim_Farklı: ''
+Toplam_İndirim: ''
+İptal_Talebi_Başarılı: ''
+? Bu_sipariş_tutarı_şirketinizin_kullanılan_kredisine_eklenmiştir._Ödeme_yaptığınızda_kredi_limitiniz_yeniden_artacaktır.
+: ''
+Kargo_Ücreti_Uyarısı: ''
+profile_kullanici_id: ''
+'Ödeme_Yöntemi:': ''
+register_ad: ''
+login_kayit_basarili: ''
+İade_Tamamlandı_Detay: ''
+cancel: Cancel
+content_management: Content Management
+İade_Talebi_Gönder: ''
+account: Account
+İptal_Et: ''
+register_kayit_islemi_basarisiz: ''
+delete: Delete
+İade_Talebi_Oluşturuldu: ''
+cart_kapida_odeme: ''
+important: Important
+'Genel_Toplam:': ''
+Siparişinizin_detayları_e_posta_adresinize_gönderilmiştir.: ''
+Krediler_doğrulanamadı: ''
+Sepetinizdeki_Ürünler: ''
+Yeni_Adres_Ekle_/_Düzenle: ''
+Sayfa_Bulunamadı: ''
+Oluşturuldu: ''
+my_orders: My Orders
+'Teslimat_Adresi:': ''
+araniyor: Searching...
+register_kullanici_adi_zaten_kayitli: This username is already taken
+contact_label_email: Email
+settings: Settings
+Sipariş_Bilgileri: ''
+Ürünü_İptal_Et: ''
+Sepete_Dön: ''
+password_reset_instruction: You have requested a password reset for your account. You can create your new password by clicking the button below.
+Sadece_PDF,_PNG,_JPG_dosyaları_yükleyebilirsiniz: ''
+login_hesabina_giris_yap: ''
+Uygulanacak_Kargo_Ücreti: ''
+Onaylanan: ''
+product_list: All Products
+Toplam_Adet: ''
+Evet: ''
+login_kullanici_adi_veya_sifre_hatalı: Username or password is incorrect
+profile_soyad: ''
+Tekrar_Dene: ''
+'Toplam:': ''
+İade_Kargoda: ''
+profile_sifre_degistir: ''
+Adres_bilgisi_yok: ''
+Kargo_Bilgileri: ''
+Toplam_Kredi_Limiti: ''
+Fiyat: ''
+profile_dogum_tarihi: ''
+login_prompt: ''
+cart: Cart
+'Tutar:': ''
+reset_password: Reset Password
+Ödeme_vadesi_ve_detayları_için_şirket_yetkilinizle_iletişime_geçebilirsiniz.: ''
+İade_İptal_Onay: ''
+Kullanilan_Kredi: ''
+Varsayılan: ''
+admin_panel_menu: ''
+İlçe_Seçiniz: ''
+Adres: ''
+Ana_Sayfa: ''
+Başında_sıfır_olmadan_giriniz.: ''
+contact_label_message: Message
+Aktif_krediniz_bulunmamaktadır: ''
+Kullanilabilir_Kredi: ''
+Ürün_Kusurlu_Bozuk: ''
+'Ürünler_Toplamı:': ''
+sepetiniz_bos: Basket is empty
+İade_İptal_Et: ''
+order_edit: Edit Order
+profile_yetki_kullanici: ''
+view: View
+Sipariş_Özeti: ''
+Hazırlanan: ''
+Henüz_kredi_kullanımınız_bulunmamaktadır: ''
+Kullanılan_Tutar: ''
+Sipariş: ''
+Siparişinize_ait_text_sepet: ''
+Adres_Tipi: ''
+İade_Açıklama_Placeholder: ''
+İptal_Modal_Mesaj: ''
+reset_password_btn: Update Password
+Kredileriniz_yükleniyor: ''
+Sipariş_vermek_için_ödeme_bilgilerinizi_tamamlamalısınız.: ''
+Sepetinize_eklediğiniz_sepet: ''
+Ücretsiz: ''
+current_password_incorrect: ''
+my_profile: My Profile
+contact_label_phone: Phone
+register_kullanici_adi: ''
+profile_hesap_bilgileri: ''
+contact_send: Send
+İade_Sebebi_Zorunlu: ''
+b2b_account: ''
+Siparişleriniz_yükleniyor...: ''
+iletisim: Contact
+İptal_Edilecek_Adet: ''
+Fatura_bilgileri_yükleniyor...: ''
+Henüz_kayıtlı_kargo_adresi_bulunamadı.: ''
+register_email_exists: Email already exists
+Siparişi_Tamamla: ''
+Tazminat: ''
+Lütfen_ödeme_dekontunuzu_yükleyiniz.: ''
+Durum: ''
+Yükleniyor...: ''
+Toplam_Kullanılabilir_Kredi: ''
+İade_Sebebi: ''
+İade_Onaylandı: ''
+hesabiniz_yok_mu: ''
+Bilinmeyen_Hata: ''
+Yeni_Adres: ''
+forgot_password_desc: Enter your email address and we'll send you a password reset link.
+Hesaplanıyor: ''
+Toplam_Tutar: ''
+menu: ''
+profile_updated_failed: ''
+light_mode: ''
+Min._Sipariş: ''
+Kredi_limitiniz_bu_sipariş_için_yeterlidir.: ''
+contact_sending: Sending...
+İade_İnceleniyor: ''
+language: Language
+Zaman_Çizelgesi: ''
+update: Update
+Ülke_Seçiniz: ''
+Tutar: ''
+Tüm_işlemleriniz_256_bit_SSL_sertifikası_ile_korunmaktadır.: ''
+my_addresses: My Addresses
+Fatura_Bilgisi_Ekle: ''
+profile_hakkimda_placeholder: ''
+Kredi_Tipi: ''
+Siparişlerim: ''
+Sorun_devam_ederse_bankanızla_veya_müşteri_hizmetlerimizde_iletişime_geçebilirsiniz.: ''
+Süresiz: ''
+Tarih: ''
+haber: News
+register: Register
+Online_Kredi_Kartı: ''
+home: Home
+Kurumsal_Fatura_Adresi: ''
+Veriler_yükleniyor...: ''
+Krediler_doğrulanıyor...: ''
+Alışverişe_Devam_Et: ''
+Henüz_sepetinize_ürün_eklemediniz._Hemen_alışverişe_başlayın!: ''
+Başlangıç: ''
+contact_label_name: Full Name
+Güncelle: ''
+Vergi_Numarası: ''
+Mağazadan_Teslim_Alma: ''
+password_hashing_failed: ''
+Kredi_Kartı: ''
+profile_yetki_admin: ''
+Hata: ''
+Firma_Adı: ''
+İl_Seçiniz: ''
+Aciklama: ''
+register_zaten_hesabiniz_var_mi: ''
+'Ülke:': ''
+Teslim_Edildi: ''
+Teslim_Alındı: ''
+edit: Edit
+Bir_hata_oluştu: ''
+Filtre_Değiştir: ''
+Adres_Ekle: ''
+'Şehir:': ''
+Vazgeç: ''
+profile_kayit_tarihi: ''
+'Kupon:': ''
+Kargo_Şirketi: ''
+Kargo_Bilgisi_Girin: ''
+İptal_Talebini_Geri_Al: ''
+Kargo_Bilgisi_Gir: ''
+Uygula: ''
+Fatura_Bilgisi_Seçiniz: ''
+Rust_+_Axum: ''
+arama_sonuclari: Search Results
+Arama_yapın...: ''
+token_expiry_notice: This reset link is valid for 10 minutes.
+Ürünler: ''
+Yeni_Adres_Ekle: ''
+Emin_misiniz: ''
+ucretsiz_kargo_icin_kalan_tutar: ''
+profile_telefon: ''
+page_title_profile: Profile
+'256_bit_SSL_şifreleme_ile_korunmaktadır': ''
+Kullanılan: ''
+theme: Theme
+kayit_olun: ''
+Sipariş_Alındı: ''
+İlk_siparişinizi_vermek_için_alışverişe_başlayın!: ''
+Kargo_takip_numaranız_hazır_olduğunda_size_bildirilecektir.: ''
+Ürünü_İstemiyorum: ''
+Temizle: ''
+profile_yeni_sifre: ''
+sepetiniz_yukleniyor: Loading basket...
+Alışverişe_Başla: ''
+Kurumsal: ''
+contact_consent_text: I consent to the processing of my personal data.
+Kayıtlı_fatura_bilginiz_yok: ''
+İade_İptal_Edildi_Başarılı: ''
+hakkimizda: ''
+Bekleyen_Odeme: ''
+'Hesap_Sahibi:': ''
+profile_iptal: ''
+profile_mevcut_sifre: ''
+dashboard: Dashboard
+İade_Detayını_Gör: ''
+tum_haklari_saklidir: ''
+İade_Reddedildi: ''
+Bireysel: ''
+İptal_Edildi: ''
+giris_yap: ''
+contact_get_in_touch: Get in Touch
+Teslimat_Adresi: ''
+register_hemen_ucretsiz_kayit_ol: ''
+Kredi: ''
+'Vergi_No:': ''
+Sil: ''
+Sipariş_bilgileriniz_hazırlanıyor...: ''
+profile_sifre_bilgisi_sosyal_medya: ''
+Firmanizin_Borcu: ''
+user_management: User Management
+profile_hakkimda: ''
+Islem_Tipi: ''
+Toplam_Alisveris: ''
+Toplam: ''
+login_hosgeldin: ''
+Filtre_Sonuç_Yok: ''
+'Hata_Detayı:': ''
+blog: Blog
+Siparişler_yüklenirken_hata_oluştu: ''
+Toplam_Kullanılabilir: ''
+İade_Bilgi_Mesajı: ''
+İptal_Onaylandı_Geri_Alınamaz: ''
+Kampanyalar_ve_İndirimler: ''
+Sirket_Alacagi: ''
+Filtreleri_Temizle: ''
+'Adet:': ''
+register_username_exists: Username already exists
+Sipariş_durumunuzu_'Siparişlerim'_sayfasından_takip_edebilirsiniz.: ''
+Tum_Siparis_Goster: ''
+profile_eposta: ''
+Yükle: ''
+'Ödeme_Bekleniyor:': ''
+TC_Kimlik_Numarası: ''
+'Kargo:': ''
+b2b_orders_link: ''
+Fatura_Adresi: ''
+Kargoda_Hasar_Görmüş: ''
+varsayilan: ''
+'Ürün_Toplamı:': ''
+Tum_Odemeler: ''
+Siparis: ''
+urunler: Products
+Sipariş_Notu_(Opsiyonel): ''
+Başarılı: ''
+İade_Talebi: ''
+password_reset_success: Your password has been reset successfully. You can now log in.
+register_giris_yapin: Giriş Yapın En
+Uyarı: ''
+'Not:': ''
+save: Save
+Adres_Seçiniz: ''
+'Seçilen_dosya:': ''
+veya: ''
+dark_mode: Dark Mode
+Aradığınız_sayfa_taşınmış,_silinmiş_veya_hiç_var_olmamış_olabilir._Endişelenmeyin,_size_yardımcı_olabiliriz!: ''
+Ürünler_Toplamı: ''
+user_not_found: ''
+Kurumsal_Fatura_İstiyorum: ''
+hizli_baglantilar: ''
+Genel_Toplam: ''
+Ödeme_yöntemleri_yükleniyor...: ''
+contact_label_subject: Subject
+page_title_my_account: My Account
+Onaylandı: ''
+Yakında_sona_eriyor: ''
+Sepetinizde_ürün_bulunamadı.: ''
+Bu_sipariş_şirketinizin_kredi_limitinden_düşülecektir._Ödeme_yaptığınızda_kredi_limitiniz_yeniden_artacaktır.: ''
+Bazı_krediler_geçersiz_hale_geldi: ''
+Onceki_Bakiye: ''
+'Sipariş:': ''
+Ödeme_işlemi_gerçekleştirilemedi._Lütfen_bilgilerinizi_kontrol_edip_tekrar_deneyiniz.: ''
+contact_info_title: Contact Information
+Doğrulanıyor...: ''
+contact_generic_error: An error occurred, please try again.
+forgot_password: Forgot Password
+Geçerlilik: ''
+Aktif_Krediler: ''
+'İlçe:': ''
+İptal_Bekliyor: ''
+page_title_my_addresses: My Addresses
+B2B_Kredi: ''
+Bu_e_posta_otomatik_olarak_gönderilmiştir._Lütfen_yanıtlamayın.: ''
+Adres_Düzenle: ''
+password_too_short: ''
+Ödeme_yöntemi_bulunamadı: ''
+kapida_odeme: ''
+Varsayılan_Adres_Olarak_Ayarla: ''
+Fatura_Adresi_Seçiniz: ''
+Kargo_Adreslerim: ''
+reset_password_desc: Please choose a new and strong password.
+profile_guncelle: ''
+add: Add
+Kalan: ''
+logout: Logout
+İade_Teslim_Alındı_Detay: ''
+mail_sent_success: Password reset link has been sent to your email address.

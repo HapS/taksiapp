@@ -1,0 +1,523 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block header %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/css/intlTelInput.css">
+<style>
+    .iti {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-1" id="app">
+    <div class="row">
+
+        <div class="col-lg-3 col-xl-3 col-xxl-3 d-none d-sm-block d-sm-none d-md-block d-md-none d-lg-block  pt-3 pb-3"
+            id="sol-menu">
+            {% include '@@theme@@/auth/my_account/sidebar.html' %}
+        </div>
+
+        <div class="col-lg-9 col-xl-9 col-xxl-9 col-sm-12 col-md-12 col-xs-12  main-content pt-3 pb-3">
+            <div class="row">
+
+                <div class="col-md-12" v-if="loading">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12" v-if="!loading">
+
+                    <div class="card mb-4">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">Kargo Adreslerim</h4>
+                            <button type="button" class="btn btn-primary btn-sm" @click="addAddress">
+                                <i class="bi bi-plus-circle-dotted"></i> Adres Ekle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-2" v-if="addeditem">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-1 mt-1">Yeni Adres Ekle / Düzenle</h6>
+                            <button type="button" class="btn-close" aria-label="Close" @click="toggleAddForm"></button>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label mb-0">Telefon Numarası</label>
+                                        <input type="tel" class="form-control" id="phone">
+                                        <div class="form-text">Başında sıfır olmadan giriniz.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="address_name" class="form-label mb-0">Adres Tanımı (Ev, İş
+                                            vb.)</label>
+                                        <input type="text" class="form-control" id="address_name"
+                                            v-model="selectedObjects.title">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="countries" class="form-label mb-0">Ülke</label>
+                                        <select class="form-select" id="countries" v-model="selectedObjects.country_id">
+                                            <option disabled value="">Ülke Seçiniz</option>
+                                            <option :value="item.id" v-for="item in countries" :key="item.id">
+                                                [[ item.name ]]
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="city" class="form-label mb-0">İl</label>
+                                        <select class="form-select" id="city" v-model="selectedObjects.city_id">
+                                            <option disabled value="">İl Seçiniz</option>
+                                            <option :value="item.id" v-for="item in cities" :key="item.id">
+                                                [[ item.name ]]
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="state" class="form-label mb-0">İlçe</label>
+                                        <select class="form-select" id="state" v-model="selectedObjects.district_id">
+                                            <option disabled value="">İlçe Seçiniz</option>
+                                            <option :value="item.id" v-for="item in states" :key="item.id">
+                                                [[ item.name ]]
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label for="registration_address" class="form-label mb-0">Adres</label>
+                                        <textarea class="form-control" id="registration_address"
+                                            v-model="selectedObjects.address_line" rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_default"
+                                            v-model="selectedObjects.is_default">
+                                        <label class="form-check-label" for="is_default">
+                                            Varsayılan Adres Olarak Ayarla
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm" @click="saveAddress" v-if="!edit">
+                                    <i class="bi bi-save"></i> Kaydet
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm" @click="updateAddress" v-else>
+                                    <i class="bi bi-save"></i> Güncelle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 bg-none">
+                        <div class="card-body p-0">
+                            <div class="row row-cols-1 row-cols-md-12 g-4" v-if="data.length == 0">
+                                <div class="col mb-2">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-0 text-center text-muted">Henüz kayıtlı kargo
+                                                adresi bulunamadı.</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row row-cols-1 row-cols-md-2 g-4" v-if="data.length > 0">
+                                <div class="col mb-2" v-for="item in data" :key="item.id" :id="item.id">
+                                    <div class="card h-100">
+                                        <div class="card-header d-flex justify-content-between">
+                                            <h6 class="card-title mb-0">[[ item.title ]]</h6>
+                                            <span v-if="item.is_default" class="badge bg-success">Varsayılan</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text mb-0">[[ item.address_line ]]</p>
+                                            <p class="card-text mb-0 text-muted small">
+                                                (Ülke: [[ item.country_name ]], Şehir: [[ item.city_name ]], İlçe: [[
+                                                item.district_name ]])
+                                            </p>
+                                            <p class="card-text mb-0 mt-2" v-if="item.phone_number">
+                                                <i class="bi bi-telephone"></i> [[ item.phone_country_code ]] [[
+                                                item.phone_number ]]
+                                            </p>
+                                        </div>
+
+                                        <div class="card-footer">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                    @click="deleteAddress(item.id)">
+                                                    <i class="bi bi-trash3"></i> Sil
+                                                </button>
+                                                <button type="button" class="btn btn-warning btn-sm"
+                                                    @click="editAddress(item)">
+                                                    <i class="bi bi-pencil-square"></i> Düzenle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
+<script>
+    const { createApp, ref, onMounted, watch, nextTick } = Vue
+    createApp({
+        delimiters: ['[[', ']]'],
+        setup() {
+            const data = ref([])
+            const loading = ref(true)
+            const addeditem = ref(false)
+            const countries = ref([])
+            const cities = ref([])
+            const states = ref([])
+            const edit = ref(false)
+            let iti = null;
+
+            const selectedObjects = ref({
+                id: null,
+                title: "",
+                country_id: "",
+                city_id: "",
+                district_id: "",
+                address_line: "",
+                is_default: false,
+                phone_country_code: "+90",
+                phone_number: ""
+            })
+
+            onMounted(() => {
+                InitData()
+                getCountries()
+            })
+
+            watch(() => selectedObjects.value.country_id, (newValue) => {
+                if (newValue) {
+                    getCities(newValue)
+                } else {
+                    cities.value = []
+                }
+            })
+
+            watch(() => selectedObjects.value.city_id, (newValue) => {
+                if (newValue) {
+                    getDistricts(newValue)
+                } else {
+                    states.value = []
+                }
+            })
+
+            async function initTelInput(initialValue = "") {
+                await nextTick();
+                const input = document.querySelector("#phone");
+                if (input) {
+                    if (iti) iti.destroy();
+                    iti = window.intlTelInput(input, {
+                        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/utils.js",
+                        separateDialCode: true,
+                        initialCountry: "tr", // Default TR
+                        preferredCountries: ["tr", "us", "gb", "de"],
+                    });
+
+                    if (initialValue) {
+                        iti.setNumber(initialValue);
+                    }
+                }
+            }
+
+            function toggleAddForm() {
+                addeditem.value = !addeditem.value
+                edit.value = false
+                resetForm()
+                if (addeditem.value) {
+                    initTelInput();
+                }
+            }
+
+            function addAddress() {
+                addeditem.value = true
+                edit.value = false
+                resetForm()
+                initTelInput();
+            }
+
+            function resetForm() {
+                selectedObjects.value = {
+                    id: null,
+                    title: "",
+                    country_id: "",
+                    city_id: "",
+                    district_id: "",
+                    address_line: "",
+                    is_default: false,
+                    phone_country_code: "+90",
+                    phone_number: ""
+                }
+            }
+
+            async function getCountries() {
+                try {
+                    const response = await fetch("/api/location/countries");
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        countries.value = res.data;
+                    }
+                } catch (error) {
+                    console.error("Countries Error:", error);
+                }
+            }
+
+            async function getCities(country_id) {
+                try {
+                    const response = await fetch(`/api/location/cities/${country_id}`);
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        cities.value = res.data;
+                    }
+                } catch (error) {
+                    console.error("Cities Error:", error);
+                }
+            }
+
+            async function getDistricts(city_id) {
+                try {
+                    const response = await fetch(`/api/location/districts/${city_id}`);
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        states.value = res.data;
+                    }
+                } catch (error) {
+                    console.error("Districts Error:", error);
+                }
+            }
+
+            async function InitData() {
+                loading.value = true;
+                try {
+                    const response = await fetch("/api/user/addresses");
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        data.value = res.data;
+                    }
+                } catch (error) {
+                    console.error("Fetch Error:", error);
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            function getPhoneData() {
+                if (iti) {
+                    const countryData = iti.getSelectedCountryData();
+                    const dialCode = "+" + countryData.dialCode;
+                    let fullNumber = iti.getNumber(); // Gets full E.164 e.g. +905321234567
+
+                    // Remove dial code from the beginning if present
+                    if (fullNumber.startsWith(dialCode)) {
+                        fullNumber = fullNumber.slice(dialCode.length);
+                    }
+
+                    // Remove empty spaces and leading zeros
+                    fullNumber = fullNumber.trim().replace(/^0+/, '');
+
+                    // If fullNumber is empty (maybe parsing failed), fallback to input value
+                    if (!fullNumber) {
+                        const inputVal = document.querySelector("#phone").value.trim();
+                        // Try to strip non-numeric chars except +
+                        // If input starts with 0, remove it
+                        let cleanInput = inputVal.replace(/\D/g, ''); // Keep only digits
+                        // If inputVal had leading 0, cleanInput might have it at the start (if it wasn't +90)
+                        // But we can't be sure about dial code here easily without iti parsing.
+                        // Let's rely on what we have.
+                        if (cleanInput.length > 0) fullNumber = cleanInput;
+                    }
+
+                    return {
+                        code: dialCode,
+                        number: fullNumber
+                    };
+                }
+                return { code: "+90", number: "" };
+            }
+
+            async function saveAddress() {
+                const phoneData = getPhoneData();
+
+                const payload = {
+                    title: selectedObjects.value.title,
+                    country_id: Number(selectedObjects.value.country_id),
+                    city_id: Number(selectedObjects.value.city_id),
+                    district_id: Number(selectedObjects.value.district_id),
+                    address_line: selectedObjects.value.address_line,
+                    is_default: selectedObjects.value.is_default,
+                    phone_country_code: phoneData.code,
+                    phone_number: phoneData.number
+                };
+
+                try {
+                    const response = await fetch("/api/user/addresses", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        Swal.fire('Başarılı', 'Adres başarıyla eklendi', 'success');
+                        addeditem.value = false;
+                        InitData();
+                    } else {
+                        Swal.fire('Hata', res.message || 'Bir hata oluştu', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Hata', 'Sunucu hatası', 'error');
+                }
+            }
+
+            async function updateAddress() {
+                const phoneData = getPhoneData();
+
+                const payload = {
+                    title: selectedObjects.value.title,
+                    country_id: Number(selectedObjects.value.country_id),
+                    city_id: Number(selectedObjects.value.city_id),
+                    district_id: Number(selectedObjects.value.district_id),
+                    address_line: selectedObjects.value.address_line,
+                    is_default: selectedObjects.value.is_default,
+                    phone_country_code: phoneData.code,
+                    phone_number: phoneData.number
+                };
+
+                try {
+                    const response = await fetch(`/api/user/addresses/${selectedObjects.value.id}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        Swal.fire('Başarılı', 'Adres güncellendi', 'success');
+                        addeditem.value = false;
+                        InitData();
+                    } else {
+                        Swal.fire('Hata', res.message || 'Güncelleme hatası', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Hata', 'Sunucu hatası', 'error');
+                }
+            }
+
+            function deleteAddress(id) {
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu adresi silmek istediğinize emin misiniz?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, Sil',
+                    cancelButtonText: 'İptal'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/user/addresses/${id}`, {
+                                method: "DELETE"
+                            });
+                            const res = await response.json();
+                            if (res.status === "success") {
+                                Swal.fire('Silindi!', 'Adres silindi.', 'success');
+                                InitData();
+                            } else {
+                                Swal.fire('Hata', res.message, 'error');
+                            }
+                        } catch (error) {
+                            Swal.fire('Hata', 'Silme işlemi başarısız', 'error');
+                        }
+                    }
+                })
+            }
+
+            async function editAddress(item) {
+                edit.value = true;
+                addeditem.value = true;
+
+                await getCities(item.country_id);
+                await getDistricts(item.city_id);
+
+                selectedObjects.value = {
+                    id: item.id,
+                    title: item.title,
+                    country_id: item.country_id,
+                    city_id: item.city_id,
+                    district_id: item.district_id,
+                    address_line: item.address_line,
+                    is_default: item.is_default,
+                    phone_country_code: item.phone_country_code || "+90",
+                    phone_number: item.phone_number || ""
+                };
+
+                const fullPhone = (item.phone_country_code || "") + (item.phone_number || "");
+                initTelInput(fullPhone);
+            }
+
+            return {
+                data,
+                loading,
+                addeditem,
+                countries,
+                cities,
+                states,
+                selectedObjects,
+                addAddress,
+                toggleAddForm,
+                saveAddress,
+                updateAddress,
+                deleteAddress,
+                editAddress,
+                edit
+            }
+        }
+    }).mount('#app')
+</script>
+{% endblock %}

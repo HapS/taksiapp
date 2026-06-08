@@ -1,0 +1,1023 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<!-- International Telephone Input CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/css/intlTelInput.css">
+<style>
+.iti {
+    width: 100%;
+}
+.iti__flag-container {
+    border-right: 1px solid #ced4da;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2 mb-4" id="userEditApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div class="w-100">
+      <h4 class="h4 mb-0 pb-0 fw-bolder">[[ isEditing ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı' ]]</h4>
+      <nav aria-label="breadcrumb" class="mb-0 d-flex align-items-center w-100" style="height:30px">
+        <ol class="breadcrumb mb-0 flex-grow-1" style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <li class="breadcrumb-item">
+            <a href="/admin/users">Kullanıcı Yönetimi</a>
+          </li>
+          <li class="breadcrumb-item active">
+            [[ isEditing ? 'Düzenle' : 'Yeni Kullanıcı' ]]
+          </li>
+        </ol>
+        <button type="button" class="btn btn-success d-flex align-items-center ms-auto" @click="saveUser" :disabled="saving">
+          <i class="bi bi-save me-1"></i>
+          [[ saving ? (isEditing ? 'Güncelleniyor...' : 'Kaydediliyor...') : (isEditing ? 'Güncelle' : 'Oluştur') ]]
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div v-if="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <!-- Content Form -->
+  <div v-else class="row">
+    <div class="col-lg-8">
+      <!-- User Form -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-person"></i>
+            [[ isEditing ? 'Kullanıcı Düzenle' : 'Kullanıcı Bilgileri' ]]
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="username" class="form-label">Kullanıcı Adı *</label>
+                <input type="text"
+                       class="form-control"
+                       id="username"
+                       v-model="form.username"
+                       required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="email" class="form-label">E-posta *</label>
+                <input type="email"
+                       class="form-control"
+                       id="email"
+                       v-model="form.email"
+                       required>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!isEditing" class="mb-3">
+            <label for="password" class="form-label">Şifre *</label>
+            <input type="password"
+                   class="form-control"
+                   id="password"
+                   v-model="form.password"
+                   required>
+            <div class="form-text">En az 6 karakter olmalıdır.</div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="first_name" class="form-label">Ad</label>
+                <input type="text"
+                       class="form-control"
+                       id="first_name"
+                       v-model="form.first_name">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="last_name" class="form-label">Soyad</label>
+                <input type="text"
+                       class="form-control"
+                       id="last_name"
+                       v-model="form.last_name">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="phone" class="form-label">Telefon Numarası</label>
+                <input type="tel" class="form-control" id="phone"
+                       v-model="form.phone_number" placeholder="0555 123 45 67">
+                <input type="hidden" id="phone_country_code" v-model="form.phone_country_code">
+                <div class="form-text">Başında sıfır olmadan giriniz.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- is_admin field removed - use RBAC roles instead -->
+          <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i>
+            <strong>Yetkilendirme:</strong> Kullanıcı yetkilerini aşağıdaki "Roller ve Yetkiler" bölümünden yönetin.
+            Admin paneline erişim için <code>admin</code>, <code>editor</code> veya <code>super_admin</code> rolü verin.
+          </div>
+
+          <div class="mb-3">
+            <label for="profile" class="form-label">Profil (JSON)</label>
+            <textarea class="form-control"
+                      id="profile"
+                      v-model="profileText"
+                      rows="4"
+                      placeholder='{"bio": "Kullanıcı hakkında", "avatar": "url", "preferences": {}}'
+                      @blur="validateProfile"></textarea>
+            <div class="form-text">Kullanıcı profil bilgileri için JSON formatında veri girin (opsiyonel).</div>
+            <div v-if="profileError" class="text-danger small mt-1">
+              <i class="bi bi-exclamation-triangle"></i> [[ profileError ]]
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success" @click="saveUser" :disabled="saving">
+              <i class="bi bi-save"></i>
+              [[ saving ? (isEditing ? 'Güncelleniyor...' : 'Kaydediliyor...') : (isEditing ? 'Güncelle' : 'Oluştur') ]]
+            </button>
+            <a href="/admin/users" class="btn btn-secondary">
+              <i class="bi bi-x-circle"></i> İptal
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="isEditing" class="col-lg-4">
+      <!-- Role Management -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-shield-check"></i> Roller ve Yetkiler
+          </h5>
+        </div>
+        <div class="card-body">
+          <div v-if="loadingRoles" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+          </div>
+          <div v-else>
+            <h6 class="mb-2">Atanmış Roller:</h6>
+            <div v-if="userRoles.length === 0" class="text-muted small mb-3">
+              Henüz rol atanmamış
+            </div>
+            <div v-else class="mb-3">
+              <span v-for="role in userRoles" :key="role.id" class="badge bg-primary me-1 mb-1">
+                [[ role.name ]]
+                <button type="button" class="btn-close btn-close-white ms-1"
+                        style="font-size: 0.6rem;"
+                        @click="removeRole(role.id)"
+                        :title="'Rolü kaldır'"></button>
+              </span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small">Rol Ekle:</label>
+              <select class="form-select form-select-sm" v-model="selectedRoleId">
+                <option value="">Rol seçin...</option>
+                <option v-for="role in availableRoles" :key="role.id" :value="role.id">
+                  [[ role.name ]] - [[ role.description ]]
+                </option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary w-100"
+                    @click="assignRole"
+                    :disabled="!selectedRoleId || assigningRole">
+              <i class="bi bi-plus-circle"></i>
+              [[ assigningRole ? 'Ekleniyor...' : 'Rol Ekle' ]]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permission Overrides -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-key-fill"></i> Özel İzinler
+          </h5>
+        </div>
+        <div class="card-body">
+          <div v-if="loadingPermissions" class="text-center py-3">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+          </div>
+          <div v-else>
+            <p class="small text-muted mb-3">
+              Kullanıcıya özel izin ver veya reddet. Bu izinler rol izinlerini geçersiz kılar.
+            </p>
+
+            <!-- Search/Filter -->
+            <div class="mb-3">
+              <input type="text"
+                     class="form-control form-control-sm"
+                     v-model="permissionSearch"
+                     placeholder="İzin ara... (örn: blog, edit, content)">
+            </div>
+
+            <!-- Permissions by Module (Checkbox List) -->
+            <div v-for="(perms, module) in filteredPermissionsByModule" :key="module" class="mb-3">
+              <h6 class="text-primary mb-2">
+                <i class="bi bi-folder"></i> [[ module ]]
+              </h6>
+              <div class="ps-3">
+                <div v-for="perm in perms" :key="perm.id" class="form-check mb-2">
+                  <div class="d-flex align-items-center">
+                    <input class="form-check-input me-2"
+                           type="checkbox"
+                           :id="'perm-' + perm.id"
+                           :checked="getPermissionState(perm.id) === 'granted'"
+                           :indeterminate.prop="getPermissionState(perm.id) === 'denied'"
+                           @change="togglePermission(perm.id, $event)">
+                    <label class="form-check-label flex-grow-1" :for="'perm-' + perm.id">
+                      <span :class="{
+                        'text-success fw-bold': getPermissionState(perm.id) === 'granted',
+                        'text-danger fw-bold': getPermissionState(perm.id) === 'denied'
+                      }">
+                        [[ perm.name ]]
+                      </span>
+                      <br>
+                      <small class="text-muted">[[ perm.description ]]</small>
+                    </label>
+                    <button v-if="getPermissionState(perm.id) !== 'none'"
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary ms-2"
+                            @click="removePermissionOverride(perm.id)"
+                            title="Override'ı kaldır">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="Object.keys(filteredPermissionsByModule).length === 0" class="text-center text-muted py-3">
+              <i class="bi bi-search"></i> İzin bulunamadı
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Update -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-key"></i> Şifre Güncelle
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="new_password" class="form-label">Yeni Şifre</label>
+            <input type="password"
+                   class="form-control"
+                   id="new_password"
+                   v-model="passwordForm.password">
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Şifre Tekrar</label>
+            <input type="password"
+                   class="form-control"
+                   id="confirm_password"
+                   v-model="passwordForm.confirm_password"
+                   :class="{ 'is-invalid': passwordForm.confirm_password && passwordForm.password !== passwordForm.confirm_password }">
+            <div v-if="passwordForm.confirm_password && passwordForm.password !== passwordForm.confirm_password" class="invalid-feedback">
+              Şifreler eşleşmiyor
+            </div>
+          </div>
+          <button type="button" class="btn btn-warning btn-sm w-100" @click="updatePassword" :disabled="updatingPassword">
+            <i class="bi bi-key"></i> [[ updatingPassword ? 'Güncelleniyor...' : 'Şifreyi Güncelle' ]]
+          </button>
+        </div>
+      </div>
+
+      <!-- User Info -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle"></i> Kullanıcı Bilgileri
+          </h5>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">ID:</dt>
+            <dd class="col-sm-8">#[[ userId ]]</dd>
+
+            <dt class="col-sm-4">Oluşturulma:</dt>
+            <dd class="col-sm-8">
+              <small>[[ userData.created_at || '-' ]]</small>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed } = Vue;
+
+createApp({
+  delimiters: ["[[", "]]"],
+  setup() {
+    const loading = ref(false);
+    const saving = ref(false);
+    const updatingPassword = ref(false);
+    const userId = {% if user_id %}{{ user_id }}{% else %}null{% endif %};
+    const isEditing = computed(() => userId !== null);
+    const userData = ref({});
+    const profileText = ref('');
+    const profileError = ref('');
+
+    // Role management
+    const loadingRoles = ref(false);
+    const assigningRole = ref(false);
+    const allRoles = ref([]);
+    const userRoles = ref([]);
+    const selectedRoleId = ref('');
+
+    const availableRoles = computed(() => {
+      const userRoleIds = userRoles.value.map(r => r.id);
+      return allRoles.value.filter(r => !userRoleIds.includes(r.id));
+    });
+
+    // Permission management
+    const loadingPermissions = ref(false);
+    const allPermissionsByModule = ref({});
+    const userPermissionOverrides = ref([]);
+    const permissionSearch = ref('');
+
+    // Filtered permissions based on search
+    const filteredPermissionsByModule = computed(() => {
+      if (!permissionSearch.value.trim()) {
+        return allPermissionsByModule.value;
+      }
+
+      const search = permissionSearch.value.toLowerCase();
+      const filtered = {};
+
+      for (const [module, perms] of Object.entries(allPermissionsByModule.value)) {
+        const matchedPerms = perms.filter(p =>
+          p.name.toLowerCase().includes(search) ||
+          p.description.toLowerCase().includes(search) ||
+          module.toLowerCase().includes(search)
+        );
+
+        if (matchedPerms.length > 0) {
+          filtered[module] = matchedPerms;
+        }
+      }
+
+      return filtered;
+    });
+
+    // Get permission state: 'granted', 'denied', or 'none'
+    const getPermissionState = (permissionId) => {
+      const override = userPermissionOverrides.value.find(
+        o => o.permission.id === permissionId
+      );
+      if (!override) return 'none';
+      return override.is_granted ? 'granted' : 'denied';
+    };
+
+    // Toggle permission (checkbox click)
+    const togglePermission = async (permissionId, event) => {
+      const currentState = getPermissionState(permissionId);
+
+      // Cycle: none -> granted -> denied -> none
+      if (currentState === 'none') {
+        // Grant permission
+        await grantPermissionDirect(permissionId);
+      } else if (currentState === 'granted') {
+        // Deny permission
+        event.target.checked = false;
+        event.target.indeterminate = true;
+        await revokePermissionDirect(permissionId);
+      } else {
+        // Remove override
+        event.target.checked = false;
+        event.target.indeterminate = false;
+        await removePermissionOverride(permissionId);
+      }
+    };
+
+    // ITI instance
+    let iti = null;
+
+    // ITI initialize function
+    const initTelInput = async (initialValue = "") => {
+      await Vue.nextTick();
+      const input = document.querySelector("#phone");
+      if (input) {
+        if (iti) iti.destroy();
+        iti = window.intlTelInput(input, {
+          utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/utils.js",
+          separateDialCode: true,
+          initialCountry: "tr", // Default TR
+          preferredCountries: ["tr", "us", "gb", "de"],
+        });
+
+        if (initialValue) {
+          iti.setNumber(initialValue);
+        }
+
+        // Ülke değiştiğinde country code'u güncelle
+        input.addEventListener("countrychange", function() {
+          const countryData = iti.getSelectedCountryData();
+          form.value.phone_country_code = '+' + countryData.dialCode;
+        });
+      }
+    };
+
+    // ITI'den telefon bilgilerini al
+    const getPhoneData = () => {
+      if (iti) {
+        const countryData = iti.getSelectedCountryData();
+        const dialCode = "+" + countryData.dialCode;
+        let fullNumber = iti.getNumber(); // Gets full E.164 e.g. +905321234567
+
+        // Remove dial code from the beginning if present
+        if (fullNumber.startsWith(dialCode)) {
+          fullNumber = fullNumber.slice(dialCode.length);
+        }
+
+        // Remove empty spaces and leading zeros
+        fullNumber = fullNumber.trim().replace(/^0+/, '');
+
+        // If fullNumber is empty (maybe parsing failed), fallback to input value
+        if (!fullNumber) {
+          const inputVal = document.querySelector("#phone").value.trim();
+          // Try to strip non-numeric chars except +
+          // If input starts with 0, remove it
+          let cleanInput = inputVal.replace(/\D/g, ''); // Keep only digits
+          if (cleanInput.length > 0) fullNumber = cleanInput;
+        }
+
+        return {
+          code: dialCode,
+          number: fullNumber
+        };
+      }
+      return { code: "+90", number: "" };
+    };
+
+    const form = ref({
+      username: '',
+      email: '',
+      password: '',
+      first_name: '',
+      last_name: '',
+      phone_number: '',
+      phone_country_code: '+90',
+      is_admin: false,
+      user_type: 'B2C',
+      profile: null
+    });
+
+    const passwordForm = ref({
+      password: '',
+      confirm_password: ''
+    });
+
+    // Load user data if editing
+    const loadUser = async () => {
+      if (!isEditing.value) return;
+
+      loading.value = true;
+      try {
+        const response = await fetch(`/admin/api/users/${userId}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          userData.value = data;
+          form.value.username = data.username;
+          form.value.email = data.email;
+          form.value.first_name = data.first_name || '';
+          form.value.last_name = data.last_name || '';
+          form.value.phone_number = data.phone_number || '';
+          form.value.phone_country_code = data.phone_country_code || '+90';
+          form.value.is_admin = data.is_admin;
+
+          if (data.profile) {
+            profileText.value = JSON.stringify(data.profile, null, 2);
+            form.value.profile = data.profile;
+          }
+
+          // Initialize ITI with phone data
+          setTimeout(async () => {
+            const fullPhone = (form.value.phone_country_code || '+90') + (form.value.phone_number || '');
+            await initTelInput(fullPhone);
+          }, 100);
+
+          // Load roles and permissions
+          loadRoles();
+          loadUserRoles();
+          loadPermissions();
+          loadUserPermissionOverrides(); // Initial load with spinner
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: 'Kullanıcı yüklenirken hata oluştu: ' + (data.error || 'Bilinmeyen hata')
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Kullanıcı yüklenirken hata oluştu: ' + error.message
+        });
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // Load all roles
+    const loadRoles = async () => {
+      try {
+        const response = await fetch('/admin/api/roles');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          allRoles.value = data.data || [];
+        }
+      } catch (error) {
+        console.error('Roller yüklenirken hata:', error);
+      }
+    };
+
+    // Load user's roles
+    const loadUserRoles = async () => {
+      if (!isEditing.value) return;
+
+      loadingRoles.value = true;
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/roles`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          userRoles.value = data.data || [];
+        }
+      } catch (error) {
+        console.error('Kullanıcı rolleri yüklenirken hata:', error);
+      } finally {
+        loadingRoles.value = false;
+      }
+    };
+
+    // Assign role to user
+    const assignRole = async () => {
+      if (!selectedRoleId.value) return;
+
+      assigningRole.value = true;
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/roles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role_id: parseInt(selectedRoleId.value) })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: 'Rol başarıyla atandı.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
+          selectedRoleId.value = '';
+          loadUserRoles();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Rol atanırken hata oluştu.'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Rol atanırken hata oluştu: ' + error.message
+        });
+      } finally {
+        assigningRole.value = false;
+      }
+    };
+
+    // Remove role from user
+    const removeRole = async (roleId) => {
+      const result = await Swal.fire({
+        title: 'Emin misiniz?',
+        text: 'Bu rolü kullanıcıdan kaldırmak istediğinizden emin misiniz?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, Kaldır!',
+        cancelButtonText: 'İptal'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/roles/${roleId}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Kaldırıldı!',
+            text: 'Rol başarıyla kaldırıldı.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
+          loadUserRoles();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Rol kaldırılırken hata oluştu.'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Rol kaldırılırken hata oluştu: ' + error.message
+        });
+      }
+    };
+
+    // Load all permissions by module
+    const loadPermissions = async () => {
+      try {
+        const response = await fetch('/admin/api/permissions/by-module');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          allPermissionsByModule.value = data.data || {};
+        }
+      } catch (error) {
+        console.error('İzinler yüklenirken hata:', error);
+      }
+    };
+
+    // Load user's permission overrides
+    const loadUserPermissionOverrides = async (showLoading = true) => {
+      if (!isEditing.value) return;
+
+      // Only show loading spinner on initial load, not on updates
+      if (showLoading) {
+        loadingPermissions.value = true;
+      }
+
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/permission-overrides`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          userPermissionOverrides.value = (data.data || []).map(item => ({
+            permission: item[0],
+            is_granted: item[1]
+          }));
+        }
+      } catch (error) {
+        console.error('Kullanıcı izinleri yüklenirken hata:', error);
+      } finally {
+        if (showLoading) {
+          loadingPermissions.value = false;
+        }
+      }
+    };
+
+    // Grant permission to user (direct, no confirmation)
+    const grantPermissionDirect = async (permissionId) => {
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/permissions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ permission_id: parseInt(permissionId) })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          loadUserPermissionOverrides(false);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'İzin verilirken hata oluştu.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+          });
+        }
+      } catch (error) {
+        console.error('İzin verilirken hata:', error);
+      }
+    };
+
+    // Revoke permission from user (deny override, direct)
+    const revokePermissionDirect = async (permissionId) => {
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/permissions/${permissionId}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          loadUserPermissionOverrides(false);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'İzin reddedilirken hata oluştu.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+          });
+        }
+      } catch (error) {
+        console.error('İzin reddedilirken hata:', error);
+      }
+    };
+
+    // Remove permission override (completely remove, let role permissions take effect)
+    const removePermissionOverride = async (permissionId) => {
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/permissions/${permissionId}`, {
+          method: 'PUT'  // PUT = remove override completely
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          loadUserPermissionOverrides(false);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Override kaldırılırken hata oluştu.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+          });
+        }
+      } catch (error) {
+        console.error('Override kaldırılırken hata:', error);
+      }
+    };
+
+    // Validate profile JSON
+    const validateProfile = () => {
+      profileError.value = '';
+
+      if (!profileText.value.trim()) {
+        form.value.profile = null;
+        return;
+      }
+
+      try {
+        form.value.profile = JSON.parse(profileText.value);
+      } catch (e) {
+        profileError.value = 'Geçersiz JSON formatı';
+      }
+    };
+
+    // Save user
+    const saveUser = async () => {
+      // Validation
+      if (!form.value.username.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'Kullanıcı adı zorunludur!'
+        });
+        return;
+      }
+
+      if (!form.value.email.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'E-posta zorunludur!'
+        });
+        return;
+      }
+
+      if (!isEditing.value && !form.value.password.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'Şifre zorunludur!'
+        });
+        return;
+      }
+
+      if (profileError.value) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'Profil JSON formatı geçersiz!'
+        });
+        return;
+      }
+
+      saving.value = true;
+      try {
+        // ITI'den telefon bilgilerini al
+        const phoneData = getPhoneData();
+        form.value.phone_country_code = phoneData.code;
+        form.value.phone_number = phoneData.number;
+
+        const url = isEditing.value
+          ? `/admin/api/users/${userId}`
+          : "/admin/api/users";
+
+        const method = isEditing.value ? "PUT" : "POST";
+
+        const payload = {
+          username: form.value.username,
+          email: form.value.email,
+          first_name: form.value.first_name || null,
+          last_name: form.value.last_name || null,
+          phone_number: form.value.phone_number || null,
+          phone_country_code: form.value.phone_country_code || null,
+          is_admin: form.value.is_admin,
+          profile: form.value.profile
+        };
+
+        if (!isEditing.value) {
+          payload.password = form.value.password;
+        }
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: isEditing.value ? 'Güncellendi!' : 'Oluşturuldu!',
+            text: isEditing.value ? 'Kullanıcı başarıyla güncellendi!' : 'Kullanıcı başarıyla oluşturuldu!',
+            timer: 2000,
+            showConfirmButton: true,
+            confirmButtonText: 'Tamam',
+          }).then(() => {
+            window.location.href = '/admin/users?success=' + (isEditing.value ? 'updated' : 'created');
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: 'Kullanıcı kaydedilirken hata oluştu: ' + data.error
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Kullanıcı kaydedilirken hata oluştu: ' + error.message
+        });
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    // Update password
+    const updatePassword = async () => {
+      if (!passwordForm.value.password.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'Şifre boş olamaz!'
+        });
+        return;
+      }
+
+      if (passwordForm.value.password !== passwordForm.value.confirm_password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Uyarı!',
+          text: 'Şifreler eşleşmiyor!'
+        });
+        return;
+      }
+
+      updatingPassword.value = true;
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/password`, {
+          method: 'PUT',
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password: passwordForm.value.password
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: 'Şifre başarıyla güncellendi!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          passwordForm.value.password = '';
+          passwordForm.value.confirm_password = '';
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: 'Şifre güncellenirken hata oluştu: ' + data.error
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Şifre güncellenirken hata oluştu: ' + error.message
+        });
+      } finally {
+        updatingPassword.value = false;
+      }
+    };
+
+    // Mount
+    setTimeout(() => {
+      loadUser();
+
+      // Initialize ITI for new users
+      if (!isEditing.value) {
+        setTimeout(async () => {
+          await initTelInput();
+        }, 100);
+      }
+    }, 0);
+
+    return {
+      loading,
+      saving,
+      updatingPassword,
+      userId,
+      isEditing,
+      userData,
+      form,
+      passwordForm,
+      profileText,
+      profileError,
+      loadingRoles,
+      assigningRole,
+      allRoles,
+      userRoles,
+      selectedRoleId,
+      availableRoles,
+      loadingPermissions,
+      allPermissionsByModule,
+      userPermissionOverrides,
+      permissionSearch,
+      filteredPermissionsByModule,
+      getPermissionState,
+      togglePermission,
+      validateProfile,
+      saveUser,
+      updatePassword,
+      assignRole,
+      removeRole,
+      removePermissionOverride
+    };
+  }
+}).mount("#userEditApp");
+</script>
+
+<!-- International Telephone Input JS -->
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.3.1/build/js/intlTelInput.min.js"></script>
+{% endblock %}

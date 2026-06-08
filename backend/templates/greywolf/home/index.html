@@ -1,0 +1,32 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+
+<!-- Homepage Builder Sections -->
+{% for section in builder.sections %}
+  {% if section.active %}
+    <!-- Section: {{ section.title }} -->
+    <section class="homepage-section section-{{ section.template }}" data-section-id="{{ section.id }}">
+      {% if section.template == "product_grid" %}
+        {% include "@@theme@@/home/sections/product_grid.html" %}
+    {% elif section.template == "video_hero" %}
+        {% include "@@theme@@/home/sections/video_hero.html" %}
+      {% elif section.template == "blog_list" %}
+        {% include "@@theme@@/home/sections/blog_list.html" %}
+      {% elif section.template == "son_haberler" %}
+        {% include "@@theme@@/home/sections/news_list.html" %}
+      {% elif section.template == "category_grid" %}
+        {% include "@@theme@@/home/sections/category_grid.html" %}
+      {% elif section.template == "hero_banner" %}
+        {% include "@@theme@@/home/sections/hero_banner.html" %}
+      {% elif section.template == "image_slider" %}
+        {% include "@@theme@@/home/sections/image_slider.html" %}
+      {% else %}
+        <!-- Unknown template: {{ section.template }} -->
+        {% include "@@theme@@/home/sections/default.html" %}
+      {% endif %}
+    </section>
+  {% endif %}
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,1028 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Mail Kuyruğu Yönetimi - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2" id="mailerApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">Mail Kuyruğu Yönetimi</h4>
+      <p class="text-muted mb-0">Mail gönderim kuyruğunu takip edin ve yönetin</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <!-- Queue Stats -->
+      <div class="me-3" v-if="stats">
+        <div class="d-flex align-items-center">
+          <span class="badge bg-warning me-2">[[ stats.pending ]] Beklemede</span>
+          <span class="badge bg-info me-2">[[ stats.retry ]] Tekrar</span>
+          <span class="badge bg-success me-2">[[ stats.sent ]] Gönderildi</span>
+          <span class="badge bg-danger me-2">[[ stats.failed ]] Başarısız</span>
+        </div>
+      </div>
+      <!-- Process Queue Button -->
+      <button
+        class="btn btn-primary btn-sm me-2"
+        @click="processQueue"
+        :disabled="processing"
+      >
+        <i class="bi bi-arrow-clockwise" :class="{ 'spin': processing }"></i>
+        [[ processing ? 'İşleniyor...' : 'Kuyruğu İşle' ]]
+      </button>
+      <!-- Refresh Stats -->
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        @click="loadStats"
+        :disabled="loadingStats"
+      >
+        <i class="bi bi-arrow-repeat" :class="{ 'spin': loadingStats }"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mail Queue List -->
+  <div class="card">
+    <div class="card-body">
+
+      <!-- Search and Filters -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            v-model="filters.search"
+            @input="debounceSearch"
+            placeholder="Email, konu veya isim ara..."
+          />
+        </div>
+
+        <div class="col-md-2">
+          <select
+            class="form-select form-select-sm"
+            v-model="filters.status"
+            @change="statusChanged"
+            title="Durum"
+          >
+            <option value="">Tüm Durumlar</option>
+            <option value="pending">Beklemede</option>
+            <option value="retry">Tekrar Dene</option>
+            <option value="sent">Gönderildi</option>
+            <option value="failed">Başarısız</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select
+            class="form-select form-select-sm"
+            v-model="filters.template_name"
+            @change="templateChanged"
+            title="Template"
+          >
+            <option value="">Tüm Template'ler</option>
+            <option value="user_verification">Kullanıcı Doğrulama</option>
+            <option value="welcome">Hoş Geldin</option>
+            <option value="order_confirmation">Sipariş Onayı</option>
+            <option value="password_reset">Şifre Sıfırlama</option>
+            <option value="payment_confirmation">Ödeme Onayı</option>
+            <option value="order_status_update">Sipariş Durumu</option>
+            <option value="contact_form">İletişim Formu</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            v-model="filters.start_date"
+            @change="dateChanged"
+            title="Başlangıç Tarihi"
+          />
+        </div>
+
+        <div class="col-md-2">
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            v-model="filters.end_date"
+            @change="dateChanged"
+            title="Bitiş Tarihi"
+          />
+        </div>
+
+        <div class="col-md-1">
+          <button
+            class="btn btn-outline-secondary btn-sm w-100"
+            @click="clearFilters"
+            title="Filtreleri Temizle"
+          >
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-hover table-sm" :style="{ filter: loading ? 'blur(5px)' : 'none' }">
+          <thead class="table-dark small">
+            <tr>
+              <th>ID</th>
+              <th>Template</th>
+              <th>Alıcı</th>
+              <th>Konu</th>
+              <th>Durum</th>
+              <th>Deneme</th>
+              <th>Tarih</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody class="align-middle small">
+            <tr v-for="mail in mails" :key="mail.id">
+              <td class="fw-bold" style="width: 5%;">[[ mail.id ]]</td>
+
+              <td style="width: 12%;">
+                <span v-if="mail.template_name" class="badge bg-info">
+                  [[ getTemplateDisplayName(mail.template_name) ]]
+                </span>
+                <span v-else class="badge bg-secondary">Custom</span>
+              </td>
+
+              <td style="width: 25%;">
+                <div>
+                  <strong>[[ mail.to_email ]]</strong>
+                  <div v-if="mail.to_name" class="text-muted small">[[ mail.to_name ]]</div>
+                </div>
+              </td>
+
+              <td style="width: 25%;">
+                <span :title="mail.subject">[[ truncateText(mail.subject, 50) ]]</span>
+              </td>
+
+              <td style="width: 10%;">
+                <span v-if="mail.status === 'pending'" class="badge bg-warning">Beklemede</span>
+                <span v-else-if="mail.status === 'retry'" class="badge bg-info">Tekrar</span>
+                <span v-else-if="mail.status === 'sent'" class="badge bg-success">Gönderildi</span>
+                <span v-else-if="mail.status === 'failed'" class="badge bg-danger">Başarısız</span>
+                <span v-else class="badge bg-secondary">[[ mail.status ]]</span>
+
+                <!-- Error message tooltip -->
+                <div v-if="mail.error_message" class="mt-1">
+                  <small class="text-danger" :title="mail.error_message">
+                    <i class="bi bi-exclamation-triangle"></i> Hata
+                  </small>
+                </div>
+              </td>
+
+              <td style="width: 8%;">
+                <span class="badge bg-light text-dark">
+                  [[ mail.attempts ]] / [[ mail.max_attempts ]]
+                </span>
+              </td>
+
+              <td style="width: 12%;" class="small">
+                <div><strong>Oluşturulma:</strong> [[ mail.created_at ]]</div>
+                <div v-if="mail.sent_at" class="text-success">
+                  <strong>Gönderilme:</strong> [[ mail.sent_at ]]
+                </div>
+                <div v-if="mail.scheduled_at" class="text-info">
+                  <strong>Zamanlanmış:</strong> [[ mail.scheduled_at ]]
+                </div>
+              </td>
+
+              <td class="text-nowrap">
+                <div class="d-flex justify-content-end align-items-center">
+                  <div class="btn-group btn-group-sm">
+                    <!-- Retry button for failed/retry mails -->
+                    <button
+                      v-if="mail.status === 'failed' || mail.status === 'retry'"
+                      class="btn btn-warning"
+                      @click="retryMail(mail.id)"
+                      title="Tekrar Gönder"
+                    >
+                      <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+
+                    <!-- View details button -->
+                    <button
+                      class="btn btn-info"
+                      @click="showMailDetails(mail)"
+                      title="Detayları Görüntüle"
+                    >
+                      <i class="bi bi-eye"></i>
+                    </button>
+
+                    <!-- Delete button -->
+                    <button
+                      class="btn btn-danger"
+                      @click="deleteMail(mail.id)"
+                      title="Sil"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="mails.length === 0">
+              <td colspan="8" class="text-center text-muted py-4">
+                <i class="bi bi-envelope-x"></i> Mail bulunamadı
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="meta.total_pages > 1" class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+        <div class="d-flex align-items-center">
+          <label class="form-label me-2 mb-0">Sayfa Başına:</label>
+          <select
+            class="form-select form-select-sm"
+            style="width: auto;"
+            v-model="filters.limit"
+            @change="changeLimit"
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <button
+            class="btn btn-outline-secondary btn-sm me-2"
+            @click="changePage(meta.page - 1)"
+            :disabled="meta.page <= 1"
+          >
+            <i class="bi bi-chevron-left"></i> Önceki
+          </button>
+
+          <select
+            class="form-select form-select-sm mx-2"
+            style="width: auto;"
+            v-model="filters.page"
+            @change="changePage(filters.page)"
+          >
+            <option v-for="page in meta.total_pages" :key="page" :value="page">
+              Sayfa [[ page ]]
+            </option>
+          </select>
+
+          <button
+            class="btn btn-outline-secondary btn-sm ms-2"
+            @click="changePage(meta.page + 1)"
+            :disabled="meta.page >= meta.total_pages"
+          >
+            Sonraki <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="text-muted small">
+          Toplam [[ meta.total ]] kayıt
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Mail Section -->
+  <div class="card mt-4 mb-4">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-envelope-plus me-2"></i>Test Mail Gönder
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <h6>Basit Test Mail</h6>
+          <p class="text-muted small">
+            Sabit verilerle hızlı test maili gönderir (test@example.com)
+          </p>
+          <button
+            class="btn btn-outline-primary btn-sm"
+            @click="sendSimpleTestMail"
+            :disabled="sendingSimpleTest"
+          >
+            <i class="bi bi-envelope" :class="{ 'spin': sendingSimpleTest }"></i>
+            [[ sendingSimpleTest ? 'Gönderiliyor...' : 'Basit Test Mail Gönder' ]]
+          </button>
+        </div>
+
+        <div class="col-md-4">
+          <h6>Özel Test Mail</h6>
+          <p class="text-muted small">
+            Kendi verilerinizle test maili gönderir
+          </p>
+          <button
+            class="btn btn-primary btn-sm"
+            @click="showTestMailModal"
+          >
+            <i class="bi bi-envelope-plus"></i>
+            Özel Test Mail Gönder
+          </button>
+        </div>
+
+        <div class="col-md-4">
+          <h6>Data Test Mail</h6>
+          <p class="text-muted small">
+            JSON data ile basit mail sistemi testi
+          </p>
+          <button
+            class="btn btn-info btn-sm"
+            @click="sendDataTestMail"
+            :disabled="sendingDataTest"
+          >
+            <i class="bi bi-code" :class="{ 'spin': sendingDataTest }"></i>
+            [[ sendingDataTest ? 'Gönderiliyor...' : 'Data Test Mail' ]]
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mail Details Modal -->
+  <div class="modal fade" id="mailDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Mail Detayları</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" v-if="selectedMail">
+          <div class="row">
+            <div class="col-md-6">
+              <strong>ID:</strong> [[ selectedMail.id ]]<br>
+              <strong>Template:</strong> [[ selectedMail.template_name || 'Custom' ]]<br>
+              <strong>Alıcı Email:</strong> [[ selectedMail.to_email ]]<br>
+              <strong>Alıcı Adı:</strong> [[ selectedMail.to_name || '-' ]]<br>
+              <strong>Dil:</strong> [[ selectedMail.language ]]<br>
+            </div>
+            <div class="col-md-6">
+              <strong>Durum:</strong>
+              <span v-if="selectedMail.status === 'pending'" class="badge bg-warning">Beklemede</span>
+              <span v-else-if="selectedMail.status === 'retry'" class="badge bg-info">Tekrar</span>
+              <span v-else-if="selectedMail.status === 'sent'" class="badge bg-success">Gönderildi</span>
+              <span v-else-if="selectedMail.status === 'failed'" class="badge bg-danger">Başarısız</span>
+              <br><br>
+              <strong>Deneme:</strong> [[ selectedMail.attempts ]] / [[ selectedMail.max_attempts ]]<br>
+              <strong>Oluşturulma:</strong> [[ selectedMail.created_at ]]<br>
+              <strong>Güncelleme:</strong> [[ selectedMail.updated_at ]]<br>
+              <div v-if="selectedMail.sent_at">
+                <strong>Gönderilme:</strong> [[ selectedMail.sent_at ]]
+              </div>
+              <div v-if="selectedMail.scheduled_at">
+                <strong>Zamanlanmış:</strong> [[ selectedMail.scheduled_at ]]
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <strong>Konu:</strong><br>
+            <div class="bg-light p-2 rounded">[[ selectedMail.subject ]]</div>
+          </div>
+
+          <div v-if="selectedMail.error_message" class="mb-3">
+            <strong>Hata Mesajı:</strong><br>
+            <div class="bg-danger bg-opacity-10 text-danger p-2 rounded">
+              [[ selectedMail.error_message ]]
+            </div>
+          </div>
+        </div>
+        <div class="modal-body" v-else>
+          <div class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+          <button
+            v-if="selectedMail && (selectedMail.status === 'failed' || selectedMail.status === 'retry')"
+            type="button"
+            class="btn btn-warning"
+            @click="retryMail(selectedMail.id)"
+            data-bs-dismiss="modal"
+          >
+            <i class="bi bi-arrow-clockwise"></i> Tekrar Gönder
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Mail Modal -->
+  <div class="modal fade" id="testMailModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Özel Test Mail Gönder</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="sendCustomTestMail">
+            <div class="mb-3">
+              <label class="form-label">Template</label>
+              <select class="form-select" v-model="testMailForm.template_name" required>
+                <option value="user_verification">Kullanıcı Doğrulama</option>
+                <option value="welcome">Hoş Geldin</option>
+                <option value="order_confirmation">Sipariş Onayı</option>
+                <option value="password_reset">Şifre Sıfırlama</option>
+                <option value="payment_confirmation">Ödeme Onayı</option>
+                <option value="order_status_update">Sipariş Durumu</option>
+                <option value="contact_form">İletişim Formu</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Alıcı Email</label>
+              <input type="email" class="form-control" v-model="testMailForm.to_email" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Alıcı Adı</label>
+              <input type="text" class="form-control" v-model="testMailForm.to_name">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Dil</label>
+              <select class="form-select" v-model="testMailForm.language">
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="sendCustomTestMail"
+            :disabled="sendingCustomTest"
+          >
+            <i class="bi bi-envelope-plus" :class="{ 'spin': sendingCustomTest }"></i>
+            [[ sendingCustomTest ? 'Gönderiliyor...' : 'Test Mail Gönder' ]]
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, onMounted } = Vue;
+
+  createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+      // Reactive state
+      const mails = ref([]);
+      const meta = ref({});
+      const stats = ref(null);
+      const loading = ref(false);
+      const loadingStats = ref(false);
+      const processing = ref(false);
+      const searchTimeout = ref(null);
+      const selectedMail = ref(null);
+      const sendingSimpleTest = ref(false);
+      const sendingCustomTest = ref(false);
+      const sendingDataTest = ref(false);
+
+      const testMailForm = ref({
+        template_name: 'user_verification',
+        to_email: '',
+        to_name: '',
+        language: 'tr'
+      });
+
+      const filters = ref({
+        search: "",
+        limit: 20,
+        page: 1,
+        status: "",
+        template_name: "",
+        start_date: null,
+        end_date: null
+      });
+
+      // URL Management
+      const getUrlParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+          page: parseInt(urlParams.get('page')) || 1,
+          limit: parseInt(urlParams.get('limit')) || 20,
+          search: urlParams.get('search') || '',
+          status: urlParams.get('status') || '',
+          template_name: urlParams.get('template_name') || '',
+          start_date: urlParams.get('start_date') || null,
+          end_date: urlParams.get('end_date') || null
+        };
+      };
+
+      const updateUrl = (params) => {
+        const url = new URL(window.location);
+
+        Object.keys(params).forEach(key => {
+          if (params[key] && params[key] !== '' && (key !== 'page' || params[key] > 1) && (key !== 'limit' || params[key] !== 20)) {
+            url.searchParams.set(key, params[key]);
+          } else {
+            url.searchParams.delete(key);
+          }
+        });
+
+        window.history.pushState({}, '', url);
+      };
+
+      // Methods
+      const loadMails = async () => {
+        loading.value = true;
+        try {
+          const params = new URLSearchParams({
+            page: filters.value.page,
+            limit: filters.value.limit,
+            ...(filters.value.search && { search: filters.value.search }),
+            ...(filters.value.status && { status: filters.value.status }),
+            ...(filters.value.template_name && { template_name: filters.value.template_name }),
+            ...(filters.value.start_date && { start_date: filters.value.start_date }),
+            ...(filters.value.end_date && { end_date: filters.value.end_date }),
+          });
+
+          const response = await fetch(`/admin/api/mailer/queue?${params}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            mails.value = data && data.data ? data.data : [];
+            meta.value = data && data.meta ? data.meta : {};
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: "Mailler yüklenirken hata oluştu: " + (data ? data.error : "Bilinmeyen hata")
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Mailler yüklenirken hata oluştu: " + error.message
+          });
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const loadStats = async () => {
+        loadingStats.value = true;
+        try {
+          const response = await fetch('/admin/api/mailer/stats');
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            stats.value = data.stats;
+          }
+        } catch (error) {
+          console.error('Stats yüklenirken hata:', error);
+        } finally {
+          loadingStats.value = false;
+        }
+      };
+
+      const processQueue = async () => {
+        console.log("kuyruk işleniyor")
+        processing.value = true;
+        try {
+          const response = await fetch('/admin/api/mailer/process', {
+            method: 'POST'
+          });
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Başarılı!',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+            // Reload data
+            await loadMails();
+            await loadStats();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: data.message || 'Mail işleme hatası'
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Mail işleme hatası: " + error.message
+          });
+        } finally {
+          processing.value = false;
+        }
+      };
+
+      const retryMail = async (id) => {
+        try {
+          const response = await fetch(`/admin/api/mailer/retry/${id}`, {
+            method: 'POST'
+          });
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Başarılı!',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+            await loadMails();
+            await loadStats();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: data.message || 'Mail retry hatası'
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Mail retry hatası: " + error.message
+          });
+        }
+      };
+
+      const deleteMail = async (id) => {
+        const result = await Swal.fire({
+          title: 'Emin misiniz?',
+          text: 'Bu maili silmek istediğinizden emin misiniz?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Evet, Sil!',
+          cancelButtonText: 'İptal'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+          const response = await fetch(`/admin/api/mailer/delete/${id}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Silindi!',
+              text: 'Mail başarıyla silindi.',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+            await loadMails();
+            await loadStats();
+          } else {
+            const data = await response.json();
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: data.message || 'Mail silme hatası'
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Mail silme hatası: " + error.message
+          });
+        }
+      };
+
+      const showMailDetails = (mail) => {
+        selectedMail.value = { ...mail }; // Shallow copy to avoid proxy issues
+        const modal = new bootstrap.Modal(document.getElementById('mailDetailsModal'));
+        modal.show();
+      };
+
+      const debounceSearch = () => {
+        clearTimeout(searchTimeout.value);
+        searchTimeout.value = setTimeout(() => {
+          filters.value.page = 1;
+          updateUrl(filters.value);
+          loadMails();
+        }, 500);
+      };
+
+      const statusChanged = () => {
+        filters.value.page = 1;
+        updateUrl(filters.value);
+        loadMails();
+      };
+
+      const templateChanged = () => {
+        filters.value.page = 1;
+        updateUrl(filters.value);
+        loadMails();
+      };
+
+      const dateChanged = () => {
+        filters.value.page = 1;
+        updateUrl(filters.value);
+        loadMails();
+      };
+
+      const changePage = (page) => {
+        const pageNum = parseInt(page);
+        if (pageNum >= 1 && pageNum <= meta.value.total_pages) {
+          filters.value.page = pageNum;
+          updateUrl(filters.value);
+          loadMails();
+        }
+      };
+
+      const changeLimit = () => {
+        filters.value.page = 1;
+        updateUrl(filters.value);
+        loadMails();
+      };
+
+      const clearFilters = () => {
+        filters.value = {
+          search: "",
+          limit: 20,
+          page: 1,
+          status: "",
+          template_name: "",
+          start_date: null,
+          end_date: null
+        };
+        updateUrl(filters.value);
+        loadMails();
+      };
+
+      // Helper functions
+      const getTemplateDisplayName = (templateName) => {
+        const templates = {
+          'user_verification': 'Kullanıcı Doğrulama',
+          'welcome': 'Hoş Geldin',
+          'order_confirmation': 'Sipariş Onayı',
+          'password_reset': 'Şifre Sıfırlama',
+          'payment_confirmation': 'Ödeme Onayı',
+          'order_status_update': 'Sipariş Durumu',
+          'contact_form': 'İletişim Formu'
+        };
+        return templates[templateName] || templateName;
+      };
+
+      const truncateText = (text, length) => {
+        if (!text) return '';
+        return text.length > length ? text.substring(0, length) + '...' : text;
+      };
+
+      // Data Test Mail Function
+      const sendDataTestMail = async () => {
+        sendingDataTest.value = true;
+
+        try {
+          const testData = {
+            to_email: 'tamer4yigit@gmail.com',
+            to_name: 'Tamer YİĞİT',
+            subject: 'Data Test Mail',
+            template_name: 'simple_mail',
+            language: 'tr',
+            // Template variables
+            greeting: 'Merhaba Tamer!',
+            message: 'Bu yeni basit mail sistemi ile gönderilen bir test mailidir.',
+            content: '<p><strong>Özellikler:</strong></p><ul><li>Tek parametre ile mail gönderimi</li><li>Esnek template sistemi</li><li>JSON data desteği</li></ul>',
+            button_text: 'Admin Paneli',
+            button_url: 'http://localhost:3000/admin',
+            success: 'Sistem başarıyla çalışıyor! 🎉'
+          };
+
+          const response = await fetch('/admin/api/send-simple-mail', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(testData)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            showNotification('success', result.message);
+            await loadMailQueue(); // Listeyi yenile
+          } else {
+            showNotification('error', result.message || 'Data test mail gönderilirken hata oluştu');
+          }
+        } catch (error) {
+          console.error('Data test mail error:', error);
+          showNotification('error', 'Data test mail gönderilirken hata oluştu: ' + error.message);
+        } finally {
+          sendingDataTest.value = false;
+        }
+      };
+
+      // Test Mail Functions
+      const sendSimpleTestMail = async () => {
+        sendingSimpleTest.value = true;
+        try {
+          const response = await fetch('/admin/api/test-mail-simple');
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Başarılı!',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+            // Reload data
+            await loadMails();
+            await loadStats();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: data.message || 'Test mail gönderme hatası'
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Test mail gönderme hatası: " + error.message
+          });
+        } finally {
+          sendingSimpleTest.value = false;
+        }
+      };
+
+      const showTestMailModal = () => {
+        // Form'u temizle
+        testMailForm.value = {
+          template_name: 'user_verification',
+          to_email: '',
+          to_name: '',
+          language: 'tr'
+        };
+
+        const modal = new bootstrap.Modal(document.getElementById('testMailModal'));
+        modal.show();
+      };
+
+      const sendCustomTestMail = async () => {
+        sendingCustomTest.value = true;
+        try {
+          const response = await fetch('/admin/api/test-mail', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testMailForm.value)
+          });
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Başarılı!',
+              text: data.message,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+            // Modal'ı kapat
+            const modal = bootstrap.Modal.getInstance(document.getElementById('testMailModal'));
+            modal.hide();
+
+            // Reload data
+            await loadMails();
+            await loadStats();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Hata!',
+              text: data.message || 'Test mail gönderme hatası'
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: "Test mail gönderme hatası: " + error.message
+          });
+        } finally {
+          sendingCustomTest.value = false;
+        }
+      };
+
+      // Lifecycle
+      onMounted(() => {
+        const urlParams = getUrlParams();
+        filters.value = urlParams;
+
+        loadMails();
+        loadStats();
+
+        // Auto refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
+
+        window.addEventListener('popstate', () => {
+          const urlParams = getUrlParams();
+          filters.value = urlParams;
+          loadMails();
+        });
+      });
+
+      return {
+        mails,
+        meta,
+        stats,
+        loading,
+        loadingStats,
+        processing,
+        filters,
+        selectedMail,
+        sendingSimpleTest,
+        sendingCustomTest,
+        sendingDataTest,
+        testMailForm,
+        loadMails,
+        loadStats,
+        processQueue,
+        retryMail,
+        deleteMail,
+        showMailDetails,
+        debounceSearch,
+        statusChanged,
+        templateChanged,
+        dateChanged,
+        changePage,
+        changeLimit,
+        clearFilters,
+        getTemplateDisplayName,
+        truncateText,
+        sendSimpleTestMail,
+        sendDataTestMail,
+        showTestMailModal,
+        sendCustomTestMail
+      };
+    },
+  }).mount("#mailerApp");
+</script>
+
+<style>
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.badge {
+  font-size: 0.75em;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* Fix for flexbox in table cells */
+.table td .d-flex {
+  min-height: 100%;
+}
+
+.modal-body strong {
+  color: #495057;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+</style>
+{% endblock %}

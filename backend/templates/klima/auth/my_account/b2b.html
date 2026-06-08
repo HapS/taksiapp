@@ -1,0 +1,572 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+<div class="container mt-1" id="orders-app">
+    <div class="row">
+        <div class="col-lg-3 col-xl-3 col-xxl-3 d-none d-sm-block d-sm-none d-md-block d-md-none d-lg-block pt-3 pb-3" id="sol-menu">
+            {% include '@@theme@@/auth/my_account/sidebar.html' %}
+        </div>
+
+        <div class="col-lg-9 col-xl-9 col-xxl-9 pt-3 pb-3">
+            <!-- Yükleme -->
+            <div v-if="loadingCredit" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">{{ t(key="Yükleniyor...", default="Yükleniyor...", lang=current_language) }}</span>
+                </div>
+                <p class="mt-3 text-muted">{{ t(key="Veriler_yükleniyor...", default="Veriler yükleniyor...", lang=current_language) }}</p>
+            </div>
+
+            <div v-else class="card mb-4">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0"> <i class="bi bi-bag-check me-2"></i>{{ t(key="Vadeli Alışverişlerim", default="Vadeli Alışverişlerim", lang=current_language) }}</h4>
+                </div>
+            </div>
+
+            <!-- Kredi Özet Kartları -->
+            <div v-if="creditSummary" class="row row-cols-2 row-cols-md-5 g-2 mb-4">
+                <div class="col">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body p-2">
+                            <small>{{ t(key="Toplam_Kredi_Limiti", default="Toplam Kredi Limiti", lang=current_language) }}</small>
+                            <h6 class="mb-0">[[ creditSummary.credit_limit ]]</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div :class="creditSummary.used_credit_raw < 0 ? 'card bg-success text-white h-100' : creditSummary.used_credit_raw > 0 ? 'card bg-danger text-white h-100' : 'card bg-secondary text-white h-100'">
+                        <div class="card-body p-2">
+                            <small v-if="creditSummary.used_credit_raw < 0">{{ t(key="Firmamizin_Size_Borcu", default="Firmamızın Size Borcu", lang=current_language) }}</small>
+                            <small v-else-if="creditSummary.used_credit_raw > 0">{{ t(key="Firmanizin_Borcu", default="Firmanızın Borcu", lang=current_language) }}</small>
+                            <small v-else>{{ t(key="Borc_Yok", default="Borç Yok", lang=current_language) }}</small>
+                            <h6 class="mb-0">[[ creditSummary.used_credit ]]</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body p-2">
+                            <small>{{ t(key="Kullanilabilir_Kredi", default="Kullanılabilir Kredi", lang=current_language) }}</small>
+                            <h6 class="mb-0">[[ creditSummary.available_credit ]]</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card bg-dark text-white h-100">
+                        <div class="card-body p-2">
+                            <small>{{ t(key="Toplam_Alisveris", default="Toplam Alışveriş", lang=current_language) }}</small>
+                            <h6 class="mb-0">[[ creditSummary.total_purchases ]]</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body p-2">
+                            <small>{{ t(key="Yapilan_Toplam_Odeme", default="Yapılan Toplam Ödeme", lang=current_language) }}</small>
+                            <h6 class="mb-0">[[ creditSummary.total_payments ]]</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- Kredi İşlemleri -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-arrow-left-right me-2"></i>{{ t(key="Kredi_Islem_Gecmisi", default="Kredi İşlem Geçmişi", lang=current_language) }}
+                    </h5>
+
+                    <div class="table-responsive">
+                            <table class="table table-striped table-hover table-sm">
+                                <thead class="table-dark small">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>{{ t(key="Islem_Tipi", default="İşlem Tipi", lang=current_language) }}</th>
+                                        <th>{{ t(key="Tutar", default="Tutar", lang=current_language) }}</th>
+                                        <th>{{ t(key="Onceki_Bakiye", default="Önceki Bakiye", lang=current_language) }}</th>
+                                        <th>{{ t(key="Sonraki_Bakiye", default="Sonraki Bakiye", lang=current_language) }}</th>
+                                        <th>{{ t(key="Siparis", default="Sipariş", lang=current_language) }}</th>
+                                        <th>{{ t(key="Aciklama", default="Açıklama", lang=current_language) }}</th>
+                                        <th>{{ t(key="Tarih", default="Tarih", lang=current_language) }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="align-middle small">
+                                    <tr v-for="tx in creditTransactions" :key="tx.id">
+                                        <td class="fw-bold">[[ tx.id ]]</td>
+                                        <td>
+                                            <span class="badge" :class="getTransactionTypeBadge(tx.transaction_type)">
+                                                [[ tx.transaction_type_display ]]
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold" :class="getAmountClass(tx.transaction_type)">[[ tx.amount ]]</td>
+                                        <td>[[ tx.balance_before ]]</td>
+                                        <td>[[ tx.balance_after ]]</td>
+                                        <td>
+                                            <a v-if="tx.order_id" :href="'/my-account/orders/' + tx.order_id" class="badge bg-info text-decoration-none">
+                                                #[[ tx.order_id ]] <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                            </a>
+                                            <span v-else class="text-muted">-</span>
+                                        </td>
+                                        <td><small>[[ tx.description || '-' ]]</small></td>
+                                        <td class="text-muted small">[[ tx.created_at_formatted ]]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="creditTransactions.length === 0" class="text-center py-4">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <p class="text-muted mt-2">{{ t(key="Henuz_islem_yok", default="Henüz işlem bulunmuyor", lang=current_language) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Dekont Yükleme Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-upload me-2"></i>
+                        {{ t(key="Ödeme_Dekontu_Yükle", default="Ödeme Dekontu Yükle", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>{{ t(key="Sipariş:", default="Sipariş:", lang=current_language) }}</strong> #[[ selectedOrder ? selectedOrder.order_id : '' ]]<br>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="paymentDocument" class="form-label">{{ t(key="Ödeme_Dekontu", default="Ödeme Dekontu", lang=current_language) }}</label>
+                        <input type="file" class="form-control" id="paymentDocument"
+                               accept=".pdf,.png,.jpg,.jpeg" @change="handleFileSelect">
+                        <div class="form-text">{{ t(key="PDF,_PNG,_JPG_formatlarında_dosya_yükleyebilirsiniz._(Max:_5MB)", default="PDF, PNG, JPG formatlarında dosya yükleyebilirsiniz. (Max: 5MB)", lang=current_language) }}</div>
+                    </div>
+
+                    <div v-if="selectedFile" class="alert alert-success">
+                        <i class="bi bi-file-earmark-check me-2"></i>
+                        {{ t(key="Seçilen_dosya:", default="Seçilen dosya:", lang=current_language) }} [[ selectedFile.name ]]
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t(key="İptal", default="İptal", lang=current_language) }}</button>
+                    <button type="button" class="btn btn-primary" @click="uploadDocument" :disabled="!selectedFile || uploading">
+                        <span v-if="uploading">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            {{ t(key="Yükleniyor...", default="Yükleniyor...", lang=current_language) }}
+                        </span>
+                        <span v-else>
+                            <i class="bi bi-upload me-1"></i> {{ t(key="Yükle", default="Yükle", lang=current_language) }}
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İptal Modal -->
+    <div class="modal fade" id="cancelItemModal" tabindex="-1" aria-labelledby="cancelItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelItemModalLabel">
+                        {{ t(key="Ürünü_İptal_Et", default="Ürünü İptal Et", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ t(key="İptal_Modal_Mesaj", default="Siparişinizdeki bu ürünü iptal etmeye karar mı verdiniz?", lang=current_language) }}</p>
+                    <div v-if="cancelingItem" class="alert alert-warning">
+                        <strong>[[ cancelingItem.product_title ]]</strong>
+                        <br>
+                        <small v-if="cancelingItem.variant_display">[[ cancelingItem.variant_display ]]</small>
+                        <br>
+                        <small>{{ t(key="Toplam_Adet", default="Toplam Adet", lang=current_language) }}: [[ cancelingItem.quantity ]]</small>
+
+                        <!-- Quantity Seçimi -->
+                        <div v-if="cancelingItem.quantity > 1" class="mt-2">
+                            <label class="form-label">{{ t(key="İptal_Edilecek_Adet", default="İptal Edilecek Adet", lang=current_language) }}:</label>
+                            <select class="form-select" v-model="cancelQuantity" style="width: auto;">
+                                <option v-for="n in cancelingItem.quantity" :value="n">[[ n ]]</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kargo Ücreti Uyarısı -->
+                    <div v-if="cancelPreviewLoading" class="text-center my-3">
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        {{ t(key="Hesaplanıyor", default="Hesaplanıyor...", lang=current_language) }}
+                    </div>
+                    <div v-else-if="cancelPreview && cancelPreview.shipping_fee_will_apply" class="alert alert-danger mt-3 mb-0">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle-fill me-2 fs-5 mt-1"></i>
+                            <div>
+                                <strong>{{ t(key="Kargo_Ücreti_Uyarısı", default="Kargo Ücreti Uyarısı!", lang=current_language) }}</strong>
+                                <p class="mb-2 mt-1">
+                                    {{ t(key="Kargo_Ücreti_Açıklama", default="Bu ürünü iptal ettiğinizde siparişinizin toplam tutarı ücretsiz kargo limitinin altına düşecektir. Siparişinize kargo ücreti yansıyacaktır.", lang=current_language) }}
+                                </p>
+                                <div class="small">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ t(key="Ücretsiz_Kargo_Limiti", default="Ücretsiz kargo limiti:", lang=current_language) }}</span>
+                                        <strong>[[ cancelPreview.free_shipping_threshold_formatted ]]</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ t(key="İptal_Sonrası_Toplam", default="İptal sonrası sipariş toplamı:", lang=current_language) }}</span>
+                                        <strong>[[ cancelPreview.remaining_total_after_cancel_formatted ]]</strong>
+                                    </div>
+                                    <hr class="my-1">
+                                    <div class="d-flex justify-content-between text-danger">
+                                        <span>{{ t(key="Uygulanacak_Kargo_Ücreti", default="Uygulanacak kargo ücreti:", lang=current_language) }}</span>
+                                        <strong>[[ cancelPreview.new_shipping_fee_formatted ]]</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ t(key="İptal_Açıklama", default="İptal talebiniz admin tarafından onaylandıktan sonra siparişinizden düşülecektir.", lang=current_language) }}
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ t(key="İptal", default="İptal", lang=current_language) }}
+                    </button>
+                    <button type="button" class="btn btn-danger" @click="requestCancelItem" :disabled="cancelingLoading">
+                        <span v-if="cancelingLoading" class="spinner-border spinner-border-sm me-1"></span>
+                        {{ t(key="Evet_İptal_Et", default="Evet, İptal Et", lang=current_language) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İade Modal -->
+    <div class="modal fade" id="returnItemModal" tabindex="-1" aria-labelledby="returnItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnItemModalLabel">
+                        <i class="bi bi-arrow-return-left me-2"></i>{{ t(key="İade_Talebi_Oluştur", default="İade Talebi Oluştur", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div v-if="returningItem" class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <img :src="returningItem.product_cover || '/static/no_image.png'" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div>
+                                <strong>[[ returningItem.product_title ]]</strong>
+                                <div v-if="returningItem.variant_display" class="text-muted small">[[ returningItem.variant_display ]]</div>
+                                <small>{{ t(key="Toplam_Adet", default="Toplam Adet", lang=current_language) }}: [[ returningItem.quantity ]]</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- İade Adedi -->
+                    <div v-if="returningItem && returningItem.quantity > 1" class="mb-3">
+                        <label class="form-label fw-semibold">{{ t(key="İade_Edilecek_Adet", default="İade Edilecek Adet", lang=current_language) }}:</label>
+                        <select class="form-select" v-model="returnQuantity" style="width: auto;">
+                            <option v-for="n in returningItem.quantity" :value="n">[[ n ]]</option>
+                        </select>
+                    </div>
+
+                    <!-- İade Sebebi -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t(key="İade_Sebebi", default="İade Sebebi", lang=current_language) }} <span class="text-danger">*</span></label>
+                        <select class="form-select" v-model="returnReason">
+                            <option value="">{{ t(key="Sebep_Seçiniz", default="Sebep seçiniz...", lang=current_language) }}</option>
+                            <option value="defective">{{ t(key="Ürün_Kusurlu_Bozuk", default="Ürün kusurlu / bozuk", lang=current_language) }}</option>
+                            <option value="wrong_product">{{ t(key="Yanlış_Ürün_Gönderildi", default="Yanlış ürün gönderildi", lang=current_language) }}</option>
+                            <option value="not_as_described">{{ t(key="Ürün_Açıklamaya_Uygun_Değil", default="Ürün açıklamaya uygun değil", lang=current_language) }}</option>
+                            <option value="unwanted">{{ t(key="Ürünü_İstemiyorum", default="Ürünü istemiyorum", lang=current_language) }}</option>
+                            <option value="damaged_in_shipping">{{ t(key="Kargoda_Hasar_Görmüş", default="Kargo sırasında hasar görmüş", lang=current_language) }}</option>
+                            <option value="other">{{ t(key="Diğer", default="Diğer", lang=current_language) }}</option>
+                        </select>
+                    </div>
+
+                    <!-- Açıklama -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t(key="Açıklama", default="Açıklama (isteğe bağlı)", lang=current_language) }}</label>
+                        <textarea class="form-control" v-model="returnReasonText" rows="3" :placeholder="'{{ t(key="İade_Açıklama_Placeholder", default="Lütfen iade sebebinizi detaylı açıklayın...", lang=current_language) }}'"></textarea>
+                    </div>
+
+                    <!-- Hata mesajı -->
+                    <div v-if="returnError" class="alert alert-danger small">
+                        <i class="bi bi-exclamation-triangle me-1"></i> [[ returnError ]]
+                    </div>
+
+                    <div class="alert alert-light small mt-2 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ t(key="İade_Bilgi_Mesajı", default="İade talebiniz incelendikten sonra onaylanacaktır. Onaylanan iadelerde ürünü belirtilen adrese kargo ile göndermeniz gerekecektir.", lang=current_language) }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ t(key="Vazgeç", default="Vazgeç", lang=current_language) }}
+                    </button>
+                    <button type="button" class="btn btn-primary" @click="submitReturnRequest" :disabled="returningLoading || !returnReason">
+                        <span v-if="returningLoading" class="spinner-border spinner-border-sm me-1"></span>
+                        <i v-else class="bi bi-arrow-return-left me-1"></i>
+                        {{ t(key="İade_Talebi_Gönder", default="İade Talebi Gönder", lang=current_language) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İade Detay Modal -->
+    <div class="modal fade" id="returnDetailModal" tabindex="-1" aria-labelledby="returnDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnDetailModalLabel">
+                        <i class="bi bi-info-circle me-2"></i>{{ t(key="İade_Talebi_Detay", default="İade Talebi Detayı", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div v-if="selectedReturnDetail">
+                        <!-- Durum ve Sebep -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">{{ t(key="Durum", default="Durum", lang=current_language) }}</label>
+                                    <div class="p-2 bg-light rounded">
+                                        <span :class="'badge ' + getReturnStatusBadgeClass(selectedReturnDetail.status)">
+                                            [[ getReturnStatusText(selectedReturnDetail.status) ]]
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">{{ t(key="Sebep", default="Sebep", lang=current_language) }}</label>
+                                    <div class="p-2 bg-light rounded" v-html="getReturnReasonText(selectedReturnDetail.reason)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Açıklama -->
+                        <div v-if="selectedReturnDetail.reason_text" class="mb-3">
+                            <label class="form-label fw-semibold">{{ t(key="Açıklama", default="Açıklama", lang=current_language) }}</label>
+                            <div class="p-2 bg-light rounded text-pre-line small">
+                                [[ selectedReturnDetail.reason_text ]]
+                            </div>
+                        </div>
+
+                        <!-- Red Sebebi -->
+                        <div v-if="selectedReturnDetail.rejection_reason" class="mb-3">
+                            <div class="alert alert-danger small mb-0">
+                                <strong>{{ t(key="Red_Sebebi", default="Red Sebebi", lang=current_language) }}:</strong>
+                                <p class="mb-0 mt-1">[[ selectedReturnDetail.rejection_reason ]]</p>
+                            </div>
+                        </div>
+
+                        <!-- Kargo Bilgisi -->
+                        <div v-if="selectedReturnDetail.return_cargo_tracking_no" class="mb-3">
+                            <label class="form-label fw-semibold">{{ t(key="Kargo_Takip", default="Kargo Takip No", lang=current_language) }}</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" :value="selectedReturnDetail.return_cargo_tracking_no" readonly>
+                                <span v-if="selectedReturnDetail.return_cargo_company" class="input-group-text small">
+                                    [[ selectedReturnDetail.return_cargo_company ]]
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- İade Tutarı -->
+                        <div v-if="selectedReturnDetail.refund_amount" class="mb-3">
+                            <label class="form-label fw-semibold">{{ t(key="İade_Tutarı", default="İade Tutarı", lang=current_language) }}</label>
+                            <div class="p-2 bg-light rounded">
+                                <strong>[[ selectedReturnDetail.refund_amount ]] [[ selectedReturnDetail.refund_currency || '' ]]</strong>
+                            </div>
+                        </div>
+
+                        <!-- Zaman Çizelgesi -->
+                        <div class="mt-4">
+                            <label class="form-label fw-semibold mb-3">{{ t(key="Zaman_Çizelgesi", default="Zaman Çizelgesi", lang=current_language) }}</label>
+                            <div class="timeline-compact">
+                                <div v-if="selectedReturnDetail.created_at" class="timeline-item">
+                                    <span class="badge bg-secondary me-2">{{ t(key="Oluşturuldu", default="Oluşturuldu", lang=current_language) }}</span>
+                                    <small class="text-muted">[[ formatDate(selectedReturnDetail.created_at) ]]</small>
+                                </div>
+                                <div v-if="selectedReturnDetail.approved_at" class="timeline-item">
+                                    <span class="badge bg-success me-2">{{ t(key="Onaylandı", default="Onaylandı", lang=current_language) }}</span>
+                                    <small class="text-muted">[[ formatDate(selectedReturnDetail.approved_at) ]]</small>
+                                </div>
+                                <div v-if="selectedReturnDetail.shipped_at" class="timeline-item">
+                                    <span class="badge bg-info me-2">{{ t(key="Kargoya_Verildi", default="Kargoya Verildi", lang=current_language) }}</span>
+                                    <small class="text-muted">[[ formatDate(selectedReturnDetail.shipped_at) ]]</small>
+                                </div>
+                                <div v-if="selectedReturnDetail.received_at" class="timeline-item">
+                                    <span class="badge bg-primary me-2">{{ t(key="Teslim_Alındı", default="Teslim Alındı", lang=current_language) }}</span>
+                                    <small class="text-muted">[[ formatDate(selectedReturnDetail.received_at) ]]</small>
+                                </div>
+                                <div v-if="selectedReturnDetail.completed_at" class="timeline-item">
+                                    <span class="badge bg-success me-2">{{ t(key="Tamamlandı", default="Tamamlandı", lang=current_language) }}</span>
+                                    <small class="text-muted">[[ formatDate(selectedReturnDetail.completed_at) ]]</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button v-if="selectedReturnDetail && selectedReturnDetail.status === 'approved'" type="button" class="btn btn-primary" @click="showCargoFormModal">
+                        <i class="bi bi-truck me-1"></i>{{ t(key="Kargo_Bilgisi_Girin", default="Kargo Bilgisi Girin", lang=current_language) }}
+                    </button>
+                    <button v-if="selectedReturnDetail && selectedReturnDetail.status === 'requested'" type="button" class="btn btn-danger" @click="cancelReturnFromDetail">
+                        <i class="bi bi-x-circle me-1"></i>{{ t(key="İade_İptal_Et", default="İade Talebini İptal Et", lang=current_language) }}
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ t(key="Kapat", default="Kapat", lang=current_language) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kargo Bilgisi Modal -->
+    <div class="modal fade" id="cargoFormModal" tabindex="-1" aria-labelledby="cargoFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cargoFormModalLabel">
+                        <i class="bi bi-truck me-2"></i>{{ t(key="Kargo_Bilgisi_Girin", default="Kargo Bilgisi Girin", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ t(key="Kargo_Bilgisi_Açıklama", default="İade onaylandı. Lütfen ürünü kargoya verip takip numarasını girin.", lang=current_language) }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t(key="Kargo_Takip_No", default="Kargo Takip No", lang=current_language) }} <span class="text-danger">*</span></label>
+                        <input v-model="cargoTrackingNo" type="text" class="form-control" :placeholder="'{{ t(key='Takip_No_Placeholder', default='Kargo takip numaranızı girin', lang=current_language) }}'">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ t(key="Kargo_Şirketi", default="Kargo Şirketi", lang=current_language) }}</label>
+                        <input v-model="cargoCompany" type="text" class="form-control" :placeholder="'{{ t(key='Kargo_Şirketi_Placeholder', default='Örn: Yurtiçi, Aras, MNG...', lang=current_language) }}'">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ t(key="Vazgeç", default="Vazgeç", lang=current_language) }}
+                    </button>
+                    <button type="button" class="btn btn-primary" @click="submitCargoInfo" :disabled="!cargoTrackingNo || cargoSubmitting">
+                        <span v-if="cargoSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+                        <i v-else class="bi bi-check-circle me-1"></i>
+                        {{ t(key="Kargo_Bilgisi_Gönder", default="Kargo Bilgisini Gönder", lang=current_language) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup() {
+        // Kredi state
+        const creditSummary = ref(null);
+        const loadingCredit = ref(false);
+        const creditTransactions = ref([]);
+
+        // Kredi metodları
+        const loadCreditSummary = async () => {
+            loadingCredit.value = true;
+            try {
+                const response = await fetch('/api/b2b/credit/me');
+                const data = await response.json();
+                if (data.data) {
+                    creditSummary.value = data.data;
+                }
+            } catch (error) {
+                console.error('Kredi özeti yüklenemedi:', error);
+            } finally {
+                loadingCredit.value = false;
+            }
+        };
+
+        const loadTransactions = async () => {
+            if (!creditTransactions.value.length) {
+                try {
+                    const params = new URLSearchParams();
+                    params.append('limit', '50');
+                    const response = await fetch(`/api/b2b/credit/transactions?${params}`);
+                    const data = await response.json();
+                    if (data.data) {
+                        creditTransactions.value = data.data;
+                    }
+                } catch (error) {
+                    console.error('Kredi işlemleri yüklenemedi:', error);
+                }
+            }
+        };
+
+
+        const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('tr-TR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+
+
+
+
+        const getTransactionTypeBadge = (type) => {
+            const badges = {
+                'purchase': 'bg-danger',
+                'payment': 'bg-success',
+                'adjustment': 'bg-warning text-dark',
+                'refund': 'bg-info'
+            };
+            return badges[type] || 'bg-secondary';
+        };
+
+        const getAmountClass = (type) => {
+            return type === 'purchase' ? 'text-danger' : 'text-success';
+        };
+
+
+        onMounted(() => {
+            loadCreditSummary();
+            loadTransactions();
+        });
+
+return {
+            creditSummary,
+            loadingCredit,
+            creditTransactions,
+            loadCreditSummary,
+            loadTransactions,
+            getTransactionTypeBadge,
+            getAmountClass
+        };
+    }
+}).mount('#orders-app');
+</script>
+{% endblock %}

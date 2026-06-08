@@ -1,0 +1,202 @@
+{% extends "admin/settings/layout.html" %} {% block settings_content %}
+<form
+  method="POST"
+  action="/admin/settings/social"
+  enctype="multipart/form-data"
+>
+  <!-- Sosyal Medya Hesapları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-share me-2"></i>Sosyal Medya Hesapları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-facebook text-primary me-2"></i>Facebook
+          </label>
+          <input
+            type="url"
+            class="form-control"
+            name="social_facebook"
+            value="{{ social_facebook }}"
+            placeholder="https://facebook.com/kullanici-adi"
+          />
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-twitter text-info me-2"></i>Twitter / X
+          </label>
+          <input
+            type="url"
+            class="form-control"
+            name="social_twitter"
+            value="{{ social_twitter }}"
+            placeholder="https://twitter.com/kullanici-adi"
+          />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-instagram text-danger me-2"></i>Instagram
+          </label>
+          <input
+            type="url"
+            class="form-control"
+            name="social_instagram"
+            value="{{ social_instagram }}"
+            placeholder="https://instagram.com/kullanici-adi"
+          />
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-linkedin text-primary me-2"></i>LinkedIn
+          </label>
+          <input
+            type="url"
+            class="form-control"
+            name="social_linkedin"
+            value="{{ social_linkedin }}"
+            placeholder="https://linkedin.com/company/sirket-adi"
+          />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-youtube text-danger me-2"></i>YouTube
+          </label>
+          <input
+            type="url"
+            class="form-control"
+            name="social_youtube"
+            value="{{ social_youtube }}"
+            placeholder="https://youtube.com/channel/kanal-id"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- İletişim Bilgileri -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-telephone me-2"></i>İletişim Bilgileri
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-envelope me-2"></i>E-posta Adresi
+          </label>
+          <input
+            type="email"
+            class="form-control"
+            name="contact_email"
+            value="{{ contact_email }}"
+            placeholder="info@example.com"
+          />
+          <div class="form-text">Genel iletişim e-posta adresi</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-telephone me-2"></i>Telefon Numarası
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            name="contact_phone"
+            value="{{ contact_phone }}"
+            placeholder="+90 555 123 45 67"
+          />
+          <div class="form-text">Müşteri hizmetleri telefon numarası</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold">
+          <i class="bi bi-geo-alt me-2"></i>Adres
+        </label>
+        <input
+          type="text"
+          class="form-control"
+          name="contact_address"
+          value="{{ contact_address }}"
+          placeholder="Örnek Mah. Örnek Sok. No:1, Şehir, Ülke"
+        />
+        <div class="form-text">Şirket/mağaza fiziksel adresi</div>
+      </div>
+    </div>
+  </div>
+  <!-- Google Maps Embed code-->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-map me-2"></i>Google Maps Embed Kodu
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label fw-bold">Embed Kodu</label>
+        <textarea
+          class="form-control"
+          name="contact_map_embed"
+          rows="4"
+          placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+                >{{ contact_map_embed }}</textarea
+        >
+        <div class="form-text">
+          Google Maps'ten aldığınız iframe embed kodunu buraya yapıştırın.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kullanım Bilgisi -->
+  <div class="card shadow-sm mb-4 border-info">
+    <div class="card-header bg-info text-white">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-info-circle me-2"></i>Kullanım Bilgisi
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="fw-bold">Sosyal Medya Linkleri:</h6>
+          <ul class="small">
+            <li>Site footer'ında sosyal medya ikonları olarak görünür</li>
+            <li>İletişim sayfasında listelenir</li>
+            <li>SEO için structured data'da kullanılır</li>
+            <li>Boş bırakılan alanlar gösterilmez</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h6 class="fw-bold">İletişim Bilgileri:</h6>
+          <ul class="small">
+            <li>İletişim sayfasında gösterilir</li>
+            <li>Footer'da iletişim bilgileri olarak kullanılır</li>
+            <li>E-posta formu gönderimlerinde alıcı adresi</li>
+            <li>Schema.org structured data'da kullanılır</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+</form>
+{% endblock %}

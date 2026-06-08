@@ -1,0 +1,783 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2" id="mediaApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">{{ title }}</h4>
+    </div>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-cloud-upload"></i> Dosya Yükle
+      </h5>
+    </div>
+    <div class="card-body">
+      <form @submit.prevent="uploadFile" enctype="multipart/form-data">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="fileInput" class="form-label">Dosya Seç (Çoklu) *</label>
+              <input type="file"
+                     class="form-control"
+                     id="fileInput"
+                     @change="handleFileSelect"
+                     accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.webp"
+                     multiple
+                     required>
+              <div class="form-text">Max 250MB/dosya - Resim, Video, Ses, PDF, Word</div>
+            </div>
+            <div class="mb-3">
+              <label for="contentTypeSelect" class="form-label">İçerik Türü Eşleme (Opsiyonel)</label>
+              <select class="form-select" id="contentTypeSelect" v-model="uploadForm.content_type">
+                <option value="">-- İlişkilendirme Yok --</option>
+                <option value="product">Product (SKU ile Eşle)</option>
+                <option value="blog">Blog (Slug ile Eşle)</option>
+                <option value="news">News (Slug ile Eşle)</option>
+                <option value="page">Page (Slug ile Eşle)</option>
+              </select>
+              <div class="form-text">Seçilirse, dosya adı (uzantısız) SKU veya Slug ile eşleşen içeriğe "Kapak Resmi" (cover) olarak atanır.</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Seçilen Dosyalar</label>
+              <div v-if="uploadForm.files.length > 0" class="small">
+                <div v-for="(file, index) in uploadForm.files" :key="index" class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                  <span>[[ file.name ]] ([[ formatFileSize(file.size) ]])</span>
+                  <button type="button" class="btn btn-sm btn-outline-danger" @click="removeFile(index)">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </div>
+              </div>
+              <div v-else class="text-muted small">Henüz dosya seçilmedi</div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Progress Bar -->
+        <div v-if="uploading" class="mb-3">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                 :style="{ width: uploadProgress + '%' }"
+                 role="progressbar">
+              [[ uploadProgress ]]%
+            </div>
+          </div>
+          <small class="text-muted">Yükleniyor...</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary" :disabled="uploading || uploadForm.files.length === 0">
+          <i class="bi bi-cloud-upload"></i>
+          [[ uploading ? 'Yükleniyor...' : `${uploadForm.files.length} Dosya Yükle` ]]
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <input type="text"
+                 class="form-control form-control-sm"
+                 v-model="filters.search"
+                 @input="debounceSearch"
+                 placeholder="Dosya ara...">
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" v-model="filters.media_type" @change="loadMedia">
+            <option value="">Tüm Tipler</option>
+            <option value="image">Resimler</option>
+            <option value="video">Videolar</option>
+            <option value="audio">Sesler</option>
+            <option value="document">Dökümanlar</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="text"
+                 class="form-control form-control-sm"
+                 v-model="filters.content_type"
+                 @input="debounceSearch"
+                 placeholder="Content Type (örn: pages)">
+        </div>
+        <div class="col-md-2">
+          <input type="number"
+                 class="form-control form-control-sm"
+                 v-model.number="filters.content_id"
+                 @input="debounceSearch"
+                 placeholder="Content ID">
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" v-model="filters.limit" @change="changeLimit">
+            <option value="12">12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-sm btn-outline-secondary w-100" @click="clearFilters" title="Filtreleri Temizle">
+            <i class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Grid -->
+  <div class="card">
+    <div class="card-body">
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+      </div>
+
+      <div v-else-if="media.length === 0" class="text-center py-5">
+        <i class="bi bi-images fs-1 text-muted"></i>
+        <p class="text-muted mt-3">Henüz medya dosyası yok</p>
+      </div>
+
+      <div v-else class="row g-3">
+        <div v-for="item in media" :key="item.id" class="col-lg-2 col-md-3 col-sm-4 col-6">
+          <div class="card h-100 media-card" @click="selectMedia(item)">
+            <div class="card-img-top media-preview position-relative">
+              <!-- Image Preview -->
+              <img v-if="item.media_type === 'image'"
+                   :src="get_media_images_thumbnail(item.url)"
+                   :alt="item.file_name"
+                   class="img-fluid">
+
+              <!-- Non-Image Preview -->
+              <div v-else class="media-icon d-flex flex-column align-items-center justify-content-center">
+                <i :class="[getMediaIcon(item.mime_type), getMediaIconColor(item.mime_type)]" style="font-size: 3rem;"></i>
+                <small class="text-muted mt-2 text-center px-2" style="font-size: 0.7rem; word-break: break-word;">
+                  [[ item.file_name ]]
+                </small>
+              </div>
+
+              <!-- Content Type Badge -->
+              <div v-if="item.content_type" class="position-absolute top-0 start-0 m-1">
+                <span class="badge bg-info text-dark" style="font-size: 0.65rem;">
+                  [[ item.content_type ]]<span v-if="item.content_id">:[[ item.content_id ]]</span>
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-2">
+              <p class="card-text small mb-0 text-truncate" :title="item.title || item.file_name">
+                [[ item.title || item.file_name ]]
+              </p>
+              <small class="text-muted">[[ formatFileSize(item.file_size) ]]</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="meta.total_pages > 1" class="d-flex justify-content-center mt-4">
+        <nav>
+          <ul class="pagination pagination-sm">
+            <li class="page-item" :class="{ disabled: meta.page <= 1 }">
+              <button class="page-link" @click="changePage(meta.page - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item active">
+              <span class="page-link">[[ meta.page ]] / [[ meta.total_pages ]]</span>
+            </li>
+            <li class="page-item" :class="{ disabled: meta.page >= meta.total_pages }">
+              <button class="page-link" @click="changePage(meta.page + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Detail Modal -->
+  <div class="modal fade" id="mediaModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" v-if="selectedMedia">
+      <div class="modal-header">
+        <h5 class="modal-title">Medya Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <!-- Preview -->
+            <div class="mb-3">
+              <img v-if="selectedMedia.media_type === 'image'"
+                   :src="selectedMedia.url"
+                   class="img-fluid rounded"
+                   :alt="selectedMedia.file_name">
+
+              <video v-else-if="selectedMedia.media_type === 'video'"
+                     :src="selectedMedia.url"
+                     controls
+                     class="w-100 rounded"></video>
+
+              <audio v-else-if="selectedMedia.media_type === 'audio'"
+                     :src="selectedMedia.url"
+                     controls
+                     class="w-100"></audio>
+
+              <div v-else class="text-center p-5 bg-light rounded">
+                <i :class="[getMediaIcon(selectedMedia.mime_type), getMediaIconColor(selectedMedia.mime_type)]" style="font-size: 4rem;"></i>
+                <p class="mt-3 fw-bold">[[ selectedMedia.file_name ]]</p>
+                <p class="text-muted small">[[ selectedMedia.mime_type ]]</p>
+              </div>
+            </div>
+
+            <!-- File Info -->
+            <div class="small">
+              <p><strong>Dosya Adı:</strong> [[ selectedMedia.file_name ]]</p>
+              <p><strong>Tip:</strong> [[ selectedMedia.mime_type ]]</p>
+              <p><strong>Boyut:</strong> [[ formatFileSize(selectedMedia.file_size) ]]</p>
+              <p><strong>Tarih:</strong> [[ selectedMedia.created_at ]]</p>
+              <p v-if="selectedMedia.content_type">
+                <strong>İçerik:</strong>
+                <span class="badge bg-info text-dark">
+                  [[ selectedMedia.content_type ]]<span v-if="selectedMedia.content_id">:[[ selectedMedia.content_id ]]</span>
+                </span>
+              </p>
+              <p><strong>URL:</strong> <code class="small">[[ selectedMedia.url ]]</code></p>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <!-- Edit Form -->
+            <form @submit.prevent="updateMedia" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label class="form-label">Başlık</label>
+                <input type="text"
+                       class="form-control"
+                       v-model="editForm.title"
+                       placeholder="Başlık">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Açıklama</label>
+                <textarea class="form-control"
+                          v-model="editForm.description"
+                          rows="3"
+                          placeholder="Açıklama"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Dosyayı Değiştir (Opsiyonel)</label>
+                <input type="file"
+                       class="form-control"
+                       id="editFileInput"
+                       @change="handleEditFileSelect"
+                       accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.webp">
+                <div class="form-text">Yeni dosya yüklemek için seçin</div>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary" :disabled="updating">
+                  <i class="bi bi-save"></i> [[ updating ? 'Kaydediliyor...' : 'Kaydet' ]]
+                </button>
+                <button type="button" class="btn btn-danger" @click="confirmDelete" :disabled="deleting">
+                  <i class="bi bi-trash"></i> [[ deleting ? 'Siliniyor...' : 'Sil' ]]
+                </button>
+                <button type="button" class="btn btn-secondary" @click="copyUrl">
+                  <i class="bi bi-copy"></i> URL Kopyala
+                </button>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref } = Vue;
+
+createApp({
+  delimiters: ["[[", "]]"],
+  setup() {
+    const media = ref([]);
+    const meta = ref({});
+    const loading = ref(false);
+    const uploading = ref(false);
+    const uploadProgress = ref(0);
+    const updating = ref(false);
+    const deleting = ref(false);
+    const searchTimeout = ref(null);
+    const selectedMedia = ref(null);
+    const mediaModal = ref(null);
+
+    const filters = ref({
+      search: '',
+      media_type: '',
+      content_type: '',
+      content_id: null,
+      limit: 12,
+      page: 1
+    });
+
+    const uploadForm = ref({
+      files: [],
+      title: '',
+      description: '',
+      content_type: ''
+    });
+
+    const editForm = ref({
+      title: '',
+      description: '',
+      file: null
+    });
+
+
+    const get_media_images_thumbnail = (path) => {
+      if (!path || path.trim() === '') return '/static/no_image.png';
+
+      let clean = String(path);
+      clean = clean.replace(/^\/media\/uploads\//, '');
+      clean = clean.replace(/^media\/uploads\//, '');
+      clean = clean.replace(/^\/media\//, '');
+
+      return `/media/thumb/200x200/center/${clean}`;
+    };
+
+
+    // Get icon class based on mime type
+    const getMediaIcon = (mimeType) => {
+      if (!mimeType) return 'bi-file-earmark';
+
+      if (mimeType.startsWith('video/')) return 'bi-file-earmark-play';
+      if (mimeType.startsWith('audio/')) return 'bi-file-earmark-music';
+      if (mimeType === 'application/pdf') return 'bi-file-earmark-pdf';
+      if (mimeType.includes('word') || mimeType.includes('document')) return 'bi-file-earmark-word';
+      if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bi-file-earmark-excel';
+      if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bi-file-earmark-ppt';
+      if (mimeType.startsWith('text/')) return 'bi-file-earmark-text';
+
+      return 'bi-file-earmark';
+    };
+
+    // Get icon color based on mime type
+    const getMediaIconColor = (mimeType) => {
+      if (!mimeType) return 'text-muted';
+
+      if (mimeType.startsWith('video/')) return 'text-primary';
+      if (mimeType.startsWith('audio/')) return 'text-success';
+      if (mimeType === 'application/pdf') return 'text-danger';
+      if (mimeType.includes('word') || mimeType.includes('document')) return 'text-info';
+      if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'text-success';
+      if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-warning';
+
+      return 'text-muted';
+    };
+
+    // Load media
+    const loadMedia = async () => {
+      loading.value = true;
+      try {
+        const params = new URLSearchParams({
+          page: filters.value.page,
+          limit: filters.value.limit,
+          ...(filters.value.search && { search: filters.value.search }),
+          ...(filters.value.media_type && { media_type: filters.value.media_type }),
+          ...(filters.value.content_type && { content_type: filters.value.content_type }),
+          ...(filters.value.content_id && { content_id: filters.value.content_id })
+        });
+
+        const response = await fetch(`/admin/api/media?${params}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          media.value = data.data || [];
+          meta.value = data.meta || {};
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: 'Medya dosyaları yüklenirken hata oluştu'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Medya dosyaları yüklenirken hata oluştu: ' + error.message
+        });
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // Handle file select
+    const handleFileSelect = (event) => {
+      const files = Array.from(event.target.files);
+      uploadForm.value.files = files;
+    };
+
+    // Remove file from list
+    const removeFile = (index) => {
+      uploadForm.value.files.splice(index, 1);
+    };
+
+    // Upload files
+    const uploadFile = async () => {
+      if (uploadForm.value.files.length === 0) return;
+
+      uploading.value = true;
+      uploadProgress.value = 0;
+
+      try {
+        const formData = new FormData();
+
+        // Add all files
+        uploadForm.value.files.forEach(file => {
+          formData.append('files', file);
+        });
+
+        // Add title and description if provided
+        if (uploadForm.value.title) {
+          formData.append('title', uploadForm.value.title);
+        }
+        if (uploadForm.value.description) {
+          formData.append('description', uploadForm.value.description);
+        }
+        if (uploadForm.value.content_type) {
+          formData.append('content_type', uploadForm.value.content_type);
+        }
+
+        // Simulate progress
+        const progressInterval = setInterval(() => {
+          if (uploadProgress.value < 90) {
+            uploadProgress.value += Math.random() * 10;
+          }
+        }, 200);
+
+        const response = await fetch('/admin/api/media', {
+          method: 'POST',
+          body: formData
+        });
+
+        clearInterval(progressInterval);
+        uploadProgress.value = 100;
+
+        if (response.ok) {
+          const data = await response.json();
+
+          let message = `${data.uploaded.length} dosya başarıyla yüklendi!`;
+          if (data.errors.length > 0) {
+            message += ` ${data.errors.length} dosyada hata oluştu.`;
+          }
+
+          Swal.fire({
+            icon: data.errors.length > 0 ? 'warning' : 'success',
+            title: 'Yükleme Tamamlandı!',
+            text: message,
+            timer: 3000,
+            showConfirmButton: false
+          });
+
+          // Reset form
+          uploadForm.value = { files: [], title: '', description: '', content_type: '' };
+          document.getElementById('fileInput').value = '';
+
+          // Reload media
+          loadMedia();
+        } else {
+          const data = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Dosyalar yüklenirken hata oluştu'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Dosyalar yüklenirken hata oluştu: ' + error.message
+        });
+      } finally {
+        uploading.value = false;
+        uploadProgress.value = 0;
+      }
+    };
+
+    // Select media
+    const selectMedia = (item) => {
+      selectedMedia.value = item;
+      editForm.value = {
+        title: item.title || '',
+        description: item.description || '',
+        file: null
+      };
+
+      if (!mediaModal.value) {
+        mediaModal.value = new bootstrap.Modal(document.getElementById('mediaModal'));
+      }
+      mediaModal.value.show();
+    };
+
+    // Handle edit file select
+    const handleEditFileSelect = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        editForm.value.file = file;
+      }
+    };
+
+    // Update media
+    const updateMedia = async () => {
+      if (!selectedMedia.value) return;
+
+      updating.value = true;
+      try {
+        const formData = new FormData();
+        formData.append('title', editForm.value.title || '');
+        formData.append('description', editForm.value.description || '');
+
+        if (editForm.value.file) {
+          formData.append('file', editForm.value.file);
+        }
+
+        const response = await fetch(`/admin/api/media/${selectedMedia.value.id}`, {
+          method: 'PUT',
+          body: formData
+        });
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: 'Medya güncellendi!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          mediaModal.value.hide();
+          loadMedia();
+        } else {
+          const data = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Güncelleme başarısız'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Güncelleme başarısız: ' + error.message
+        });
+      } finally {
+        updating.value = false;
+      }
+    };
+
+    // Copy URL to clipboard
+    const copyUrl = async () => {
+      if (selectedMedia.value) {
+        try {
+          await navigator.clipboard.writeText(window.location.origin + selectedMedia.value.url);
+          Swal.fire({
+            icon: 'success',
+            title: 'Kopyalandı!',
+            text: 'URL panoya kopyalandı',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: 'URL kopyalanamadı'
+          });
+        }
+      }
+    };
+
+    // Confirm delete
+    const confirmDelete = async () => {
+      const result = await Swal.fire({
+        title: 'Emin misiniz?',
+        text: 'Bu dosya kalıcı olarak silinecek!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Evet, sil!',
+        cancelButtonText: 'İptal'
+      });
+
+      if (result.isConfirmed) {
+        await deleteMedia();
+      }
+    };
+
+    // Delete media
+    const deleteMedia = async () => {
+      if (!selectedMedia.value) return;
+
+      deleting.value = true;
+      try {
+        const response = await fetch(`/admin/api/media/${selectedMedia.value.id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Silindi!',
+            text: 'Medya dosyası silindi!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          mediaModal.value.hide();
+          loadMedia();
+        } else {
+          const data = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: data.error || 'Silme başarısız'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Hata!',
+          text: 'Silme başarısız: ' + error.message
+        });
+      } finally {
+        deleting.value = false;
+      }
+    };
+
+    // Debounce search
+    const debounceSearch = () => {
+      clearTimeout(searchTimeout.value);
+      searchTimeout.value = setTimeout(() => {
+        filters.value.page = 1;
+        loadMedia();
+      }, 500);
+    };
+
+    // Change page
+    const changePage = (page) => {
+      if (page >= 1 && page <= meta.value.total_pages) {
+        filters.value.page = page;
+        loadMedia();
+      }
+    };
+
+    // Change limit
+    const changeLimit = () => {
+      filters.value.page = 1;
+      loadMedia();
+    };
+
+    // Clear filters
+    const clearFilters = () => {
+      filters.value = {
+        search: '',
+        media_type: '',
+        content_type: '',
+        content_id: null,
+        limit: 12,
+        page: 1
+      };
+      loadMedia();
+    };
+
+    // Format file size
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    };
+
+    // Mount
+    setTimeout(() => {
+      loadMedia();
+    }, 0);
+
+    return {
+      media,
+      meta,
+      loading,
+      uploading,
+      uploadProgress,
+      updating,
+      deleting,
+      filters,
+      uploadForm,
+      editForm,
+      selectedMedia,
+      getMediaIcon,
+      getMediaIconColor,
+      loadMedia,
+      handleFileSelect,
+      removeFile,
+      uploadFile,
+      selectMedia,
+      handleEditFileSelect,
+      updateMedia,
+      copyUrl,
+      confirmDelete,
+      debounceSearch,
+      changePage,
+      changeLimit,
+      clearFilters,
+      formatFileSize,
+      get_media_images_thumbnail
+    };
+  }
+}).mount("#mediaApp");
+</script>
+
+<style>
+.media-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.media-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.media-preview {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.media-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-icon {
+  font-size: 3rem;
+  color: #6c757d;
+}
+</style>
+{% endblock %}

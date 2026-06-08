@@ -1,0 +1,13 @@
+<!-- Multi-language tabs -->
+<ul class="nav nav-tabs" id="langTabs" role="tablist">
+    <li class="nav-item" role="presentation" v-for="(langName, langCode, index) in sortedLanguages" :key="langCode">
+        <button class="nav-link" :class="{ active: index === 0 }" :id="`${langCode}-tab`" data-bs-toggle="tab"
+            :data-bs-target="`#${langCode}`" type="button" role="tab" :aria-controls="langCode"
+            :aria-selected="index === 0">
+            <span v-if="langCode === 'tr'">🇹🇷</span>
+            <span v-if="langCode === 'en'">🇺🇸</span>
+            <span v-if="langCode === 'de'">🇩🇪</span>
+            [[ langName ]]
+        </button>
+    </li>
+</ul>

@@ -1,0 +1,169 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/mail" enctype="multipart/form-data">
+
+  <!-- SMTP Sunucu Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-envelope me-2"></i>SMTP Mail Sunucu Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+
+      <div class="row">
+        <div class="col-md-8 mb-3">
+          <label class="form-label fw-bold">SMTP Sunucu Adresi</label>
+          <input type="text"
+                 class="form-control"
+                 name="smtp_host"
+                 value="{{ smtp_host }}"
+                 placeholder="smtp.gmail.com">
+          <div class="form-text">Mail sağlayıcınızın SMTP sunucu adresi</div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-bold">Port</label>
+          <input type="number"
+                 class="form-control"
+                 name="smtp_port"
+                 value="{{ smtp_port }}"
+                 placeholder="587">
+          <div class="form-text">Genellikle 587 (TLS) veya 465 (SSL)</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Kullanıcı Adı</label>
+          <input type="text"
+                 class="form-control"
+                 name="smtp_username"
+                 value="{{ smtp_username }}"
+                 placeholder="kullanici@example.com">
+          <div class="form-text">SMTP kimlik doğrulama kullanıcı adı</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Şifre</label>
+          <input type="password"
+                 class="form-control"
+                 name="smtp_password"
+                 value="{{ smtp_password }}"
+                 placeholder="••••••••">
+          <div class="form-text">SMTP kimlik doğrulama şifresi</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Gönderen E-posta</label>
+          <input type="email"
+                 class="form-control"
+                 name="smtp_from_email"
+                 value="{{ smtp_from_email }}"
+                 placeholder="noreply@example.com">
+          <div class="form-text">Sistem maillerinin gönderileceği adres</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Gönderen Adı</label>
+          <input type="text"
+                 class="form-control"
+                 name="smtp_from_name"
+                 value="{{ smtp_from_name }}"
+                 placeholder="Site Adı">
+          <div class="form-text">E-postalarda görünecek gönderen adı</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold">Şifreleme Türü</label>
+        <select class="form-select" name="smtp_encryption">
+          <option value="tls" {% if smtp_encryption == "tls" %}selected{% endif %}>TLS (Önerilen)</option>
+          <option value="ssl" {% if smtp_encryption == "ssl" %}selected{% endif %}>SSL</option>
+          <option value="none" {% if smtp_encryption == "none" %}selected{% endif %}>Şifreleme Yok</option>
+        </select>
+        <div class="form-text">Güvenlik için TLS veya SSL kullanmanız önerilir</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Popüler Mail Sağlayıcıları -->
+  <div class="card shadow-sm mb-4 border-info">
+    <div class="card-header bg-info text-white">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-info-circle me-2"></i>Popüler Mail Sağlayıcıları Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Gmail</h6>
+          <ul class="small">
+            <li><strong>SMTP Host:</strong> smtp.gmail.com</li>
+            <li><strong>Port:</strong> 587</li>
+            <li><strong>Şifreleme:</strong> TLS</li>
+            <li><strong>Not:</strong> 2FA aktifse uygulama şifresi kullanın</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Outlook/Hotmail</h6>
+          <ul class="small">
+            <li><strong>SMTP Host:</strong> smtp-mail.outlook.com</li>
+            <li><strong>Port:</strong> 587</li>
+            <li><strong>Şifreleme:</strong> TLS</li>
+            <li><strong>Not:</strong> Microsoft hesabı kullanın</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Yahoo Mail</h6>
+          <ul class="small">
+            <li><strong>SMTP Host:</strong> smtp.mail.yahoo.com</li>
+            <li><strong>Port:</strong> 587</li>
+            <li><strong>Şifreleme:</strong> TLS</li>
+            <li><strong>Not:</strong> Uygulama şifresi gerekebilir</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Yandex Mail</h6>
+          <ul class="small">
+            <li><strong>SMTP Host:</strong> smtp.yandex.com</li>
+            <li><strong>Port:</strong> 587</li>
+            <li><strong>Şifreleme:</strong> TLS</li>
+            <li><strong>Not:</strong> Yandex hesabı kullanın</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Mail Gönderimi -->
+  <div class="card shadow-sm mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-envelope-check me-2"></i>Test Mail Gönderimi
+      </h6>
+    </div>
+    <div class="card-body">
+      <p class="mb-3">
+        SMTP ayarlarınızı kaydettikten sonra, admin panelinden test maili gönderebilirsiniz.
+      </p>
+      <a href="/admin/mailer" class="btn btn-warning">
+        <i class="bi bi-envelope-paper me-2"></i>Mail Yönetimi Sayfasına Git
+      </a>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "@@theme@@/base.html" %}
+
+
+
+{% block header %}
+<title>{{ settings.seo_title_langs.langs[current_language].title }}</title>
+<meta name="description" content="{{ settings.seo_description_langs.langs[current_language].title }}">
+<meta name="og:title" content="{{ settings.seo_title_langs.langs[current_language].title }}">
+<meta name="og:description" content="{{ settings.seo_description_langs.langs[current_language].title }}">
+<meta name="og:image" content="{{ settings.seo_image_langs.langs[current_language].title | safe }}">
+<meta name="keywords" content="{{ settings.site_keywords_langs.langs[current_language].title }}">
+{% endblock %}
+
+
+{% block content %}
+
+
+
+{% for section in builder.sections %}
+  {% if section.active %}
+    <section class="homepage-section section-{{ section.template }}" data-section-id="{{ section.id }}">
+
+      {% if section.template == "product_grid.html" %}
+        {% include "@@theme@@/home/sections/product_grid.html" %}
+      {% elif section.template == "blog_list.html" %}
+        {% include "@@theme@@/home/sections/blog_list.html" %}
+      {% elif section.template == "son_haberler.html" %}
+        {% include "@@theme@@/home/sections/news_list.html" %}
+      {% elif section.template == "category_grid.html" %}
+        {% include "@@theme@@/home/sections/category_grid.html" %}
+      {% elif section.template == "category_cover.html" %}
+        {% include "@@theme@@/home/sections/category_cover.html" %}
+      {% elif section.template == "tanitim_cover.html" %}
+        {% include "@@theme@@/home/sections/tanitim_cover.html" %}
+      {% elif section.template == "tek_urun_slide.html" %}
+        {% include "@@theme@@/home/sections/tek_urun_slide.html" %}
+      {% elif section.template == "image_slider_fluid.html" %}
+        {% include "@@theme@@/home/sections/image_slider_fluid.html" %}
+      {% elif section.template == "image_slider_bootstrap.html" %}
+          {% include "@@theme@@/home/sections/image_slider_bootstrap.html" %}
+      {% elif section.template == "features_strip.html" %}
+        {% include "@@theme@@/home/sections/features_strip.html" %}
+      {% elif section.template == "btu_categories.html" %}
+        {% include "@@theme@@/home/sections/btu_categories.html" %}
+      {% elif section.template == "brands_section.html" %}
+        {% include "@@theme@@/home/sections/brands_section.html" %}
+      {% elif section.template == "cta_banner.html" %}
+        {% include "@@theme@@/home/sections/cta_banner.html" %}
+      {% else %}
+        {% include "@@theme@@/home/sections/default.html" %}
+      {% endif %}
+
+
+      {% if settings.debug_logs %}
+        <small class="text-muted text-center">{{ section.template }} (sadece admin görür)</small>
+      {% endif %}
+
+
+    </section>
+  {% endif %}
+{% endfor %}
+
+
+
+
+{% endblock %}

@@ -1,0 +1,1084 @@
+{% extends "@@theme@@/b2b/b2b_base.html" %}
+
+{% block content %}
+<div class="container mt-1" id="orders-app">
+    <div class="row">
+
+
+        <div class="col-lg-12 col-xl-12 col-xxl-12 pt-3 pb-3">
+            <!-- Loading -->
+            <div v-if="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">{{ t(key="Yükleniyor...", default="Yükleniyor...", lang=current_language) }}</span>
+                </div>
+                <p class="mt-3 text-muted">{{ t(key="Siparişleriniz_yükleniyor...", default="Siparişleriniz yükleniyor...", lang=current_language) }}</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0"> <i class="bi bi-bag-check me-2"></i>{{ t(key="Siparişlerim", default="Siparişlerim", lang=current_language) }}</h4>
+                    <span class="badge bg-primary">[[ orders.length ]] {{ t(key="sipariş", default="sipariş", lang=current_language) }}</span>
+                </div>
+            </div>
+
+            <!-- Boş durum -->
+            <div v-if="orders.length === 0" class="card-body text-center py-5">
+                <i class="bi bi-bag-x display-1 text-muted"></i>
+                <h4 class="text-muted mt-3">{{ t(key="Henüz_siparişiniz_yok", default="Henüz siparişiniz yok", lang=current_language) }}</h4>
+                <p class="text-muted">{{ t(key="İlk_siparişinizi_vermek_için_alışverişe_başlayın!", default="İlk siparişinizi vermek için alışverişe başlayın!", lang=current_language) }}</p>
+                <a href="/{{ current_language }}/products" class="btn btn-primary">
+                    <i class="bi bi-shop"></i> {{ t(key="Alışverişe_Başla", default="Alışverişe Başla", lang=current_language) }}
+                </a>
+            </div>
+
+            <!-- Siparişler -->
+            <div v-else>
+                <div class="card mb-4" v-for="order in orders" :key="order.id">
+                     <!-- Sipariş başlığı -->
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <p class="mb-0">
+                                        <i class="bi bi-receipt me-1"></i>
+                                        {{ t(key="Sipariş", default="Sipariş", lang=current_language) }} #[[ order.order_id ]]
+                                    </p>
+                                    <span class="badge ms-2" :class="getStatusBadgeClass(order.status)">
+                                        [[ getStatusText(order.status) ]]
+                                    </span>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    [[ formatDate(order.order_date || order.created_at) ]]
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-md-end align-items-center gap-3">
+                                    <div class="border-start ps-3">
+                                        <div class="text-muted small">{{ t(key="Alıcı", default="Alıcı", lang=current_language) }}</div>
+                                        <div>[[ order.user_info ? (order.user_info.first_name || '') + ' ' + (order.user_info.last_name || '') : 'None' ]]</div>
+                                    </div>
+                                    <div class="border-start ps-3">
+                                        <div class="text-muted small">{{ t(key="Ürünler", default="Ürünler", lang=current_language) }}</div>
+                                        <div>[[ order.total_formatted ]]</div>
+                                    </div>
+                                    <div class="border-start ps-3">
+                                        <div class="text-muted small">{{ t(key="Kargo", default="Kargo", lang=current_language) }}</div>
+                                        <div>
+                                            <span v-if="order.is_free_shipping" class="text-success">{{ t(key="Ücretsiz", default="Ücretsiz", lang=current_language) }}</span>
+                                            <span v-else-if="order.cargo_price > 0">[[ order.cargo_price_formatted ]]</span>
+                                            <span v-else class="text-muted">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="border-start ps-3">
+                                        <div class="text-muted small">{{ t(key="Toplam", default="Toplam", lang=current_language) }}</div>
+                                        <div class="text-success fw-bold">[[ order.final_total_formatted ]]</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sipariş listesi -->
+                    <div class="card-body p-0">
+                        <div  class="order-card">
+                            <!-- Sipariş içeriği -->
+                            <div class="order-content p-3">
+                                <!-- Ürünler -->
+                                <div v-if="order.items && order.items.length > 0" class="mb-4">
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-box me-2"></i>
+                                        {{ t(key="Ürünler", default="Ürünler", lang=current_language) }} ([[ order.items.length ]] adet)
+                                    </h6>
+                                    <div class="row">
+                                        <div v-for="item in order.items" :key="item.id" class="col-md-4 mb-3">
+                                            <div class="product-item border rounded p-2 position-relative">
+                                                <!-- İptal edilmiş ürün için badge -->
+                                                <span v-if="item.status === 'cancel_accept'" class="position-absolute top-0 end-0 badge bg-danger m-1" style="cursor: not-allowed;" :title="'{{ t(key="İptal_Onaylandı_Geri_Alınamaz", default="İptal onaylandı, geri alınamaz", lang=current_language) }}'">
+                                                    {{ t(key="İptal_Edildi", default="İptal Edildi", lang=current_language) }}
+                                                </span>
+                                                <span v-else-if="item.status === 'cancel_request'"
+                                                      class="position-absolute top-0 end-0 badge bg-warning text-dark m-1"
+                                                      style="cursor: pointer;"
+                                                      @click="cancelCancelRequest(order.id, item)"
+                                                      :title="'{{ t(key="İptal_Talebini_Geri_Al", default="İptal talebini geri al", lang=current_language) }}'">
+                                                    {{ t(key="İptal_Bekliyor", default="İptal Bekliyor", lang=current_language) }}
+                                                </span>
+                                                <!-- Dropdown menü -->
+                                                <div v-if="!item.status" class="dropdown position-absolute top-0 end-0 m-1">
+                                                    <button class="btn btn-sm btn-link text-dark p-0" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item text-danger small" href="#" @click.prevent="showCancelModal(order.id, item)">
+                                                                <i class="bi bi-x-circle me-2"></i>{{ t(key="İptal_Et", default="İptal Et", lang=current_language) }}
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <div class="row align-items-center">
+                                                    <div class="col-3">
+                                                        <img :src="item.product_cover || '/static/no_image.png'"
+                                                             class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    </div>
+                                                    <div class="col-9">
+                                                        <div class="fw-semibold small text-truncate">[[ item.product_title ]]</div>
+                                                        <div v-if="item.variant_display" class="text-muted small">[[ item.variant_display ]]</div>
+                                                        <div v-else class="text-muted small"><br></div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                                            <span class="small text-muted">[[ item.quantity ]]  X [[ item.price_formatted ]] </span>
+                                                            <span class="small fw-bold">[[ item.total_formatted ]]</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Teslimat/Fatura Adresleri -->
+                                    <div class="col-md-5 mb-3">
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            {{ t(key="Teslimat_/_Fatura_Adresleri", default="Teslimat / Fatura Adresleri", lang=current_language) }}
+                                        </h6>
+
+                                        <!-- Teslimat Adresi -->
+                                        <div class="address-card border rounded p-3 mb-2">
+                                            <div class="fw-semibold mb-1"><i class="bi bi-geo-alt me-2"></i> {{ t(key="Teslimat_Adresi", default="Teslimat Adresi", lang=current_language) }}</div>
+                                            <div class="text-muted small">
+                                                <div v-if="order.address_line" class="text-pre-line">
+                                                    [[ order.address_line ]]
+                                                </div>
+                                                <div v-else class="text-warning">{{ t(key="Adres_bilgisi_yok", default="Adres bilgisi yok", lang=current_language) }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Fatura Adresi -->
+                                        <div v-if="order.invoice_address_line" class="address-card border rounded p-3 mb-2">
+                                            <div class="fw-semibold mb-1"><i class="bi bi-file-earmark-text me-2"></i> {{ t(key="Fatura_Adresi", default="Fatura Adresi", lang=current_language) }}</div>
+                                            <div class="text-muted small text-pre-line">
+                                                [[ order.invoice_address_line ]]
+                                            </div>
+                                        </div>
+
+                                        <!-- Kargo Bilgileri -->
+                                        <div class="address-card border rounded p-3 mb-2" v-if="order.cargo_company || order.cargo_tracking_no">
+                                            <div class="fw-semibold mb-1"><i class="bi bi-truck me-2"></i> {{ t(key="Kargo_Bilgileri", default="Kargo Bilgileri", lang=current_language) }}</div>
+                                            <div class="text-muted small">
+                                                <div class="text-pre-line">
+                                                    [[ order.cargo_company ]]
+                                                </div>
+                                                <div class="text-pre-line">
+                                                    [[ order.cargo_tracking_no ]]
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ödeme Bilgileri -->
+                                        <div class="address-card border rounded p-3 mb-2" v-if="order.payment_method">
+                                            <div class="fw-semibold mb-1"><i class="bi bi-credit-card me-2"></i> {{ t(key="Ödeme_Yöntemi", default="Ödeme Yöntemi", lang=current_language) }}</div>
+                                            <div class="text-muted small">
+                                                <div class="text-pre-line">
+                                                    [[ getPaymentMethodText(order.payment_method) ]]
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Timeline -->
+                                    <div class="col-md-7">
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-clock-history me-2"></i>
+                                            {{ t(key="Sipariş_Takibi", default="Sipariş Takibi", lang=current_language) }}
+                                        </h6>
+
+                                        <div class="timeline-compact">
+                                            <div class="timeline-item d-flex mb-2" v-for="event in getOrderTimeline(order)" :key="event.id">
+                                                <div class="timeline-icon me-2">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                                         :style="{ backgroundColor: event.color || '#007bff', color: 'white', width: '24px', height: '24px', fontSize: '12px' }">
+                                                        <i :class="event.icon || 'bi-info-circle'"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="timeline-content flex-grow-1">
+                                                    <!-- Dosya yükleme eventi için özel görünüm -->
+                                                    <div v-if="event.metadata && event.metadata.file_path" class="d-flex justify-content-between align-items-center">
+                                                        <div class="flex-grow-1 me-2">
+                                                            <div class="fw-semibold small text-truncate">[[ event.title ]]</div>
+                                                            <div class="text-muted small text-truncate">
+                                                                <i class="bi bi-file-earmark-pdf me-1"></i>
+                                                                [[ event.metadata.filename ]]
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                            <button class="btn btn-sm btn-outline-primary px-2"
+                                                                    @click="viewDocument(event.metadata.file_path, event.metadata.filename)"
+                                                                    :title="'Dosyayı görüntüle: ' + event.metadata.filename">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                            <small class="text-muted text-nowrap ms-1" style="font-size: 0.7rem;">[[ formatDate(event.created_at) ]]</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Normal event görünümü -->
+                                                    <div v-else>
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div class="fw-semibold small flex-grow-1 me-2 text-truncate">[[ event.title ]]</div>
+                                                            <small class="text-muted text-nowrap flex-shrink-0" style="font-size: 0.7rem;">[[ formatDate(event.created_at) ]]</small>
+                                                        </div>
+                                                        <div v-if="event.description" class="text-muted small">
+                                                            [[ event.description ]]
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Timeline yükleme butonu -->
+                                            <div class="text-center mt-2">
+                                                <button class="btn btn-sm btn-outline-secondary" @click="loadOrderTimeline(order)">
+                                                    <i class="bi bi-arrow-clockwise me-1"></i> {{ t(key="Timeline_Yenile", default="Timeline Yenile", lang=current_language) }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Banka transferi için özel alan -->
+                                <div v-if="order.payment_method === 'eft-banka-transferi'" class="mt-3">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-bank me-2"></i>
+                                                {{ t(key="Banka_Transferi_Bilgileri", default="Banka Transferi Bilgileri", lang=current_language) }}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div v-if="order.status === 'pending'" class="alert alert-warning mb-3">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <strong>{{ t(key="Ödeme_Bekleniyor:", default="Ödeme Bekleniyor:", lang=current_language) }}</strong> {{ t(key="Lütfen_ödeme_dekontunuzu_yükleyiniz.", default="Lütfen ödeme dekontunuzu yükleyiniz.", lang=current_language) }}
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6>{{ t(key="Hesap_Bilgileri", default="Hesap Bilgileri", lang=current_language) }}</h6>
+                                                    {% if settings.bank1_name %}
+                                                    <p class="mb-1"><strong>{{ t(key="Banka:", default="Banka:", lang=current_language) }}</strong> {{ settings.bank1_name }}</p>
+                                                    <p class="mb-1"><strong>{{ t(key="Hesap_Sahibi:", default="Hesap Sahibi:", lang=current_language) }}</strong> {{ settings.bank1_account_holder }}</p>
+                                                    <p class="mb-1"><strong>{{ t(key="IBAN:", default="IBAN:", lang=current_language) }}</strong> {{ settings.bank1_iban }}</p>
+                                                    {% endif %}
+                                                    <p class="mb-1"><strong>Açıklama:</strong> [[ order.order_id ]]</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>{{ t(key="Dekont_Yükleme", default="Dekont Yükleme", lang=current_language) }}</h6>
+                                                    <button class="btn btn-info w-100" @click="uploadPaymentDocument(order)">
+                                                        <i class="bi bi-upload me-2"></i>
+                                                        {{ t(key="Ödeme_Dekontu_Yükle", default="Ödeme Dekontu Yükle", lang=current_language) }}
+                                                    </button>
+                                                    <small class="text-muted mt-2 d-block">
+                                                        {{ t(key="PDF,_PNG,_JPG_formatlarında_yükleyebilirsiniz", default="PDF, PNG, JPG formatlarında yükleyebilirsiniz", lang=current_language) }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sipariş notu -->
+                                <div v-if="order.notes" class="mt-3 p-2 border rounded">
+                                    <small class="text-muted">
+                                        <i class="bi bi-chat-text me-1"></i>
+                                        <strong>{{ t(key="Not:", default="Not:", lang=current_language) }}</strong> [[ order.notes ]]
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Sayfalama -->
+                <div v-if="orders.length > 0" class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item" :class="{ disabled: currentPage <= 1 }">
+                                <button class="page-link" @click="loadOrders(currentPage - 1)" :disabled="currentPage <= 1">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">[[ currentPage ]]</span>
+                            </li>
+                            <li class="page-item" :class="{ disabled: orders.length < perPage }">
+                                <button class="page-link" @click="loadOrders(currentPage + 1)" :disabled="orders.length < perPage">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Dekont Yükleme Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-upload me-2"></i>
+                        {{ t(key="Ödeme_Dekontu_Yükle", default="Ödeme Dekontu Yükle", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>{{ t(key="Sipariş:", default="Sipariş:", lang=current_language) }}</strong> #[[ selectedOrder ? selectedOrder.order_id : '' ]]<br>
+                        <strong>{{ t(key="Tutar:", default="Tutar:", lang=current_language) }}</strong> [[ selectedOrder ? formatPrice(selectedOrder.total_amount, selectedOrder.currency) : '' ]]
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="paymentDocument" class="form-label">{{ t(key="Ödeme_Dekontu", default="Ödeme Dekontu", lang=current_language) }}</label>
+                        <input type="file" class="form-control" id="paymentDocument"
+                               accept=".pdf,.png,.jpg,.jpeg" @change="handleFileSelect">
+                        <div class="form-text">{{ t(key="PDF,_PNG,_JPG_formatlarında_dosya_yükleyebilirsiniz._(Max:_5MB)", default="PDF, PNG, JPG formatlarında dosya yükleyebilirsiniz. (Max: 5MB)", lang=current_language) }}</div>
+                    </div>
+
+                    <div v-if="selectedFile" class="alert alert-success">
+                        <i class="bi bi-file-earmark-check me-2"></i>
+                        {{ t(key="Seçilen_dosya:", default="Seçilen dosya:", lang=current_language) }} [[ selectedFile.name ]]
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t(key="İptal", default="İptal", lang=current_language) }}</button>
+                    <button type="button" class="btn btn-primary" @click="uploadDocument" :disabled="!selectedFile || uploading">
+                        <span v-if="uploading">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            {{ t(key="Yükleniyor...", default="Yükleniyor...", lang=current_language) }}
+                        </span>
+                        <span v-else>
+                            <i class="bi bi-upload me-1"></i> {{ t(key="Yükle", default="Yükle", lang=current_language) }}
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- İptal Modal -->
+    <div class="modal fade" id="cancelItemModal" tabindex="-1" aria-labelledby="cancelItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelItemModalLabel">
+                        {{ t(key="Ürünü_İptal_Et", default="Ürünü İptal Et", lang=current_language) }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ t(key="İptal_Modal_Mesaj", default="Siparişinizdeki bu ürünü iptal etmeye karar mı verdiniz?", lang=current_language) }}</p>
+                    <div v-if="cancelingItem" class="alert alert-warning">
+                        <strong>[[ cancelingItem.product_title ]]</strong>
+                        <br>
+                        <small v-if="cancelingItem.variant_display">[[ cancelingItem.variant_display ]]</small>
+                        <br>
+                        <small>{{ t(key="Toplam_Adet", default="Toplam Adet", lang=current_language) }}: [[ cancelingItem.quantity ]]</small>
+
+                        <!-- Quantity Seçimi -->
+                        <div v-if="cancelingItem.quantity > 1" class="mt-2">
+                            <label class="form-label">{{ t(key="İptal_Edilecek_Adet", default="İptal Edilecek Adet", lang=current_language) }}:</label>
+                            <select class="form-select" v-model="cancelQuantity" style="width: auto;">
+                                <option v-for="n in cancelingItem.quantity" :value="n">[[ n ]]</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ t(key="İptal_Açıklama", default="İptal talebiniz admin tarafından onaylandıktan sonra siparişinizden düşülecektir.", lang=current_language) }}
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ t(key="İptal", default="İptal", lang=current_language) }}
+                    </button>
+                    <button type="button" class="btn btn-danger" @click="requestCancelItem" :disabled="cancelingLoading">
+                        <span v-if="cancelingLoading" class="spinner-border spinner-border-sm me-1"></span>
+                        {{ t(key="Evet_İptal_Et", default="Evet, İptal Et", lang=current_language) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-card {
+    margin-bottom: 2rem;
+}
+
+.order-header {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.product-item {
+    transition: all 0.2s ease;
+    background-color: var(--bs-body-bg);
+}
+
+.product-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+[data-bs-theme="dark"] .product-item:hover {
+    box-shadow: 0 2px 8px rgba(255,255,255,0.1);
+}
+
+.address-card {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color) !important;
+}
+
+.timeline-compact {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.timeline-compact .timeline-item {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-compact .timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    bottom: -8px;
+    width: 2px;
+    background-color: var(--bs-border-color);
+}
+
+.timeline-content {
+    min-width: 0; /* flex item'ların taşmasını önler */
+    font-size: 0.875rem;
+}
+
+.timeline-content .text-muted {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    font-size: 0.8rem;
+}
+
+.timeline-content .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.text-pre-line {
+    white-space: pre-line;
+}
+
+.timeline-compact .timeline-icon {
+    flex-shrink: 0;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+/* Card styling for dark theme */
+.card {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+}
+
+.card-header {
+    background-color: var(--bs-secondary-bg);
+    border-bottom-color: var(--bs-border-color);
+}
+
+/* Modal styling for dark theme */
+.modal-content {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+}
+
+.modal-header {
+    border-bottom-color: var(--bs-border-color);
+}
+
+.modal-footer {
+    border-top-color: var(--bs-border-color);
+}
+
+/* Form controls for dark theme */
+.form-control {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+}
+
+.form-control:focus {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-primary);
+    color: var(--bs-body-color);
+}
+
+/* Alert styling for dark theme */
+.alert {
+    border-color: var(--bs-border-color);
+}
+
+/* Pagination styling for dark theme */
+.page-link {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+}
+
+.page-link:hover {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+}
+
+.page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.page-item.disabled .page-link {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+    .order-header .row > div {
+        margin-bottom: 0.5rem;
+    }
+
+    .product-item .row {
+        align-items: center;
+    }
+
+    .timeline-compact {
+        margin-top: 1rem;
+    }
+}
+
+/* Ürün kartları grid düzeni */
+.product-item img {
+    border-radius: 4px;
+}
+
+/* Timeline animasyonu */
+.timeline-compact .timeline-item {
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark theme specific adjustments */
+[data-bs-theme="dark"] {
+    --bs-secondary-bg: rgba(255, 255, 255, 0.05);
+    --bs-border-color: rgba(255, 255, 255, 0.125);
+}
+
+[data-bs-theme="dark"] .timeline-compact .timeline-item:not(:last-child)::after {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-bs-theme="dark"] .address-card {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-bs-theme="dark"] .card-header {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+createApp({
+    delimiters: ['[[', ']]'],
+    setup() {
+        // Reactive state
+        const loading = ref(true);
+        const loadingTimeline = ref(false);
+        const uploading = ref(false);
+        const orders = ref([]);
+        const selectedOrder = ref(null);
+        const timeline = ref([]);
+        const selectedFile = ref(null);
+        const currentPage = ref(1);
+        const perPage = ref(10);
+
+        // Methods
+        const loadOrders = async (page = 1) => {
+            try {
+                loading.value = true;
+                const response = await fetch(`/api/cart/orders?page=${page}&per_page=${perPage.value}`);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    orders.value = result.data || [];
+                    currentPage.value = page;
+
+                    // Her sipariş için timeline'ı yükle
+                    orders.value.forEach(order => {
+                        loadOrderTimeline(order);
+                    });
+                } else {
+                    throw new Error(result.error || 'Siparişler yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: '{{ t(key="Siparişler_yüklenirken_hata_oluştu", default="Siparişler yüklenirken hata oluştu", lang=current_language) }}',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } finally {
+                loading.value = false;
+            }
+        };
+
+
+
+        const loadOrderTimeline = async (order) => {
+            try {
+                const response = await fetch(`/api/timeline/content/ecommerce/cart/${order.id}`);
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Timeline'ı order objesine ekle
+                    order.timeline = result.data || [];
+                } else {
+                    order.timeline = [];
+                }
+            } catch (error) {
+                console.error('Error loading timeline:', error);
+                order.timeline = [];
+            }
+        };
+
+        const getOrderTimeline = (order) => {
+            // Eğer timeline yüklenmemişse, temel status timeline'ı döndür
+            if (!order.timeline) {
+                return getBasicTimeline(order);
+            }
+            return order.timeline;
+        };
+
+        const getBasicTimeline = (order) => {
+            const basicEvents = [];
+
+            // Sipariş oluşturuldu
+            basicEvents.push({
+                id: 'created',
+                title: '{{ t(key="Sipariş_Alındı", default="Sipariş Alındı", lang=current_language) }}',
+                description: '{{ t(key="Siparişiniz_başarıyla_oluşturuldu", default="Siparişiniz başarıyla oluşturuldu", lang=current_language) }}',
+                icon: 'bi-cart-check',
+                color: '#28a745',
+                created_at: order.created_at
+            });
+
+            // Mevcut status'e göre ek event
+            if (order.status !== 'pending') {
+                basicEvents.push({
+                    id: 'status',
+                    title: getStatusText(order.status),
+                    description: `Sipariş durumu: ${getStatusText(order.status).toLowerCase()}`,
+                    icon: getStatusIcon(order.status),
+                    color: getStatusColor(order.status),
+                    created_at: order.updated_at || order.created_at
+                });
+            }
+
+            return basicEvents;
+        };
+
+        const getStatusColor = (status) => {
+            const colorMap = {
+                'pending': '#ffc107',
+                'confirmed': '#17a2b8',
+                'preparing': '#007bff',
+                'shipped': '#28a745',
+                'delivered': '#28a745',
+                'cancelled': '#dc3545',
+                'refunded': '#6c757d'
+            };
+            return colorMap[status] || '#007bff';
+        };
+
+        const uploadPaymentDocument = (order) => {
+            selectedOrder.value = order;
+            selectedFile.value = null;
+            new bootstrap.Modal(document.getElementById('uploadModal')).show();
+        };
+
+        const handleFileSelect = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Dosya boyutu kontrolü (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Dosya boyutu 5MB\'dan büyük olamaz',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
+                }
+
+                // Dosya tipi kontrolü
+                const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+                if (!allowedTypes.includes(file.type)) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: '{{ t(key="Sadece_PDF,_PNG,_JPG_dosyaları_yükleyebilirsiniz", default="Sadece PDF, PNG, JPG dosyaları yükleyebilirsiniz", lang=current_language) }}',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
+                }
+
+                selectedFile.value = file;
+            }
+        };
+
+        const uploadDocument = async () => {
+            if (!selectedFile.value || !selectedOrder.value) return;
+
+            try {
+                uploading.value = true;
+                const formData = new FormData();
+                formData.append('document', selectedFile.value);
+
+                const response = await fetch(`/api/cart/orders/${selectedOrder.value.id}/upload-document`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Dekont başarıyla yüklendi',
+                        showConfirmButton: false,
+                        timer: 4000
+                    });
+
+                    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                    selectedFile.value = null;
+
+                    // Timeline'ı yenile
+                    loadOrderTimeline(selectedOrder.value);
+
+                } else {
+                    throw new Error(result.error || 'Dekont yüklenemedi');
+                }
+
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: error.message || 'Dekont yüklenirken hata oluştu',
+                    showConfirmButton: false,
+                    timer: 5000
+                });
+            } finally {
+                uploading.value = false;
+            }
+        };
+
+        // dosya görüntüleme fonksiyonu
+        const viewDocument = (filePath, filename) => {
+            if (!filePath) return;
+
+            // dosya yolunu tam url'ye çevir
+            const fileUrl = `/${filePath}`;
+
+            // yeni sekmede aç
+            window.open(fileUrl, '_blank');
+        };
+
+
+
+        const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('tr-TR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        const getStatusText = (status) => {
+            const statusMap = {
+                'pending': 'Beklemede',
+                'confirmed': 'Onaylandı',
+                'preparing': 'Hazırlanıyor',
+                'shipped': 'Kargoya Verildi',
+                'delivered': 'Teslim Edildi',
+                'cancelled': 'İptal Edildi',
+                'refunded': 'İade Edildi'
+            };
+            return statusMap[status] || status;
+        };
+
+        const getStatusBadgeClass = (status) => {
+            const classMap = {
+                'pending': 'bg-warning',
+                'confirmed': 'bg-info',
+                'preparing': 'bg-primary',
+                'shipped': 'bg-success',
+                'delivered': 'bg-success',
+                'cancelled': 'bg-danger',
+                'refunded': 'bg-secondary'
+            };
+            return classMap[status] || 'bg-secondary';
+        };
+
+        const getStatusAlertClass = (status) => {
+            const classMap = {
+                'pending': 'warning',
+                'confirmed': 'info',
+                'preparing': 'primary',
+                'shipped': 'success',
+                'delivered': 'success',
+                'cancelled': 'danger',
+                'refunded': 'secondary'
+            };
+            return classMap[status] || 'secondary';
+        };
+
+        const getStatusIcon = (status) => {
+            const iconMap = {
+                'pending': 'bi-clock',
+                'confirmed': 'bi-check-circle',
+                'preparing': 'bi-gear',
+                'shipped': 'bi-truck',
+                'delivered': 'bi-house-check',
+                'cancelled': 'bi-x-circle',
+                'refunded': 'bi-arrow-counterclockwise'
+            };
+            return iconMap[status] || 'bi-info-circle';
+        };
+
+        const getPaymentMethodText = (method) => {
+            const methodMap = {
+                'online-kredi-karti': '{{ t(key="Online_Kredi_Kartı", default="Online Kredi Kartı", lang=current_language) }}',
+                'eft-banka-transferi': '{{ t(key="EFT_/_Banka_Transferi", default="EFT / Banka Transferi", lang=current_language) }}',
+                'kapida-odeme': '{{ t(key="Kapıda_Ödeme", default="Kapıda Ödeme", lang=current_language) }}',
+                'gelip-alacagim': '{{ t(key="Mağazadan_Teslim_Alma", default="Mağazadan Teslim Alma", lang=current_language) }}'
+            };
+            return methodMap[method] || method;
+        };
+
+        // İptal modal için state
+        const cancelModal = ref(null);
+        const cancelingItem = ref(null);
+        const cancelingOrderId = ref(null);
+        const cancelingLoading = ref(false);
+        const cancelQuantity = ref(1);
+
+        const showCancelModal = (orderId, item) => {
+            cancelingOrderId.value = orderId;
+            cancelingItem.value = item;
+            cancelQuantity.value = 1;
+            const modalEl = document.getElementById('cancelItemModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        };
+
+        const requestCancelItem = async () => {
+            if (!cancelingOrderId.value || !cancelingItem.value) return;
+
+            cancelingLoading.value = true;
+            try {
+                const response = await fetch(`/api/orders/${cancelingOrderId.value}/items/${cancelingItem.value.id}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        quantity: cancelQuantity.value
+                    })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: '{{ t(key="İptal_Talebi_Başarılı", default="İptal talebiniz alınmıştır. En kısa sürede incelenecektir.", lang=current_language) }}',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    const modalEl = document.getElementById('cancelItemModal');
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.hide();
+                    loadOrders();
+                } else {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: result.error || '{{ t(key="Bir_hata_oluştu", default="Bir hata oluştu", lang=current_language) }}',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            } catch (error) {
+                console.error('Cancel request error:', error);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: '{{ t(key="Bir_hata_oluştu", default="Bir hata oluştu", lang=current_language) }}',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } finally {
+                cancelingLoading.value = false;
+            }
+        };
+
+        const cancelCancelRequest = async (orderId, item) => {
+            Swal.fire({
+                title: '{{ t(key="İptal_Talebini_Geri_Al", default="İptal talebini geri almak istiyor musunuz?", lang=current_language) }}',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '{{ t(key="Evet", default="Evet", lang=current_language) }}',
+                cancelButtonText: '{{ t(key="Hayır", default="Hayır", lang=current_language) }}'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/api/orders/${orderId}/items/${item.id}/cancel`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: '{{ t(key="İptal_Talebi_Geri_Alındı", default="İptal talebi geri alındı", lang=current_language) }}',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                            loadOrders();
+                        } else {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: result.error || '{{ t(key="Bir_hata_oluştu", default="Bir hata oluştu", lang=current_language) }}',
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Cancel cancel request error:', error);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: '{{ t(key="Bir_hata_oluştu", default="Bir hata oluştu", lang=current_language) }}',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                }
+            });
+        };
+
+        // Lifecycle
+        onMounted(() => {
+            loadOrders();
+        });
+
+        return {
+            loading,
+            loadingTimeline,
+            uploading,
+            orders,
+            selectedOrder,
+            timeline,
+            selectedFile,
+            currentPage,
+            perPage,
+            loadOrders,
+
+            loadOrderTimeline,
+            getOrderTimeline,
+            getBasicTimeline,
+            getStatusColor,
+            uploadPaymentDocument,
+            handleFileSelect,
+            uploadDocument,
+            viewDocument,
+            formatDate,
+            getStatusText,
+            getStatusBadgeClass,
+            getStatusAlertClass,
+            getStatusIcon,
+            getPaymentMethodText,
+            showCancelModal,
+            requestCancelItem,
+            cancelCancelRequest,
+            cancelModal,
+            cancelingItem,
+            cancelingOrderId,
+            cancelingLoading,
+            cancelQuantity
+        };
+    }
+}).mount('#orders-app');
+</script>
+{% endblock %}

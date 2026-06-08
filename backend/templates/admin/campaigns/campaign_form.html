@@ -1,0 +1,757 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if campaign_id %}Kampanya Düzenle{% else %}Yeni Kampanya{% endif %} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2 mb-4" id="campaignFormApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div class="w-100">
+      <h4 class="h4 mb-0 pb-0 fw-bolder">[[ isEditing ? 'Kampanya Düzenle' : 'Yeni Kampanya' ]]</h4>
+      <nav aria-label="breadcrumb" class="mb-0 d-flex align-items-center w-100" style="height:30px">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="/admin/campaigns" title="Kampanya listesine dön">
+              <i class="bi bi-house-door"></i> Kampanyalar
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            <i class="bi bi-pencil"></i>
+            [[ isEditing ? 'Düzenle' : 'Yeni Kampanya' ]]
+          </li>
+        </ol>
+      </nav>
+
+      <button class="btn btn-success d-flex align-items-center ms-auto" @click="saveCampaign" :disabled="saving" style="position: absolute; right: 15px; top: 8px;">
+        <i class="bi bi-save2 me-1"></i> [[ saving ? 'Kaydediliyor...' : (isEditing ? 'Güncelle' : 'Kaydet') ]]
+      </button>
+    </div>
+  </div>
+
+  <div v-if="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <div v-else class="row">
+    <div class="col-lg-8">
+      <div class="card mb-3">
+        <div class="card-header fw-bold"><i class="bi bi-info-circle me-1"></i> Temel Bilgiler</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Kampanya Adı <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" v-model="form.name" placeholder="Örn: Yaz İndirimi" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Açıklama</label>
+            <textarea class="form-control" v-model="form.description" rows="3" placeholder="Kampanya açıklaması (opsiyonel)"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Senaryo Tipi <span class="text-danger">*</span></label>
+              <select class="form-select" v-model="form.scenario_type" @change="onScenarioChange" :disabled="isEditing">
+                <option value="">Seçiniz...</option>
+                <option value="buy_x_get_y_free">X Al Y Bedava</option>
+                <option value="quantity_discount_percent">Adet İndirimi (%)</option>
+                <option value="category_spend_get_discount">Kategori Harcama İndirimi</option>
+                <option value="cart_total_discount">Sepet Toplamı İndirimi</option>
+                <option value="coupon_code">Kupon Kodu</option>
+                <option value="free_shipping">Ücretsiz Kargo</option>
+                <option value="first_order_discount">İlk Sipariş İndirimi</option>
+              </select>
+              <div v-if="isEditing" class="form-text">Senaryo tipi değiştirilemez.</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label fw-bold">Öncelik</label>
+              <input type="number" class="form-control" v-model.number="form.priority" min="0" max="100" />
+              <div class="form-text">Yüksek değer = yüksek öncelik</div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label fw-bold">Yığılabilir</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" v-model="form.stackable" id="stackableSwitch" />
+                <label class="form-check-label" for="stackableSwitch">Evet</label>
+              </div>
+              <div class="form-text">Diğer kampanyalarla birleşebilir mi?</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">Kampanya Tipi</label>
+              <select class="form-select" v-model="form.campaign_type">
+                <option value="automatic">Otomatik</option>
+                <option value="coupon">Kupon</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">Hedef Sepet Türü</label>
+              <select class="form-select" v-model="form.target_cart_type">
+                <option value="both">Hepsi (B2B & B2C)</option>
+                <option value="b2c">Sadece B2C (Standart)</option>
+                <option value="b2b">Sadece B2B</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">Maks. Kullanım</label>
+              <input type="number" class="form-control" v-model.number="form.max_uses" min="0" placeholder="Sınırsız" />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">Kullanıcı Başına Maks.</label>
+              <input type="number" class="form-control" v-model.number="form.max_uses_per_user" min="0" placeholder="Sınırsız" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario Params -->
+      <div v-if="form.scenario_type" class="card mb-3">
+        <div class="card-header fw-bold"><i class="bi bi-sliders me-1"></i> Senaryo Parametreleri</div>
+        <div class="card-body">
+          <!-- BuyXGetYFree -->
+          <template v-if="form.scenario_type === 'buy_x_get_y_free'">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Satın Alınan Ürün ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.buy_product_id" placeholder="Ürün ID" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Satın Alınacak Adet <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.buy_quantity" min="1" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hediye Ürün ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.get_product_id" placeholder="Ürün ID" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hediye Adet <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.get_quantity" min="1" />
+              </div>
+            </div>
+          </template>
+
+          <!-- QuantityDiscountPercent -->
+          <template v-if="form.scenario_type === 'quantity_discount_percent'">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ürün ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.product_id" placeholder="Ürün ID" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Min. Adet <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.min_quantity" min="1" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">İndirim (%) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.discount_percent" step="0.01" min="0" max="100" />
+              </div>
+            </div>
+          </template>
+
+          <!-- CategorySpendGetDiscount -->
+          <template v-if="form.scenario_type === 'category_spend_get_discount'">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Kategori (Term) ID <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.term_id" placeholder="Term ID" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Min. Harcama <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.min_spend" step="0.01" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Para Birimi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.currency">
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="AZN">AZN</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Tipi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.reward_type">
+                  <option value="fixed_discount">Sabit İndirim</option>
+                  <option value="percent_discount">Yüzde İndirim</option>
+                  <option value="coupon">Kupon</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Değeri <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.reward_value" step="0.01" />
+              </div>
+            </div>
+          </template>
+
+          <!-- CartTotalDiscount -->
+          <template v-if="form.scenario_type === 'cart_total_discount'">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Min. Sepet Tutarı <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.min_cart_total" step="0.01" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Para Birimi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.currency">
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="AZN">AZN</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Tipi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.reward_type">
+                  <option value="fixed_discount">Sabit İndirim</option>
+                  <option value="percent_discount">Yüzde İndirim</option>
+                  <option value="coupon">Kupon</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Değeri <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.reward_value" step="0.01" />
+              </div>
+            </div>
+          </template>
+
+          <!-- CouponCode -->
+          <template v-if="form.scenario_type === 'coupon_code'">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Tipi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.reward_type">
+                  <option value="fixed_discount">Sabit İndirim</option>
+                  <option value="percent_discount">Yüzde İndirim</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Değeri <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.reward_value" step="0.01" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Para Birimi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.currency">
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="AZN">AZN</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Kapsam <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.scope">
+                  <option value="cart">Sepet</option>
+                  <option value="product">Ürün</option>
+                  <option value="term">Kategori</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3" v-if="form.params.scope === 'product'">
+                <label class="form-label fw-bold">Hedef Ürün ID</label>
+                <input type="number" class="form-control" v-model.number="form.params.scope_target_id" placeholder="Ürün ID" />
+              </div>
+            </div>
+            <div v-if="isEditing && coupons.length > 0" class="mt-3 p-3 bg-light rounded">
+              <h6 class="fw-bold mb-2"><i class="bi bi-ticket-perforated me-1"></i> Kupon Kodları</h6>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover small mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kod</th>
+                      <th>Durum</th>
+                      <th>Kullanım</th>
+                      <th>Max</th>
+                      <th>Bitiş</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="coupon in coupons" :key="coupon.id">
+                      <td class="fw-bold">[[ coupon.code ]]</td>
+                      <td>
+                        <span :class="coupon.is_active ? 'badge bg-success' : 'badge bg-secondary'">
+                          [[ coupon.is_active ? 'Aktif' : 'Pasif' ]]
+                        </span>
+                      </td>
+                      <td>[[ coupon.usage_count ]]</td>
+                      <td>[[ coupon.max_usage || '∞' ]]</td>
+                      <td>[[ coupon.valid_until ? formatDate(coupon.valid_until) : 'Sınırsız' ]]</td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-danger" @click="deleteCoupon(coupon.id, coupon.code)" title="Sil">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+
+          <!-- FreeShipping -->
+          <template v-if="form.scenario_type === 'free_shipping'">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Min. Sepet Tutarı <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.min_cart_total" step="0.01" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Para Birimi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.currency">
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="AZN">AZN</option>
+                </select>
+              </div>
+            </div>
+          </template>
+
+          <!-- FirstOrderDiscount -->
+          <template v-if="form.scenario_type === 'first_order_discount'">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Tipi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.reward_type">
+                  <option value="fixed_discount">Sabit İndirim</option>
+                  <option value="percent_discount">Yüzde İndirim</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Ödül Değeri <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" v-model.number="form.params.reward_value" step="0.01" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Para Birimi <span class="text-danger">*</span></label>
+                <select class="form-select" v-model="form.params.currency">
+                  <option value="TRY">TRY</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="AZN">AZN</option>
+                </select>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-header fw-bold"><i class="bi bi-toggle-on me-1"></i> Yayınlama</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Durum</label>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" v-model="form.is_active" id="isActiveSwitch" />
+              <label class="form-check-label" for="isActiveSwitch">[[ form.is_active ? 'Aktif' : 'Pasif' ]]</label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Başlangıç Tarihi</label>
+            <input type="datetime-local" class="form-control" v-model="form.starts_at" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Bitiş Tarihi</label>
+            <input type="datetime-local" class="form-control" v-model="form.ends_at" />
+          </div>
+          <hr />
+          <div v-if="isEditing" class="small text-muted">
+            <div class="mb-1"><strong>Oluşturulma:</strong> [[ formatDate(campaign.created_at) ]]</div>
+            <div class="mb-1"><strong>Güncelleme:</strong> [[ formatDate(campaign.updated_at) ]]</div>
+            <div class="mb-1"><strong>Kullanım:</strong> [[ campaign.usage_count ]][[ campaign.max_uses ? '/' + campaign.max_uses : '' ]]</div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-success w-100" @click="saveCampaign" :disabled="saving">
+              <i class="bi bi-save2 me-1"></i> [[ saving ? 'Kaydediliyor...' : (isEditing ? 'Güncelle' : 'Kaydet') ]]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="isEditing" class="card mb-3">
+        <div class="card-header fw-bold bg-white"><i class="bi bi-graph-up-arrow me-1 text-primary"></i> Kampanya Performansı</div>
+        <div class="card-body p-0">
+          <div v-if="statsLoading" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          </div>
+          <div v-else-if="stats" class="p-3">
+            <div class="row text-center mb-3">
+              <div class="col-6 border-end">
+                <div class="small text-muted mb-1">Kullanım</div>
+                <div class="h4 mb-0 fw-bold text-primary">[[ stats.usage_count ]]</div>
+              </div>
+              <div class="col-6">
+                <div class="small text-muted mb-1">İndirim</div>
+                <div class="h4 mb-0 fw-bold text-success" style="font-size: 1.1rem;">[[ stats.total_discount_given ]]</div>
+              </div>
+            </div>
+            
+            <div v-if="stats.top_products && stats.top_products.length > 0">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="small fw-bold text-muted mb-0">En Çok Satan Ürünler</label>
+                <span class="badge bg-light text-dark fw-normal">İlk 5</span>
+              </div>
+              <div class="list-group list-group-flush border-top">
+                <div v-for="prod in stats.top_products" :key="prod.product_id" class="list-group-item px-0 py-2 border-bottom-0 small d-flex align-items-center">
+                  <div class="flex-grow-1 text-truncate pe-2">
+                    <i class="bi bi-box-seam me-1 text-muted"></i>
+                    [[ prod.product_title || ('Ürün #' + prod.product_id) ]]
+                  </div>
+                  <span class="badge rounded-pill bg-soft-primary text-primary px-2" style="background-color: rgba(13, 110, 253, 0.1);">[[ prod.usage_count ]] adet</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="alert alert-light small mb-0 mt-2 text-center border-dashed">
+              Henüz satış verisi bulunmuyor.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="isEditing && form.scenario_type === 'coupon_code'" class="card mb-3">
+        <div class="card-header fw-bold"><i class="bi bi-ticket-perforated me-1"></i> Hızlı Kupon Oluştur</div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label small">Kupon Kodları (virgülle ayırın)</label>
+            <input type="text" class="form-control form-control-sm" v-model="bulkCouponCodes" placeholder="SUMMER25, WELCOME10" />
+          </div>
+          <div class="row mb-2">
+            <div class="col-6">
+              <label class="form-label small">Max Kullanım</label>
+              <input type="number" class="form-control form-control-sm" v-model.number="bulkCouponMaxUsage" min="1" placeholder="Sınırsız" />
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Geçerlilik</label>
+              <input type="date" class="form-control form-control-sm" v-model="bulkCouponValidUntil" />
+            </div>
+          </div>
+          <button class="btn btn-sm btn-warning w-100" @click="addBulkCoupons" :disabled="!bulkCouponCodes.trim()">
+            <i class="bi bi-plus-circle me-1"></i> Kuponları Ekle
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const campaignId = {% if campaign_id %}{{ campaign_id }}{% else %}null{% endif %};
+
+const { createApp, ref, computed, onMounted } = Vue;
+
+createApp({
+  delimiters: ["[[", "]]"],
+  setup() {
+    const isEditing = ref(!!campaignId);
+    const loading = ref(false);
+    const saving = ref(false);
+    const campaign = ref({});
+
+    const form = ref({
+      name: '',
+      description: '',
+      scenario_type: '',
+      campaign_type: 'automatic',
+      is_active: true,
+      priority: 0,
+      stackable: false,
+      max_uses_per_user: null,
+      target_cart_type: 'both',
+      starts_at: '',
+      ends_at: '',
+      params: {}
+    });
+
+    const coupons = ref([]);
+    const newCouponCode = ref('');
+    const newCouponMaxUsage = ref(null);
+    const newCouponValidUntil = ref('');
+    const bulkCouponCodes = ref('');
+    const bulkCouponMaxUsage = ref(null);
+    const bulkCouponValidUntil = ref('');
+
+    const stats = ref(null);
+    const statsLoading = ref(false);
+
+    const loadStats = async () => {
+      if (!campaignId) return;
+      statsLoading.value = true;
+      try {
+        const response = await fetch(`/admin/api/campaigns/${campaignId}/stats`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          stats.value = data.data;
+        }
+      } catch (error) {
+        console.error('İstatistikler yüklenemedi:', error);
+      } finally {
+        statsLoading.value = false;
+      }
+    };
+
+    const initParams = () => {
+      const defaults = {
+        buy_x_get_y_free: { buy_product_id: null, buy_quantity: 1, get_product_id: null, get_quantity: 1 },
+        quantity_discount_percent: { product_id: null, min_quantity: 1, discount_percent: 0 },
+        category_spend_get_discount: { term_id: null, min_spend: 0, currency: 'TRY', reward_type: 'fixed_discount', reward_value: 0 },
+        cart_total_discount: { min_cart_total: 0, currency: 'TRY', reward_type: 'fixed_discount', reward_value: 0 },
+        coupon_code: { reward_type: 'fixed_discount', reward_value: 0, currency: 'TRY', scope: 'cart', scope_target_id: null },
+        free_shipping: { min_cart_total: 0, currency: 'TRY' },
+        first_order_discount: { reward_type: 'fixed_discount', reward_value: 0, currency: 'TRY' }
+      };
+      const type = form.value.scenario_type;
+      if (defaults[type]) {
+        form.value.params = { ...defaults[type] };
+      }
+    };
+
+    const onScenarioChange = () => {
+      if (!isEditing.value) {
+        initParams();
+        if (form.value.scenario_type === 'coupon_code') {
+          form.value.campaign_type = 'coupon';
+        } else {
+          form.value.campaign_type = 'automatic';
+        }
+      }
+    };
+
+    const loadCampaign = async () => {
+      if (!campaignId) return;
+      loading.value = true;
+      try {
+        const response = await fetch(`/admin/api/campaigns/${campaignId}`);
+        const data = await response.json();
+        if (response.ok && data.success && data.data) {
+          const c = data.data;
+          campaign.value = c;
+          form.value = {
+            name: c.name || '',
+            description: c.description || '',
+            scenario_type: c.scenario_type || '',
+            campaign_type: c.campaign_type || 'automatic',
+            is_active: c.is_active ?? true,
+            priority: c.priority ?? 0,
+            stackable: c.stackable ?? false,
+            max_uses: c.max_uses,
+            max_uses_per_user: c.max_uses_per_user,
+            target_cart_type: c.target_cart_type || 'both',
+            starts_at: c.starts_at ? c.starts_at.substring(0, 16) : '',
+            ends_at: c.ends_at ? c.ends_at.substring(0, 16) : '',
+            params: c.params || {}
+          };
+          if (c.scenario_type === 'coupon_code') {
+            loadCoupons();
+          }
+        } else {
+          Swal.fire({ icon: 'error', title: 'Hata!', text: data.error || 'Kampanya yüklenemedi' });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Hata!', text: error.message });
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const loadCoupons = async () => {
+      if (!campaignId) return;
+      try {
+        const response = await fetch(`/admin/api/campaigns/${campaignId}/coupons`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          coupons.value = data.data || [];
+        }
+      } catch (error) {
+        console.error('Kuponlar yüklenemedi:', error);
+      }
+    };
+
+    const saveCampaign = async () => {
+      if (!form.value.name) {
+        Swal.fire({ icon: 'warning', title: 'Uyarı', text: 'Kampanya adı zorunludur.' });
+        return;
+      }
+      if (!form.value.scenario_type) {
+        Swal.fire({ icon: 'warning', title: 'Uyarı', text: 'Senaryo tipi seçiniz.' });
+        return;
+      }
+
+      saving.value = true;
+      const payload = { ...form.value };
+      if (payload.starts_at) {
+        payload.starts_at = new Date(payload.starts_at).toISOString();
+      } else {
+        delete payload.starts_at;
+      }
+      if (payload.ends_at) {
+        payload.ends_at = new Date(payload.ends_at).toISOString();
+      } else {
+        delete payload.ends_at;
+      }
+      if (!payload.max_uses) delete payload.max_uses;
+      if (!payload.max_uses_per_user) delete payload.max_uses_per_user;
+
+      try {
+        const url = isEditing.value ? `/admin/api/campaigns/${campaignId}` : '/admin/api/campaigns';
+        const method = isEditing.value ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: isEditing.value ? 'Güncellendi!' : 'Oluşturuldu!',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+          if (!isEditing.value && data.data && data.data.id) {
+            window.location.href = `/admin/campaigns/${data.data.id}`;
+          } else if (isEditing.value) {
+            loadCampaign();
+          }
+        } else {
+          Swal.fire({ icon: 'error', title: 'Hata!', text: data.error || 'Kampanya kaydedilemedi' });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Hata!', text: error.message });
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    const addCoupons = async () => {
+      if (!campaignId || !newCouponCode.value.trim()) return;
+      const codes = [newCouponCode.value.trim().toUpperCase()];
+      try {
+        const payload = { codes };
+        if (newCouponMaxUsage.value) payload.max_usage = newCouponMaxUsage.value;
+        if (newCouponValidUntil.value) payload.valid_until = new Date(newCouponValidUntil.value).toISOString();
+
+        const response = await fetch(`/admin/api/campaigns/${campaignId}/coupons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          newCouponCode.value = '';
+          newCouponMaxUsage.value = null;
+          newCouponValidUntil.value = '';
+          loadCoupons();
+          Swal.fire({ icon: 'success', title: 'Eklendi!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Hata!', text: data.error || 'Kupon eklenemedi' });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Hata!', text: error.message });
+      }
+    };
+
+    const addBulkCoupons = async () => {
+      if (!campaignId || !bulkCouponCodes.value.trim()) return;
+      const codes = bulkCouponCodes.value.split(',').map(c => c.trim().toUpperCase()).filter(c => c.length > 0);
+      if (codes.length === 0) return;
+      try {
+        const payload = { codes };
+        if (bulkCouponMaxUsage.value) payload.max_usage = bulkCouponMaxUsage.value;
+        if (bulkCouponValidUntil.value) payload.valid_until = new Date(bulkCouponValidUntil.value).toISOString();
+
+        const response = await fetch(`/admin/api/campaigns/${campaignId}/coupons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          bulkCouponCodes.value = '';
+          bulkCouponMaxUsage.value = null;
+          bulkCouponValidUntil.value = '';
+          loadCoupons();
+          Swal.fire({ icon: 'success', title: `${codes.length} kupon eklendi!`, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Hata!', text: data.error || 'Kuponlar eklenemedi' });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Hata!', text: error.message });
+      }
+    };
+
+    const deleteCoupon = async (couponId, code) => {
+      const result = await Swal.fire({
+        title: 'Emin misiniz?',
+        text: `"${code}" kuponunu silmek istediğinizden emin misiniz?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, Sil!',
+        cancelButtonText: 'İptal'
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch(`/admin/api/coupons/${couponId}`, { method: 'DELETE' });
+        if (response.ok) {
+          loadCoupons();
+          Swal.fire({ icon: 'success', title: 'Silindi!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        } else {
+          const data = await response.json();
+          Swal.fire({ icon: 'error', title: 'Hata!', text: data.error || 'Kupon silinemedi' });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Hata!', text: error.message });
+      }
+    };
+
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+
+    onMounted(() => {
+      if (isEditing.value) {
+        loadCampaign();
+        loadStats();
+      }
+    });
+
+    return {
+      isEditing, loading, saving, campaign, form, coupons,
+      newCouponCode, newCouponMaxUsage, newCouponValidUntil,
+      bulkCouponCodes, bulkCouponMaxUsage, bulkCouponValidUntil,
+      onScenarioChange, saveCampaign,
+      addCoupons, addBulkCoupons, deleteCoupon, loadCoupons,
+      formatDate, stats, statsLoading
+    };
+  }
+}).mount("#campaignFormApp");
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.breadcrumb { background: none; padding: 0; }
+.breadcrumb-item + .breadcrumb-item::before { content: var(--bs-breadcrumb-divider, "/"); }
+.breadcrumb-item a { color: #0d6efd; text-decoration: none; }
+.breadcrumb-item a:hover { color: #0a58ca; text-decoration: underline; }
+.breadcrumb-item.active { color: #6c757d; }
+</style>
+{% endblock %}

@@ -1,0 +1,102 @@
+<!-- Global Add to Cart Modal -->
+<div id="globalCartModal" class="modal fade" tabindex="-1" aria-labelledby="globalCartModalLabel" aria-hidden="true" data-language="{{ current_language | default(value='tr') }}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="globalCartModalLabel">Seçenek Belirleyin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" v-if="selectedProduct">
+                <!-- Product Info -->
+                <div class="d-flex align-items-center mb-3">
+                    <img :src="modalProductImage" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;" :alt="selectedProduct.title">
+                    <div>
+                        <h6 class="mb-1">[[ selectedProduct.title ]]</h6>
+                        <p class="text-primary fw-bold mb-0">[[ formattedModalPrice ]]</p>
+                    </div>
+                </div>
+
+                <!-- Variant Options (only show if product has variants) -->
+                <div v-if="productVariants.length > 0">
+                    <div v-for="option in uniqueOptions" :key="option.name" class="mb-3">
+                        <label class="form-label fw-bold">[[ option.name ]]</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button v-for="value in getOptionValues(option.values)"
+                                    :key="value"
+                                    type="button"
+                                    class="btn btn-sm"
+                                    :class="getButtonClass(option.name, value)"
+                                    :disabled="!isOptionAvailable(option.name, value)"
+                                    @click="selectOption(option.name, value)">
+                                [[ value ]]
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stock badge for variants -->
+                    <div v-if="currentVariant" class="mb-3">
+                        <span class="badge bg-success px-3 py-2" v-if="currentVariant.stock > 10">
+                            <i class="bi bi-check-circle me-1"></i>Stokta var
+                        </span>
+                        <span class="badge bg-warning text-dark px-3 py-2" v-else-if="currentVariant.stock > 0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Son [[ currentVariant.stock ]] adet
+                        </span>
+                        <span class="badge bg-danger px-3 py-2" v-else>
+                            <i class="bi bi-x-circle me-1"></i>Tükendi
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Stock badge for products without variants -->
+                <div v-else class="mb-3">
+                    <span class="badge bg-success px-3 py-2" v-if="selectedProduct?.product?.stock > 10">
+                        <i class="bi bi-check-circle me-1"></i>Stokta var
+                    </span>
+                    <span class="badge bg-warning text-dark px-3 py-2" v-else-if="selectedProduct?.product?.stock > 0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Son [[ selectedProduct?.product?.stock ]] adet
+                    </span>
+                    <span class="badge bg-danger px-3 py-2" v-else>
+                        <i class="bi bi-x-circle me-1"></i>Tükendi
+                    </span>
+                </div>
+
+                <!-- Quantity Selector -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Adet</label>
+                    <div class="input-group" style="width: 150px;">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" @click="decreaseQuantity" :disabled="quantity <= 1">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <input type="number" class="form-control form-control-sm text-center" v-model.number="quantity" @change="validateQuantity" min="1" :max="maxQuantity" style="-moz-appearance: textfield;">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" @click="increaseQuantity" :disabled="quantity >= maxQuantity">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">Maksimum: [[ maxQuantity ]] adet</small>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="modal-body text-center py-5" v-else>
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+                <p class="text-muted mt-2 mb-0">Ürün bilgileri yükleniyor...</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Vazgeç
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        :disabled="addToCartDisabled"
+                        @click="addToCart">
+                    <span v-if="isLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <i v-else class="bi bi-bag-plus me-1"></i>
+                    Sepete Ekle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

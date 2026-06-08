@@ -1,0 +1,62 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/update" enctype="multipart/form-data">
+
+  <!-- Bakım Modu -->
+  <div class="card shadow-sm mb-4 ">
+    <div class="card-header">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-tools me-2"></i>Güncelleme
+      </h6>
+    </div>
+    <div class="card-body">
+
+      {% if upload_success %}
+        <div class="alert alert-success" role="alert">
+          <i class="bi bi-check-circle me-2"></i>
+          Güncelleme başarıyla yüklendi.
+        </div>
+      {% endif %}
+
+      {% if upload_error %}
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Güncelleme yüklenirken bir hata oluştu. Lütfen tekrar deneyin.
+        </div>
+      {% endif %}
+
+      <p>Mevcut Sürüm: <strong>{{ version }}</strong></p>
+      <p>Yeni sürüm mevcutsa, lütfen aşağıdan zip dosyasını yükleyin ve "Ayarları Kaydet" düğmesine tıklayın.</p>
+
+      <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Güncelleme işleminden önce lütfen tam bir yedek aldığınızdan emin olun. Bu özellik deneysel olabilir ve veri kaybına neden olabilir.
+      </div>
+      <div class="mb-3">
+        <label for="update_zip" class="form-label">Güncelleme Zip Dosyası</label>
+        <input class="form-control" type="file" id="update_zip" name="update_zip" accept=".zip" required>
+      </div>
+
+
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>
+        Güncelleme işlemi sırasında lütfen sayfayı kapatmayın veya tarayıcınızı yenilemeyin.
+      </div>
+
+
+
+
+    </div>
+  </div>
+
+
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

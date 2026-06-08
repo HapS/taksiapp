@@ -1,0 +1,338 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<div id="kargo-app">
+  <form @submit.prevent="saveSettings">
+
+    <!-- tab menu title description -->
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light">
+        <h6 class="mb-0 fw-bold">
+          <i class="bi bi-truck me-2"></i>Görünen Başlıklar ve Açıklamalar
+        </h6>
+      </div>
+      <div class="card-body">
+
+        <!-- Language Tabs -->
+        <ul class="nav nav-tabs mb-4" id="LanguageTabs" role="tablist">
+          {% for lang in supported_languages %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {% if loop.first %}active{% endif %}"
+                    id="tab-{{ lang }}"
+                    data-bs-toggle="tab"
+                    data-bs-target="#lang-{{ lang }}"
+                    type="button"
+                    role="tab">{{ lang | upper }}</button>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="tab-content" id="LanguageTabContent">
+          {% for lang in supported_languages %}
+          <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+               id="lang-{{ lang }}"
+               role="tabpanel"
+               aria-labelledby="tab-{{ lang }}">
+
+            <!-- Kargo Şirketi Title -->
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-uppercase text-muted">Kargo Şirketi Başlığı</label>
+              <input type="text"
+                     class="form-control"
+                     name="seo_title_{{ lang }}"
+                     v-model="formData.langs['{{lang}}'].title"
+                     placeholder="Xxx Kargo"
+                     maxlength="60">
+
+            </div>
+
+            <!-- Kargo Şirketi Description -->
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-uppercase text-muted">Kargo Şirketi Açıklaması</label>
+              <textarea class="form-control"
+                        name="seo_description_{{ lang }}"
+                        v-model="formData.langs['{{lang}}'].description"
+                        placeholder="Xxx Kargo açıklama"
+                        rows="3"
+                        maxlength="160"></textarea>
+
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- KArgo Ücreti Bilgiler -->
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h6 class="mb-0 fw-bold">
+          <i class="bi bi-truck me-2"></i>{{ title }} İçin Standart Kargo Ücreti
+        </h6>
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-12">
+          <label class="form-label">Standart Kargo Ücreti</label>
+            <input type="number" v-model="formData.standard_cargo_fee" class="form-control" placeholder="0.00" min="0" step="0.01">
+            <div class="form-text">Bu ücret, gönderi oluşturulurken varsayılan olarak atanır. Lütfen satış yaptığınız para birimine göre yazınız</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Genel Bilgiler -->
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h6 class="mb-0 fw-bold">
+          <i class="bi bi-truck me-2"></i>{{ title }}
+        </h6>
+      </div>
+      <div class="card-body row g-3">
+        <div class="col-md-12">
+          <label class="form-label">Ortam</label>
+          <select v-model="formData.environment" class="form-select">
+            <option value="test">Test (Sandbox)</option>
+            <option value="live">Canlı</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- API / Kimlik Doğrulama -->
+    <div class="card mb-4">
+      <div class="card-header fw-bold">
+        API / Kimlik Doğrulama
+      </div>
+      <div class="card-body row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label">API Base URL</label>
+          <input type="text" v-model="formData.api.base_url" class="form-control" placeholder="https://api.kolaygelsin.com">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Müşteri Kodu</label>
+          <input type="text" v-model="formData.api.customer_code" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">API Key</label>
+          <input type="password" v-model="formData.api.api_key" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">API Secret</label>
+          <input type="password" v-model="formData.api.api_secret" class="form-control">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Gönderici Bilgileri -->
+    <div class="card mb-4">
+      <div class="card-header fw-bold">
+        Gönderici (Shipper) Bilgileri
+      </div>
+      <div class="card-body row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label">Firma Adı</label>
+          <input type="text" v-model="formData.shipper.company_name" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Vergi No / TCKN</label>
+          <input type="text" v-model="formData.shipper.tax_number" class="form-control">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Adres</label>
+          <textarea v-model="formData.shipper.address" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">İl</label>
+          <input type="text" v-model="formData.shipper.city" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">İlçe</label>
+          <input type="text" v-model="formData.shipper.district" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Posta Kodu</label>
+          <input type="text" v-model="formData.shipper.postal_code" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Telefon</label>
+          <input type="text" v-model="formData.shipper.phone" class="form-control" placeholder="+90">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">E-posta</label>
+          <input type="email" v-model="formData.shipper.email" class="form-control">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Webhook / Teknik -->
+    <div class="card mb-4">
+      <div class="card-header fw-bold">
+        Teknik Ayarlar
+      </div>
+      <div class="card-body row g-3">
+
+        <div class="col-md-8">
+          <label class="form-label">Webhook / Callback URL</label>
+          <input type="text" v-model="formData.webhook.url" class="form-control" placeholder="https://site.com/api/kargo/webhook">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Webhook Secret</label>
+          <input type="text" v-model="formData.webhook.secret" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Varsayılan Ödeme Tipi</label>
+          <select v-model="formData.payment.default_type" class="form-select">
+            <option value="sender">Gönderici Ödemeli</option>
+            <option value="receiver">Alıcı Ödemeli</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Kapıda Ödeme Aktif</label>
+          <select v-model="formData.payment.cod_enabled" class="form-select">
+            <option value="1">Evet</option>
+            <option value="0">Hayır</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+      <button type="submit" class="btn btn-success" :disabled="saving">
+        <i class="bi bi-save me-2"></i>
+        <span v-if="saving">Kaydediliyor...</span>
+        <span v-else>Ayarları Kaydet</span>
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  const { createApp, ref, reactive, onMounted } = Vue;
+
+  createApp({
+    setup() {
+      const saving = ref(false);
+      const kargoSirketiId = ref({{ kargo_sirketi_id }});
+
+      // Initial data from server
+      const initialData = {{ sirket.data | json_encode | safe }};
+
+      // Initialize langs with supported languages
+      const supportedLangs = {{ supported_languages | json_encode | safe }};
+      const langs = {};
+
+      supportedLangs.forEach(lang => {
+        langs[lang] = {
+          title: initialData.langs?.[lang]?.title || '',
+          description: initialData.langs?.[lang]?.description || ''
+        };
+      });
+
+      // Form data structure
+      const formData = reactive({
+        langs: langs,
+        environment: initialData.environment || 'test',
+        api: {
+          base_url: initialData.api?.base_url || '',
+          customer_code: initialData.api?.customer_code || '',
+          api_key: initialData.api?.api_key || '',
+          api_secret: initialData.api?.api_secret || ''
+        },
+        shipper: {
+          company_name: initialData.shipper?.company_name || '',
+          tax_number: initialData.shipper?.tax_number || '',
+          address: initialData.shipper?.address || '',
+          city: initialData.shipper?.city || '',
+          district: initialData.shipper?.district || '',
+          postal_code: initialData.shipper?.postal_code || '',
+          phone: initialData.shipper?.phone || '',
+          email: initialData.shipper?.email || ''
+        },
+        webhook: {
+          url: initialData.webhook?.url || '',
+          secret: initialData.webhook?.secret || ''
+        },
+        payment: {
+          default_type: initialData.payment?.default_type || 'sender',
+          cod_enabled: initialData.payment?.cod_enabled?.toString() || '0'
+        },
+        standard_cargo_fee: initialData.standard_cargo_fee || ''
+      });
+
+      const showToast = (icon, title) => {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        Toast.fire({
+          icon: icon,
+          title: title
+        });
+      };
+
+
+
+
+      const saveSettings = async () => {
+        saving.value = true;
+
+        try {
+          const response = await fetch(`/admin/settings/kargo-sirketi/${kargoSirketiId.value}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+
+          if (response.ok) {
+            showToast('success', 'Ayarlar başarıyla kaydedildi!');
+          } else {
+            const errorData = await response.text();
+            console.error('Save error:', errorData);
+            showToast('error', 'Ayarlar kaydedilirken bir hata oluştu!');
+          }
+        } catch (error) {
+          console.error('Request error:', error);
+          showToast('error', 'Bağlantı hatası: ' + error.message);
+        } finally {
+          saving.value = false;
+        }
+      };
+
+      return {
+        formData,
+        saving,
+        saveSettings
+      };
+    }
+  }).mount('#kargo-app');
+</script>
+{% endblock %}

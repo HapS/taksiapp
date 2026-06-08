@@ -1,0 +1,536 @@
+Min._Sipariş: Min. Sipariş
+Hazırlanan: Hazırlanan
+Banka_Transferi: Banka Transferi
+'Seçilen_dosya:': 'Seçilen dosya:'
+Kargo_Bilgisi_Kaydedildi: Kargo bilgisi başarıyla kaydedildi
+İptal_Açıklama: İptal talebiniz admin tarafından onaylandıktan sonra siparişinizden düşülecektir.
+Kargo_takip_numaranız_hazır_olduğunda_size_bildirilecektir.: Kargo takip numaranız hazır olduğunda size bildirilecektir.
+profile_kullanici_bilgilerim: Kullanıcı Bilgilerim
+page_title_profile: Profil
+Mağazadan_Teslim_Alma: Mağazadan Teslim Alma
+Kullanilabilir_Kredi: Kullanılabilir Kredi
+profile_web_sitesi: Web Sitesi
+İade_Talebi: İade Talebi
+edit: Düzenle
+blog: Blog
+contact_yeni_form_doldur: Yeni Form Doldur
+reset_password: Parola Sıfırlama
+Adresler_yükleniyor...: Adresler yükleniyor...
+Aradığınız_sayfa_taşınmış,_silinmiş_veya_hiç_var_olmamış_olabilir._Endişelenmeyin,_size_yardımcı_olabiliriz!: Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir. Endişelenmeyin, size yardımcı olabiliriz!
+hizli_baglantilar: Hızlı Bağlantılar
+İade_Bilgi_Mesajı: İade talebiniz incelendikten sonra onaylanacaktır. Onaylanan iadelerde ürünü belirtilen adrese kargo ile göndermeniz gerekecektir.
+İade: İade
+'Toplam_İndirim:': 'Toplam İndirim:'
+Siparişiniz_başarıyla_oluşturuldu: Siparişiniz başarıyla oluşturuldu
+Rust_+_Axum: Rust + Axum
+reset_password_desc: Lütfen yeni ve güçlü bir parola belirleyin.
+Sonraki_Bakiye: Sonraki Bakiye
+important: Önemli
+Teslimat_Adresi: Teslimat Adresi
+profile: Profil
+İade_Sebebi: İade Sebebi
+Hediye: Hediye
+Ürün_Açıklamaya_Uygun_Değil: Ürün açıklamaya uygun değil
+cart_hizli_teslimat: Hızlı Teslimat
+'Vergi_Dairesi:': 'Vergi Dairesi:'
+Adres_Düzenle: Adres Düzenle
+İptal: İptal
+İade_Et: İade Et
+araniyor: Aranıyor...
+save: Kaydet
+Doğrulanıyor...: Doğrulanıyor...
+Fatura_Adresim_Farklı: Fatura Adresim Farklı
+Kullanılan_Krediler: Kullanılan Krediler
+sifre: Parola
+Sipariş_Notu_(Opsiyonel): Sipariş Notu (Opsiyonel)
+Fatura_Türü: Fatura Türü
+farkli_kelime_deneyin: Lütfen farklı anahtar kelimelerle tekrar deneyin.
+İade_İptal_Onay: İade talebiniz iptal edilecek.
+kargo_secenekleri: Kargo Seçenekleri
+Sepetinizdeki_Ürünler: Sepetinizdeki Ürünler
+Tüm_hakları_saklıdır_mail_base: Tüm hakları saklıdır.
+'Hesap_Sahibi:': 'Hesap Sahibi:'
+Evet_İptal_Et: Evet, İptal Et
+ara: Ara
+profile_telefon: Telefon
+İade_Teslim_Alındı_Detay: Ürün teslim alındı, inceleniyor
+dashboard: Kontrol Paneli
+register_sifre: Parola
+Yakında_sona_eriyor: Yakında sona eriyor
+urun: Ürün
+Siparişler_yüklenirken_hata_oluştu: Siparişler yüklenirken hata oluştu
+Sepeti_Temizle: Sepeti Temizle
+view: Görüntüle
+footer_slogan: SGM 2026 Tüm Hakları Saklıdır
+Adres_Tanımı_(Ev,_İş_vb.: Adres Tanımı (Ev, İş vb.
+Tazminat: Tazminat
+Teslim_Alındı: Teslim Alındı
+Kampanya_ve_İndirimler: Kampanya & İndirimler
+password_reset_instruction: Hesabınız için şifre sıfırlama talebinde bulundunuz. Aşağıdaki butona tıklayarak yeni şifrenizi oluşturabilirsiniz.
+kapida_odeme: Kapıda Ödeme
+'TC_Kimlik_No:': 'TC Kimlik No:'
+order_management: Sipariş Yönetimi
+contact_info_title: İletişim Bilgileri
+daha_ekleyin: daha ekleyin
+İptal_Talebi_Geri_Alındı: İptal talebi geri alındı
+İptal_Edilecek_Adet: İptal Edilecek Adet
+menu: Menü
+B2B_Kredili_Ödeme: B2B Kredili Ödeme
+password_reset_success: Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.
+Telefon_Numarası: Telefon Numarası
+Firma_Adı: Firma Adı
+login: Giriş Yap
+Bu_e_posta_otomatik_olarak_gönderilmiştir._Lütfen_yanıtlamayın.: Bu e-posta otomatik olarak gönderilmiştir. Lütfen yanıtlamayın.
+Para_Birimi: Para Birimi
+Yükle: Yükle
+İptal_Edildi: İptal Edildi
+contact_sending: Gönderiliyor...
+Varsayılan: Varsayılan
+Bu_sipariş_şirketinizin_kredi_limitinden_düşülecektir._Ödeme_yaptığınızda_kredi_limitiniz_yeniden_artacaktır.: Bu sipariş şirketinizin kredi limitinden düşülecektir. Ödeme yaptığınızda kredi limitiniz yeniden artacaktır.
+Başında_sıfır_olmadan_giriniz.: Başında sıfır olmadan giriniz.
+İade_Talebi_Oluştur: İade Talebi Oluştur
+Fiyat: Fiyat
+reset_password_btn: Parolayı Güncelle
+Ödeme_vadesi_ve_detayları_için_şirket_yetkilinizle_iletişime_geçebilirsiniz.: Ödeme vadesi ve detayları için şirket yetkilinizle iletişime geçebilirsiniz.
+PDF,_PNG,_JPG_formatlarında_dosya_yükleyebilirsiniz._(Max:_5MB): 'PDF, PNG, JPG formatlarında dosya yükleyebilirsiniz. (Max: 5MB)'
+wasnt_you: 'Bu talebi siz yapmadıysanız:'
+Başarılı: Başarılı
+register_giris_yapin: Giriş Yapın
+urunler: Ürünler
+Yeni_Adres_Ekle_/_Düzenle: Yeni Adres Ekle / Düzenle
+register_eposta: E-posta
+Kargo_Takip: Kargo Takip No
+Red_Sebebi: Red Sebebi
+Sipariş_durumunuzu_'Siparişlerim'_sayfasından_takip_edebilirsiniz.: Sipariş durumunuzu 'Siparişlerim' sayfasından takip edebilirsiniz.
+Kargo_Şirketi: Kargo Şirketi
+Takip_No_Placeholder: Kargo takip numaranızı girin
+Kargo_Bilgileri: Kargo Bilgileri
+Sirket_Alacagi: Şirket Alacağı
+İptal_Talebini_Geri_Al: İptal talebini geri al
+Kredi_kullanılmıyor: Kredi kullanılmıyor
+contact_consent_text: Kişisel verilerimin işlenmesine izin veriyorum.
+profile_konum: Konum
+update: Güncelle
+Sipariş_durumunuzu_xxx_sayfasından_takip_edebilirsiniz.: Sipariş durumunuzu Siparişlerim sayfasından takip edebilirsiniz.
+Sebep: Sebep
+reset_password_title: Yeni Parola Belirleyin
+Sipariş_vermek_için_teslimat_adresi_seçmelisiniz.: Sipariş vermek için teslimat adresi seçmelisiniz.
+EFT_/_Banka_Transferi: EFT / Banka Transferi
+Filtreleri_Temizle: Filtreleri Temizle
+Siparişiniz_başarıyla_alındı_ve_işleme_koyuldu._Detayları_aşağıda_bulabilirsiniz.: Siparişiniz başarıyla alındı ve işleme koyuldu. Detayları aşağıda bulabilirsiniz.
+'Sipariş_Numarası:': 'Sipariş Numarası:'
+'Ödeme_Bekleniyor:': 'Ödeme Bekleniyor:'
+PDF,_PNG,_JPG_formatlarında_yükleyebilirsiniz: PDF, PNG, JPG formatlarında yükleyebilirsiniz
+'Ürünler:': 'Ürünler:'
+contact_send: Gönder
+Tümü: Tümü
+order_details: Sipariş Detayları
+Banka_Transferi_Bilgileri: Banka Transferi Bilgileri
+İptal_Et: İptal Et
+varsayilan: Varsayılan
+register_kayit_ol: Kayıt Ol
+register_sifre_tekrar: Parola Tekrar
+İade_Onaylandı: İade Onaylandı — Lütfen ürünü kargoya verin
+Kargo_Şirketi_Placeholder: 'Örn: Yurtiçi, Aras, MNG...'
+İade_Edilecek_Adet: İade Edilecek Adet
+Kredilerim: Kredilerim
+'Ücretsiz_kargo_icin:': 'Ücretsiz kargo için:'
+Alışverişe_Başla: Alışverişe Başla
+Adres_Tipi: Adres Tipi
+login_hesabina_giris_yap: Giriş Yapın
+page_title_my_profile: Profilim
+order_edit: Sipariş Düzenle
+page_title_my_addresses: Adreslerim
+Bitiş: Bitiş
+register_email_exists: E-posta zaten var
+İade_Talebi_Detay: İade Talebi Detayı
+Ürünler: Ürünler
+'Kargo:': 'Kargo:'
+profile_soyad: Soyad
+contact_label_message: Mesaj
+Ürün: Ürün
+Siparişinize_ait_text_sepet: Siparişinize ait fatura bilgileri ve teslimat adresi aşağıda seçtiğiniz bilgilere göre düzenlenecektir, farklı fatura adresi için lütfen işaretleyiniz.
+sepetiniz_yukleniyor: Sepetiniz Yükleniyor...
+admin_panel: Admin Panel
+Süresiz: Süresiz
+Toplam_İndirim: Toplam İndirim
+Bireysel: Bireysel
+Kullanılan_Kredi: Kullanılan Kredi
+home: Ana Sayfa
+Tüm_işlemleriniz_256_bit_SSL_sertifikası_ile_korunmaktadır.: Tüm işlemleriniz 256-bit SSL sertifikası ile korunmaktadır.
+'Genel_Toplam:': 'Genel Toplam:'
+register_hesap_olustur: Yeni Hesap Oluştur
+iletisim: İletişim
+İade_İptal_Et: İade Talebini İptal Et
+'Ürün_Toplamı:': 'Ürün Toplamı:'
+Kargo_Adreslerim: Kargo Adreslerim
+Düzenle: Düzenle
+Yükleniyor...: Yükleniyor...
+İlçe: İlçe
+register_email_gecersiz: Geçersiz e-posta adresi formatı
+hello: Merhaba
+'İlçe:': 'İlçe:'
+login_kayit_basarili: Kayıt Başarılı
+Kargo_Bilgisi_Girin: Kargo Bilgisi Girin
+İlçe_Seçiniz: İlçe Seçiniz
+Ödeme_işlemini_tamamlayabilmek_için_aşağıdaki_bilgileri_doldurmanız_gerekmektedir.: Ödeme işlemini tamamlayabilmek için aşağıdaki bilgileri doldurmanız gerekmektedir.
+Sepetinize_eklediğiniz_sepet: Sepetinize eklediğiniz ürünlerin stok durumları ve fiyatları sipariş tamamlanana kadar değişiklik gösterebilir. Siparişinizi tamamlamadan önce lütfen sepetinizi kontrol ediniz.
+Krediler_doğrulanıyor...: Krediler doğrulanıyor...
+profile_updated_failed: Profil güncellenirken bir hata oluştu
+B2B_kredili_ödemeniz_başarıyla_tamamlandı.: B2B kredili ödemeniz başarıyla tamamlandı.
+İade_Onay_Bekliyor: İade Onay Bekliyor
+profile_profil_bilgileri: Kullanıcı Bilgilerim
+arama_sonuclari: Arama Sonuçları
+site_name: Site Name
+Adres_Ekle: Adres Ekle
+Uyarı: Uyarı
+Uygulanacak_Kargo_Ücreti: 'Uygulanacak kargo ücreti:'
+profile_favorilerim: Favorilerim
+Toplam_Kredi_İndirimi: Toplam Kredi İndirimi
+Kalan: Kalan
+Ürünler_Toplamı: Ürünler Toplamı
+'Şehir:': 'Şehir:'
+products: Ürünler
+Toplam_Alisveris: Toplam Alışveriş
+account: Hesap
+user_management: Kullanıcı Yönetimi
+'Sipariş:': 'Sipariş:'
+Ödeme_işlemi_gerçekleştirilemedi._Lütfen_bilgilerinizi_kontrol_edip_tekrar_deneyiniz.: Ödeme işlemi gerçekleştirilemedi. Lütfen bilgilerinizi kontrol edip tekrar deneyiniz.
+Telefon: Telefon
+Soyad: Soyad
+contact_get_in_touch: Bizimle İletişime Geçin
+giris_yap: Giriş Yap
+Henüz_siparişiniz_yok: Henüz siparişiniz yok
+b2b_account: B2B Hesabım
+Sipariş_Takibi: Sipariş Takibi
+Teslimat_/_Fatura_Adresleri: Teslimat / Fatura Adresleri
+Sipariş_bilgileriniz_hazırlanıyor...: Sipariş bilgileriniz hazırlanıyor...
+profile_cikis_yap: Çıkış Yap
+Sipariş_Alındı: Sipariş Alındı
+password_changed_successfully: Şifre başarıyla değiştirildi
+Evet: Evet
+Henüz_kredi_kullanımınız_bulunmamaktadır: Henüz kredi kullanımınız bulunmamaktadır
+Krediler_doğrulanamadı: Krediler doğrulanamadı
+Ürünü_İstemiyorum: Ürünü istemiyorum
+password_too_short: Yeni şifre en az 6 karakter olmalı
+forgot_password_title: Parolanızı mı unuttunuz?
+Kredi_Tipi: Kredi Tipi
+'Tutar:': 'Tutar:'
+İade_Kargoda_Detay: İade kargoya verildi, teslim bekleniyor
+tum_haklari_saklidir: Tüm Hakları Saklıdır
+my_account: Hesabım
+tumu: Tümü
+Durum: Durum
+Takip_No_Zorunlu: Kargo takip numarası zorunludur
+contact_label_email: E-posta
+settings: Ayarlar
+register_email_zaten_kayitli: Bu e-posta adresi zaten kayıtlı
+Sebep_Seçiniz: Sebep seçiniz...
+Filtre_Sonuç_Yok: Bu filtrelere uygun sipariş bulunamadı
+Kapat: Kapat
+Kargo_Ücreti_Açıklama: Bu ürünü iptal ettiğinizde siparişinizin toplam tutarı ücretsiz kargo limitinin altına düşecektir. Siparişinize kargo ücreti yansıyacaktır.
+page_title_my_orders: Siparişlerim
+Firmanizin_Borcu: Firmanızın Borcu
+Tekrar_Dene: Tekrar Dene
+mail_sent_success: Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.
+İade_Açıklama_Placeholder: Lütfen iade sebebinizi detaylı açıklayın...
+Kargo_Bilgisi_Gir: Kargo bilgisi girmek için tıklayın
+profile_kullanici_adi: Kullanıcı Adı
+new_password: Yeni Parola
+Henuz_islem_yok: Henüz işlem bulunmuyor
+'IBAN:': 'IBAN:'
+Ad: Ad
+İptal_Sonrası_Toplam: 'İptal sonrası sipariş toplamı:'
+contact_label_name: Ad Soyad
+sepetiniz_bos: Sepetiniz Boş
+Tum_Odemeler: Tüm Ödemeler
+İade_İptal_Edildi_Başarılı: İade talebi iptal edildi
+Tip: Tip
+user_not_found: Kullanıcı bulunamadı
+profile_kullanici_id: Kullanıcı ID
+hesabiniz_yok_mu: Hesabınız yok mu?
+Kargoda: Kargoda
+Kullanılabilir_Kredi: Kullanılabilir Kredi
+'Ara_Toplam:': 'Ara Toplam:'
+İade_Talebi_Gönder: İade Talebi Gönder
+incele: İncele
+Oluşturuldu: Oluşturuldu
+Islem_Tipi: İşlem Tipi
+İade_İptal_Edildi: İade talebi iptal edildi
+profile_yeni_sifre_tekrar: Yeni Parola Tekrar
+Ödeme_yöntemi_bulunamadı: Ödeme yöntemi bulunamadı
+sonuc_bulunamadi: Sonuç bulunamadı
+Ücretsiz_Kargo_Limiti: 'Ücretsiz kargo limiti:'
+'Ürünler_Toplamı:': 'Ürünler Toplamı:'
+Kredi_Islem_Gecmisi: Kredi İşlem Geçmişi
+b2b_dashboard_link: Dashboard
+orders: Siparişler
+Fatura_Bilgisi_Seçiniz: Fatura Bilgisi Seçiniz
+Siparişleriniz_yükleniyor...: Siparişleriniz yükleniyor...
+register_hemen_ucretsiz_kayit_ol: Hemen Ücretsiz Kayıt Ol
+profile_kredilerim: Kredilerim
+Aktif_krediniz_bulunmamaktadır: Aktif krediniz bulunmamaktadır
+profile_updated: Profil başarıyla güncellendi
+İptal_Onaylandı_Geri_Alınamaz: İptal onaylandı, geri alınamaz
+Ürünü_İptal_Et: Ürünü İptal Et
+Firmamizin_Size_Borcu: Firmamızın Size Borcu
+Siparişi_Onayla_ve_Tamamla: Siparişi Onayla ve Tamamla
+Vazgeç: Vazgeç
+wasnt_you_desc: Hesabınızın güvenliği için hemen bizimle iletişime geçin. Bu e-postayı görmezden gelebilirsiniz, şifreniz değiştirilmeyecektir.
+İade_Tamamlandı: İade Tamamlandı
+profile_mevcut_sifre: Mevcut Parola
+Vergi_Dairesi: Vergi Dairesi
+Promosyon: Promosyon
+Sipariş_vermek_için_fatura_adresi_seçmelisiniz.: Sipariş vermek için fatura adresi seçmelisiniz.
+Sepete_Dön: Sepete Dön
+Sipariş_vermek_için_ödeme_bilgilerinizi_tamamlamalısınız.: Sipariş vermek için ödeme bilgilerinizi tamamlamalısınız.
+Genel_Toplam: Genel Toplam
+'Banka:': 'Banka:'
+İlk_siparişinizi_vermek_için_alışverişe_başlayın!: İlk siparişinizi vermek için alışverişe başlayın!
+Kredi_doğrulama_hatası: Kredi doğrulama hatası
+Varsayılan_Adres_Olarak_Ayarla: Varsayılan Adres Olarak Ayarla
+light_mode: Aydınlık Tema
+Sipariş_Özeti: Sipariş Özeti
+'Kupon_kodu_girin:': 'Kupon kodu girin:'
+login_hosgeldin: Hoş Geldiniz
+İade_Sebebi_Zorunlu: Lütfen bir iade sebebi seçin.
+profile_iptal: İptal
+login_kullanici_adi_veya_sifre_hatalı: Kullanıcı adı veya şifre hatalı
+Kullanılan: Kullanılan
+Henüz_sepetinize_ürün_eklemediniz._Hemen_alışverişe_başlayın!: Henüz sepetinize ürün eklemediniz. Hemen alışverişe başlayın!
+Sadece_PDF,_PNG,_JPG_dosyaları_yükleyebilirsiniz: Sadece PDF, PNG, JPG dosyaları yükleyebilirsiniz
+Güvenli_Alışveriş: Güvenli Alışveriş
+Onaylanan: Onaylanan
+Fatura_Bilgisi_Ekle: Fatura Bilgisi Ekle
+current_password_incorrect: Mevcut şifre yanlış
+forgot_password_desc: E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+'Toplam:': 'Toplam:'
+checkout: Ödeme
+google_ile_giris_yap: Google ile Giriş Yapın
+Kaydet: Kaydet
+Kullanım_Geçmişi: Kullanım Geçmişi
+sayfalar: Sayfalar
+Temizle: Temizle
+Aktif_Krediler: Aktif Krediler
+Fatura_Adresi: Fatura Adresi
+send_reset_link: Sıfırlama Bağlantısı Gönder
+İade_Kargoda: İade kargoya verildi
+İade_Onaylandı_Kargo_Bekleniyor: Kargo Bekleniyor
+forgot_password: Parolamı Unuttum
+Önemli_Bilgiler: Önemli Bilgiler
+profile_sifre_degistir: Parolayı Değiştir
+Ödeme_Dekontu_Yükle: Ödeme Dekontu Yükle
+Vergi_Numarası: Vergi Numarası
+Kurumsal_Fatura_Adresi: Kurumsal Fatura Adresi
+Bekleyen_Odeme: Bekleyen Ödeme
+Borc_Yok: Borç Yok
+delete: Sil
+add: Ekle
+Toplam_Kullanılabilir_Kredi: Toplam Kullanılabilir Kredi
+Adres_bilgisi_yok: Adres bilgisi yok
+Sipariş_vermek_için_ödeme_yöntemi_seçmelisiniz.: Sipariş vermek için ödeme yöntemi seçmelisiniz.
+footer_ana_sayfa: Ana Sayfa
+Sipariş: Sipariş
+kayit_olun: Kayıt Olun
+cart_kapida_odeme: Kapıda Ödeme Seçeneği
+favorites: Favoriler
+Hesaplanıyor: Hesaplanıyor...
+Siparişlerim: Siparişlerim
+Ürün_Kusurlu_Bozuk: Ürün kusurlu / bozuk
+Kargo_Bilgisi_Gönder: Kargo Bilgisini Gönder
+Güncelle: Güncelle
+profile_sifre_bilgisi_sosyal_medya: Sosyal Medya ile Giriş Yapılan Hesaplarda Mevcut Parola Yoktur
+page_title_my_account: Hesabım
+Kullanilan_Kredi: Kullanılan Kredi
+Kullanılan_Tutar: Kullanılan Tutar
+profile_ad: Ad
+'Not:': 'Not:'
+Hayır: Hayır
+Şirket_Kredi_Durumu: Şirket Kredi Durumu
+profile_tum_siparislerim: Tüm Siparişlerim
+Toplam: Toplam
+Toplam_Kredi_Limiti: Toplam Kredi Limiti
+Ülke_Seçiniz: Ülke Seçiniz
+'Kupon:': 'Kupon:'
+Ödeme_Yöntemi: Ödeme Yöntemi
+Kargo_Bilgisi_Açıklama: İade onaylandı. Lütfen ürünü kargoya verip takip numarasını girin.
+invalid_token: Geçersiz veya süresi dolmuş sıfırlama bağlantısı.
+sayfa: Sayfa
+Bir_hata_oluştu: Bir hata oluştu
+Adet: Adet
+content_management: İçerik Yönetimi
+Bekleyen: Bekleyen
+Rust_+_Axum_+_Tera_+_PostgreSQL_ile_güçlendirilmiş_modern_web_uygulaması: SGM 2026 Tüm Hakları Saklıdır
+Toplam_Kullanılabilir: Toplam Kullanılabilir
+Ödeme_Bilgileri: Ödeme Bilgileri
+İade_Reddedildi: İade talebi reddedildi
+'Teslimat_Adresi:': 'Teslimat Adresi:'
+token_expiry_notice: Bu sıfırlama bağlantısı 10 dakika geçerlidir.
+B2B_Kredi: B2B Kredi
+Timeline_Yenile: Timeline Yenile
+'Ülke:': 'Ülke:'
+Vadeli Alışverişlerim: Vadeli Alışverişlerim
+Tamam: Tamam
+dark_mode: Karanlık Tema
+Alıcı: Alıcı
+contact_generic_error: Bir hata oluştu, lütfen tekrar deneyiniz.
+Toplam_Adet: Toplam Adet
+Kredi: Kredi
+password_hashing_failed: Şifre işlenirken hata oluştu
+register_kayit_islemi_basarisiz: Kayıt İşlemi Başarısız
+my_favorites: Favorilerim
+Geçerlilik: Geçerlilik
+footer_text: '2026 Tüm hakları saklıdır.'
+register_username_exists: Kullanıcı adı zaten var
+Kredi_limitiniz_bu_sipariş_için_yeterlidir.: Kredi limitiniz bu sipariş için yeterlidir.
+İade_Tamamlandı_Detay: İade tamamlandı
+Online_Kredi_Kartı: Online Kredi Kartı
+profile_yetki: Yetki
+Kapıda_Ödeme: Kapıda Ödeme
+Toplam_Tutar: Toplam Tutar
+kategoriler_mega_menu: Kategoriler
+İade_Talebi_Oluşturuldu: İade talebiniz başarıyla oluşturuldu
+Adres: Adres
+Aciklama: Açıklama
+Kargoya_Verildi: Kargoya Verildi
+reset_failed: Şifre sıfırlama işlemi başarısız oldu.
+profile_kargo_adreslerim: Kargo Adreslerim
+Kargo_Tipi: Kargo Tipi
+my_orders: Siparişlerim
+Yapilan_Toplam_Odeme: Yapılan Toplam Ödeme
+Email: Email
+Sepetinizde_ürün_bulunamadı.: Sepetinizde ürün bulunamadı.
+Siparişiniz_Başarıyla_Alındı!: Siparişiniz Başarıyla Alındı!
+Fatura_bilgileri_yükleniyor...: Fatura bilgileri yükleniyor...
+profile_hesap_bilgileri: Hesap Bilgileri
+'256_bit_SSL_şifreleme_ile_korunmaktadır': '256-bit SSL şifreleme ile korunmaktadır'
+Kredi_Kartı: Kredi Kartı
+Diğer: Diğer
+Yeni_Adres_Ekle: Yeni Adres Ekle
+Kayıtlı_adresiniz_yok: Kayıtlı adresiniz yok
+'Hata_Detayı:': 'Hata Detayı:'
+Siparişinizin_detayları_e_posta_adresinize_gönderilmiştir.: Siparişinizin detayları e-posta adresinize gönderilmiştir.
+Dekont_Yükleme: Dekont Yükleme
+passwords_do_not_match: Yeni şifreler eşleşmiyor
+İyzico_ödeme_formu_yüklenemedi._Lütfen_tekrar_deneyin.: İyzico ödeme formu yüklenemedi. Lütfen tekrar deneyin.
+Ana_Sayfa: Ana Sayfa
+Lütfen_ödeme_dekontunuzu_yükleyiniz.: Lütfen ödeme dekontunuzu yükleyiniz.
+'Kargo_Ücreti:': 'Kargo Ücreti:'
+contact_submit_success: Mesajınız başarılı bir şekilde gönderildi. Teşekkür ederiz!
+Ödeme_Dekontu: Ödeme Dekontu
+Zaman_Çizelgesi: Zaman Çizelgesi
+İptal_Modal_Mesaj: Siparişinizdeki bu ürünü iptal etmeye karar mı verdiniz?
+Ödeme_yöntemleri_yükleniyor...: Ödeme yöntemleri yükleniyor...
+Alışverişe_Devam_Et: Alışverişe Devam Et
+İade_Talebiniz_İnceleniyor: İade talebiniz inceleniyor. Admin onayından sonra kargo bilgilerinizi girebileceksiniz.
+İade_İnceleniyor: İade İnceleniyor
+Yanlış_Ürün_Gönderildi: Yanlış ürün gönderildi
+Başlangıç: Başlangıç
+Emin_misiniz: Emin misiniz?
+Kargo_Takip_No: Kargo Takip No
+my_cart: Sepetim
+profile_dogum_tarihi: Doğum Tarihi
+logout: Çıkış Yap
+Kredi_Islemleri: Kredi İşlemleri
+? Bu_sipariş_tutarı_şirketinizin_kullanılan_kredisine_eklenmiştir._Ödeme_yaptığınızda_kredi_limitiniz_yeniden_artacaktır.
+: Bu sipariş tutarı şirketinizin kullanılan kredisine eklenmiştir. Ödeme yaptığınızda kredi limitiniz yeniden artacaktır.
+Bilinmeyen_Hata: Bilinmeyen bir hata oluştu
+veya: veya
+Süresi_Dolan_Krediler: Süresi Dolan Krediler
+Fatura_Adresi_Seçiniz: Fatura Adresi Seçiniz
+back_to_login: Girişe Dön
+Sorun_devam_ederse_bankanızla_veya_müşteri_hizmetlerimizde_iletişime_geçebilirsiniz.: Sorun devam ederse bankanızla veya müşteri hizmetlerimizde iletişime geçebilirsiniz.
+ucretsiz_kargo_icin_kalan_tutar: 'Ücretsiz kargo için kalan tutar:'
+TC_Kimlik_Numarası: TC Kimlik Numarası
+Teslim_Edildi: Teslim Edildi
+'Ödeme_Yöntemi:': 'Ödeme Yöntemi:'
+Henüz_kayıtlı_kargo_adresi_bulunamadı.: Henüz kayıtlı kargo adresi bulunamadı.
+contact_validation_error: Lütfen zorunlu alanları doldurunuz.
+Tutar: Tutar
+mail_failed: E-posta gönderilirken bir hata oluştu.
+Sipariş_Bilgileri: Sipariş Bilgileri
+b2b_orders_link: Siparişler
+b2b_products_link: Ürünler
+Uygula: Uygula
+profile_guncelle: Profili Güncelle
+haber: Haber
+sipariş: sipariş
+register_zayif_sifre: Şifre çok zayıf (en az 6 karakter, büyük/küçük harf ve rakam içermeli)
+login_basariyla_cikis_yaptiniz: Başarıyla Çıkış Yaptınız
+register_kullanici_adi_zaten_kayitli: Bu kullanıcı adı zaten kullanılıyor
+İade_Detayını_Gör: İade detayını gör
+'Adet:': 'Adet:'
+Hata: Hata
+İade_Teslim_Alındı: Ürün teslim alındı, inceleniyor
+İptal_Talebi_Başarılı: İptal talebiniz alınmıştır. En kısa sürede incelenecektir.
+Kargo: Kargo
+profile_fatura_adreslerim: Fatura Adreslerim
+cancel: İptal
+profile_eposta: E-posta
+register_ad: İsim
+profile_hakkimda: Hakkımda
+register_kullanici_adi: Kullanıcı Adı
+Sil: Sil
+my_addresses: Adreslerim
+register: Kayıt Ol
+login_prompt: Hesabınıza giriş yapın veya yeni bir hesap oluşturun
+Siparis: Sipariş
+Sayfa_Bulunamadı: Sayfa Bulunamadı
+Siparişi_Tamamla: Siparişi Tamamla
+language: Dil Seçimi
+Sipariş_Numarası: Sipariş Numarası
+Kredi_Limiti: Kredi Limiti
+page_title_my_cart: Sepetim
+Siparişiniz_hazırlanmaya_başlandı_ve_en_kısa_sürede_kargoya_verilecektir.: Siparişiniz hazırlanmaya başlandı ve en kısa sürede kargoya verilecektir.
+profile_yetki_kullanici: Kullanıcı Yetkisi
+Onaylandı: Onaylandı
+Tamamlandı: Tamamlandı
+product_list: Tüm Ürünler
+Kampanyalar_ve_İndirimler: Kampanyalar ve İndirimler
+kullanici_adi_veya_email: Kullanıcı Adı veya E-posta
+Kurumsal_Fatura_İstiyorum: Kurumsal Fatura İstiyorum
+İl_Seçiniz: İl Seçiniz
+profile_yetki_admin: Admin Yetkisi
+Kurumsal: Kurumsal
+İptal_Bekliyor: İptal Bekliyor
+'Vergi_No:': 'Vergi No:'
+categories: Kategoriler
+Vadeli_Siparisler: Vadeli Siparişler
+theme: Tema
+password_update_failed: Şifre güncellenirken hata oluştu
+register_soyad: Soyisim
+Yeni_Adres: Yeni Adres
+pages: Sayfalar
+cart: Sepet
+admin_panel_menu: Admin Panel
+Kredileriniz_yükleniyor: Kredileriniz yükleniyor...
+İade_Bilgisi_Bulunamadı: İade bilgisi bulunamadı.
+my_profile: Profilim
+register_zaten_hesabiniz_var_mi: Zaten hesabınız var mı?
+Kargo_Ücreti_Uyarısı: Kargo Ücreti Uyarısı!
+Hesap_Bilgileri: Hesap Bilgileri
+Veriler_yükleniyor...: Veriler yükleniyor...
+contact_label_phone: Telefon
+profile_hakkimda_placeholder: Hakkımda
+Tum_Siparis_Goster: Tüm Siparişleri Göster
+Arama_yapın...: Arama yapın...
+İade_Bekliyor: İade Bekliyor
+Onceki_Bakiye: Önceki Bakiye
+Kullanılabilir_kredilerinizi_ve_geçmiş_kullanımlarınızı_görüntüleyin: Kullanılabilir kredilerinizi ve geçmiş kullanımlarınızı görüntüleyin
+Filtre_Değiştir: Farklı filtreler deneyebilir veya tüm siparişlerinizi görüntüleyebilirsiniz.
+contact_label_subject: Konu
+Adres_Seçiniz: Adres Seçiniz
+Siparislerim: Siparişlerim
+aranacak_kelime: Aranacak kelime...
+Tarih: Tarih
+Kargoda_Hasar_Görmüş: Kargo sırasında hasar görmüş
+Ücretsiz: Ücretsiz
+İade_Tutarı: İade Tutarı
+blog_yazilari: Blog Yazıları
+Bazı_krediler_geçersiz_hale_geldi: Bazı krediler geçersiz hale geldi
+Kayıtlı_fatura_bilginiz_yok: Kayıtlı fatura bilginiz yok
+profile_yeni_sifre: Yeni Parola
+Bağlantı_Hatası: Bağlantı hatası. Lütfen tekrar deneyin.
+Açıklama: Açıklama
+security_notice: Güvenliğiniz için bu bağlantıyı kimseyle paylaşmayın.
+profile_kayit_tarihi: Kayıt Tarihi

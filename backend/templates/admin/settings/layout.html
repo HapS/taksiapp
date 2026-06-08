@@ -1,0 +1,62 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2">
+  <div class="row align-items-center pb-2 mb-3 border-bottom">
+    <div class="col">
+      <h4 class="h4 mb-0 fw-bold">{{ title }}</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="/admin">Admin</a></li>
+          <li class="breadcrumb-item"><a href="/admin/settings">Ayarlar</a></li>
+          <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Sidebar Navigation -->
+    <div class="col-lg-3 mb-4">
+      <div class="card shadow-sm sticky-top" style="top: 1rem;">
+        <div class="card-header">
+          <h6 class="mb-0 fw-bold">
+            <i class="bi bi-gear me-2"></i>Ayarlar
+          </h6>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for item in sidebar_items %}
+          <a href="{{ item.url }}"
+             class="list-group-item list-group-item-action {% if current_section == item.id %}active{% endif %}">
+            <i class="{{ item.icon }} me-2"></i>{{ item.title }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
+      {% if success %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>Ayarlar başarıyla kaydedildi!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endif %}
+
+      {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>Ayarlar kaydedilirken bir hata oluştu!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endif %}
+
+      {% block settings_content %}
+      <!-- Section content will be inserted here -->
+      {% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

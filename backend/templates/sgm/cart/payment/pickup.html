@@ -1,0 +1,176 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shop me-2"></i>
+                        Mağazadan Teslim Alma
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="alert alert-success">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Ücretsiz Teslim:</strong> Siparişinizi mağazamızdan ücretsiz olarak teslim alabilirsiniz.
+                            </div>
+                            
+                            <h5>Mağaza Bilgileri</h5>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h6><i class="bi bi-geo-alt text-danger me-2"></i>Adres</h6>
+                                            <p class="text-muted">
+                                                {{ settings.contact_address}}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <h6><i class="bi bi-telephone text-primary me-2"></i>İletişim</h6>
+                                            <p class="text-muted">
+                                                <strong>Telefon:</strong> {{ settings.contact_phone}}<br>
+                                                
+                                                <strong>E-posta:</strong> {{ settings.contact_email}}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                <strong>Teslim Alma Koşulları:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Siparişiniz hazır olduğunda SMS ile bilgilendirileceksiniz</li>
+                                    <li>Ödeme mağazada nakit veya kredi kartı ile yapılabilir</li>
+                                    <li>Siparişinizi 7 gün içinde teslim almanız gerekmektedir</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Sipariş Özeti</h6>
+                                    <p class="mb-1"><strong>Sipariş No:</strong> {{ cart.order_id }}</p>
+                                    <hr>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Ürün Toplamı:</span>
+                                        <span class="small">{{ product_total_formatted }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Kargo Ücreti:</span>
+                                        {% if is_free_shipping %}
+                                        <span class="text-success small">Ücretsiz</span>
+                                        {% else %}
+                                        <span class="small">{{ standart_cargo_fee_formatted }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Genel Toplam:</strong>
+                                        <strong class="text-success">{{ final_total_formatted }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-success btn-lg w-100" id="confirm-pickup">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Siparişi Onayla
+                                </button>
+                                <a href="/my-cart" class="btn btn-outline-secondary w-100 mt-2">
+                                    <i class="bi bi-arrow-left me-2"></i>
+                                    Sepete Dön
+                                </a>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-bell me-1"></i>
+                                    Hazır olduğunda SMS ile bilgilendirileceksiniz
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body text-center">
+                            <h6>Mağaza Konumu</h6>
+                            <div class="ratio ratio-16x9">
+                                {{ settings.contact_map_embed | safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.getElementById('confirm-pickup').addEventListener('click', function() {
+    Swal.fire({
+        title: 'Sipariş Onayı',
+        text: 'Siparişinizi mağazamızdan teslim almak üzere onaylıyor musunuz?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, Onayla',
+        cancelButtonText: 'İptal'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/api/cart/complete-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        payment_url: '{{ payment_url }}',
+                        notes: 'Mağazadan teslim alma seçildi'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        title: 'Siparişiniz Alındı!',
+                        text: 'Sipariş numaranız: ' + result.data.order_id + '. Hazır olduğunda SMS ile bilgilendirileceksiniz.',
+                        icon: 'success',
+                        confirmButtonText: 'Siparişlerime Git'
+                    }).then(() => {
+                        window.location.href = '/my-account/orders';
+                    });
+                } else {
+                    throw new Error(result.error || 'Sipariş oluşturulamadı');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Sipariş oluşturulurken bir hata oluştu: ' + error.message,
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

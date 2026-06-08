@@ -1,0 +1,123 @@
+<!-- Media Edit Modal -->
+<div class="modal fade" id="mediaEditModal" tabindex="-1" aria-labelledby="mediaEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" v-if="editingMedia">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mediaEditModalLabel">Medya Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-5">
+                        <!-- Preview -->
+                        <div class="mb-3">
+                            <img v-if="editingMedia.mime_type && editingMedia.mime_type.startsWith('image/')"
+                                :src="get_media_images_thumbnail(editingMedia.url)" class="img-fluid rounded" :alt="editingMedia.file_name">
+                            <div v-else
+                                class="bg-light d-flex flex-column align-items-center justify-content-center rounded"
+                                style="height: 200px;">
+                                <i :class="[getMediaIcon(editingMedia.mime_type), getMediaIconColor(editingMedia.mime_type)]"
+                                    class="fs-1"></i>
+                                <small class="text-muted mt-2">[[ editingMedia.file_name ]]</small>
+                            </div>
+                        </div>
+                        <div class="small text-muted">
+                            <p class="mb-1"><strong>Dosya:</strong> [[ editingMedia.file_name ]]</p>
+                            <p class="mb-0"><strong>URL:</strong> <code class="small truncate">[[ editingMedia.url ]]</code></p>
+                        </div>
+                        <hr>
+                        <!-- Admin search -->
+                        <div class="mb-3">
+                            <label class="form-label">Arama (İçerik / Kategori)</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control form-control-sm" v-model="searchTerm" @input="debouncedSearch" placeholder="Başlığa veya açıklamaya göre ara...">
+                                <button class="btn btn-sm btn-outline-secondary" @click="performSearch" :disabled="searchLoading">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+
+                            <div v-if="searchLoading" class="small text-muted">Aranıyor...</div>
+
+                            <ul v-if="searchResults && searchResults.length" class="list-group list-group-flush small">
+                                <li v-for="r in searchResults" :key="r.id" :class="['list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', (selectedSearchId === r.id ? 'bg-light' : '')]">
+                                    <div class="me-2">
+                                                <div class="fw-bold">[[ (r.titles && r.titles[editingMediaLang]) ? r.titles[editingMediaLang] : r.title ]]</div>
+                                        <div class="text-muted small">[[ (r.descriptions && r.descriptions[editingMediaLang]) ? r.descriptions[editingMediaLang] : (r.description || '—') ]]</div>
+                                        <div class="text-truncate" style="max-width:280px"><small class="text-muted">[[ (r.absolute_urls && r.absolute_urls[editingMediaLang]) ? r.absolute_urls[editingMediaLang] : (r.url || '') ]]</small></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary" @click.prevent="selectSearchResult(r)">Seç</button>
+                                    </div>
+                                </li>
+                            </ul>
+
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Link</label>
+                            <input type="text" class="form-control form-control-sm" v-model="editingMedia.link" placeholder="URL">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <label class="form-label">Dosyayı Değiştir</label>
+                            <input type="file" class="form-control form-control-sm" id="editMediaFileInput"
+                                @change="handleEditMediaFileSelect" :disabled="!editingMedia.id"
+                                accept="image/*,video/*,audio/*,.webp,.pdf,.doc,.docx">
+                            <div class="form-text" v-if="editingMedia.id">Yeni dosya yüklemek için seçin (opsiyonel)
+                            </div>
+                            <div class="form-text text-warning" v-else>
+                                <i class="bi bi-exclamation-triangle"></i> Dosyayı değiştirmek için önce sayfayı
+                                kaydedin
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tip *</label>
+                            <select class="form-select" v-model="editingMedia.media_type">
+                                <option value="cover">Kapak</option>
+                                <option value="icon">İkon</option>
+                                <option value="video">Video</option>
+                                <option value="gallery">Galeri</option>
+                                <option value="document">Döküman</option>
+                            </select>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <label class="form-label">Başlık</label>
+                            <input type="text" class="form-control form-control-sm" v-model="editingMedia.title"
+                                placeholder="Medya başlığı">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control form-control-sm" v-model="editingMedia.description" rows="3"
+                                placeholder="Kısa açıklama"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">İçerik</label>
+                            <textarea class="form-control form-control-sm" v-model="editingMedia.content" rows="4"
+                                placeholder="Detaylı içerik"></textarea>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" @click="removeMediaFromModal">
+                    <i class="bi bi-trash"></i> Sil
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> İptal
+                </button>
+                <button type="button" class="btn btn-primary" @click="saveMediaEdit">
+                    <i class="bi bi-check"></i> Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

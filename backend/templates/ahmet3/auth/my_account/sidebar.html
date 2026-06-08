@@ -1,0 +1,25 @@
+<div class="card border-0 radius-4">
+    <div class="card-body p-0">
+        <div class="list-group  elborder">
+            <a href="/my-account/orders"
+                class="list-group-item list-group-item-action  lh-lg d-flex align-items-center ">
+                <i class="bi bi-box-seam fs-4 me-3 mx-3"></i> {{ t(key="profile_tum_siparislerim", lang=current_language) }}
+            </a>
+            <a href="/my-account/addresses"
+                class="list-group-item list-group-item-action  lh-lg d-flex align-items-center ">
+                <i class="bi bi-geo fs-4 me-3 mx-3"></i> {{ t(key="profile_kargo_adreslerim", lang=current_language) }}
+            </a>
+            <a href="/my-account/corporate-addresses"
+                class="list-group-item list-group-item-action  lh-lg d-flex align-items-center ">
+                <i class="bi bi-receipt fs-4 me-3 mx-3"></i> {{ t(key="profile_fatura_adreslerim", lang=current_language) }}
+            </a>
+            {% if not is_guest %}
+            <a href="/my-account/profile"
+                class="list-group-item list-group-item-action  lh-lg d-flex align-items-center ">
+                <i class="bi bi-person-circle fs-4 me-3 mx-3"></i> {{ t(key="profile_kullanici_bilgilerim", lang=current_language) }}
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+</div>

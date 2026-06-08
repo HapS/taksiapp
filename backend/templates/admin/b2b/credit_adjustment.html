@@ -1,0 +1,339 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Kredi Düzeltme - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2" id="creditAdjustmentApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">Kredi Düzeltme</h4>
+      <nav aria-label="breadcrumb" class="mb-0" style="height:24px">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a href="/admin">
+              <i class="bi bi-house-door"></i> Admin Panel
+            </a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="/admin/b2b/credit/transactions">
+              <i class="bi bi-credit-card"></i> Kredi İşlemleri
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            <i class="bi bi-pencil"></i> Düzeltme
+          </li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle"></i> <strong>Hata:</strong> {{ error }}
+    <div class="mt-2">
+      <a href="/admin/b2b/credit/transactions" class="btn btn-sm btn-primary">
+        <i class="bi bi-arrow-left"></i> İşlem Geçmişine Dön
+      </a>
+    </div>
+  </div>
+  {% else %}
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card border-warning">
+        <div class="card-header bg-warning">
+          <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Kredi Düzeltme</h5>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <i class="bi bi-info-circle"></i>
+            <strong>Dikkat:</strong> Bu işlem şirketin kredi bakiyesini doğrudan değiştirir.
+            Yanlış kullanım veri tutarsızlığına neden olabilir.
+          </div>
+
+          <form @submit.prevent="submitAdjustment">
+            <!-- Seçili Şirket Bilgisi -->
+            <div v-if="summary" class="alert alert-info mb-3">
+              <h6 class="alert-heading mb-2">
+                <i class="bi bi-building"></i> Şirket Bilgileri
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <strong>Şirket:</strong> [[ summary.company_name ]]<br>
+                  <strong>Vergi No:</strong> [[ summary.tax_number || '-' ]]
+                </div>
+                <div class="col-md-6">
+                  <strong>Yetkili:</strong> [[ summary.contact_person || '-' ]]<br>
+                  <strong>Email:</strong> [[ summary.contact_email || '-' ]]
+                </div>
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Düzeltme Tutarı <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                v-model.number="form.amount"
+                step="0.01"
+                placeholder="0.00"
+                required
+              />
+              <small class="text-muted">
+                <strong>Pozitif değer:</strong> Şirketin borcunu artırır (kullanılan kredi artar)<br />
+                <strong>Negatif değer:</strong> Şirketin borcunu azaltır (kullanılan kredi azalır)
+              </small>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Açıklama <span class="text-danger">*</span></label>
+              <textarea
+                class="form-control"
+                v-model="form.description"
+                rows="4"
+                placeholder="Düzeltme nedenini detaylı açıklayın... (Örn: Fatura düzeltmesi, hatalı kayıt, iade işlemi vb.)"
+                required
+              ></textarea>
+              <small class="text-muted">Bu açıklama işlem geçmişinde görünecektir</small>
+            </div>
+
+            <!-- Confirmation -->
+            <div class="mb-3">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  v-model="form.confirmed"
+                  id="confirmCheck"
+                  required
+                />
+                <label class="form-check-label" for="confirmCheck">
+                  <strong>Bu işlemin sonuçlarını anladım ve onaylıyorum</strong>
+                </label>
+              </div>
+            </div>
+
+            <!-- Alert Messages -->
+            <div v-if="error" class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle"></i> [[ error ]]
+            </div>
+            <div v-if="success" class="alert alert-success">
+              <i class="bi bi-check-circle"></i> [[ success ]]
+            </div>
+
+            <!-- Preview -->
+            <div v-if="summary && form.amount" class="alert alert-info">
+              <h6><i class="bi bi-calculator"></i> Önizleme</h6>
+              <div class="row">
+                <div class="col-6">
+                  <small class="text-muted">Mevcut Kullanılan Kredi:</small>
+                  <div class="fw-bold">[[ summary.used_credit ]]</div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted">Düzeltme Sonrası:</small>
+                  <div class="fw-bold" :class="getNewBalanceClass()">
+                    [[ calculateNewBalance() ]]
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-warning" :disabled="loading || !form.confirmed">
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="bi bi-check-circle me-2"></i>
+                Düzeltmeyi Uygula
+              </button>
+              <a href="/admin/b2b/credit/transactions" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> İptal
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Summary Sidebar -->
+    <div class="col-md-4">
+      <div v-if="summary" class="card">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0"><i class="bi bi-info-circle"></i> Şirket Bilgileri</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <small class="text-muted">Şirket</small>
+            <div class="fw-bold">[[ summary.company_name ]]</div>
+            <small class="text-muted">[[ summary.tax_number || '-' ]]</small>
+          </div>
+          <div class="mb-3">
+            <small class="text-muted">Yetkili Kişi</small>
+            <div class="fw-bold text-primary">
+              <i class="bi bi-person-fill"></i> [[ summary.contact_person || '-' ]]
+            </div>
+            <small class="text-muted">[[ summary.contact_email || '-' ]]</small>
+          </div>
+          <hr />
+          <div class="mb-2">
+            <small class="text-muted">Kredi Limiti</small>
+            <div class="fw-bold text-info">[[ summary.credit_limit ]]</div>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Kullanılan Kredi</small>
+            <div class="fw-bold text-danger">[[ summary.used_credit ]]</div>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Kullanılabilir Kredi</small>
+            <div class="fw-bold text-success">[[ summary.available_credit ]]</div>
+          </div>
+          <hr />
+          <div class="mb-2">
+            <small class="text-muted">Toplam İşlem</small>
+            <div class="fw-bold">[[ summary.total_transactions || 0 ]]</div>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Toplam Satış</small>
+            <div class="fw-bold text-info">[[ summary.total_purchases ]]</div>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Toplam Ödeme</small>
+            <div class="fw-bold text-success">[[ summary.total_payments ]]</div>
+          </div>
+          <div class="mb-0">
+            <small class="text-muted">Toplam Düzeltme</small>
+            <div class="fw-bold text-warning">[[ summary.total_adjustments ]]</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3 border-warning">
+        <div class="card-header bg-warning">
+          <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Uyarı</h6>
+        </div>
+        <div class="card-body">
+          <small>
+            <ul class="mb-0 ps-3">
+              <li><strong>Pozitif tutar:</strong> Şirketin borcunu artırır</li>
+              <li><strong>Negatif tutar:</strong> Şirketin borcunu azaltır</li>
+              <li>Bu işlem geri alınamaz</li>
+              <li>Tüm düzeltmeler kayıt altına alınır</li>
+              <li>Detaylı açıklama yazmak zorunludur</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  delimiters: ['[[', ']]'],
+  data() {
+    return {
+      company_id: {{ company_id }},
+      summary: null,
+      form: {
+        amount: '',
+        description: '',
+        confirmed: false
+      },
+      loading: false,
+      error: '',
+      success: ''
+    };
+  },
+  mounted() {
+    // Backend'den gelen company_id ile direkt yükle
+    this.loadCompanySummary();
+  },
+  methods: {
+    async loadCompanySummary() {
+      if (!this.company_id) {
+        this.summary = null;
+        return;
+      }
+      try {
+        const response = await fetch(`/admin/api/credit/summary?company_id=${this.company_id}`);
+        const data = await response.json();
+        if (data.success !== false) {
+          this.summary = data.data;
+        } else {
+          console.error('API error:', data.error);
+        }
+      } catch (error) {
+        console.error('Şirket özeti yüklenemedi:', error);
+      }
+    },
+    calculateNewBalance() {
+      if (!this.summary || !this.form.amount) return '-';
+      const current = this.summary.used_credit_raw || 0;
+      const newBalance = current + parseFloat(this.form.amount);
+      return newBalance.toFixed(2) + ' ₺';
+    },
+    getNewBalanceClass() {
+      if (!this.summary || !this.form.amount) return '';
+      const current = this.summary.used_credit_raw || 0;
+      const newBalance = current + parseFloat(this.form.amount);
+      return newBalance >= 0 ? 'text-danger' : 'text-success';
+    },
+    async submitAdjustment() {
+      if (!this.form.confirmed) {
+        this.error = 'Lütfen onay kutusunu işaretleyin';
+        return;
+      }
+
+      this.loading = true;
+      this.error = '';
+      this.success = '';
+
+      try {
+        // Number olarak gönder (Decimal için)
+        const payload = {
+          company_id: parseInt(this.company_id),
+          amount: parseFloat(this.form.amount),
+          currency: 'TRY',
+          description: this.form.description
+        };
+
+        const response = await fetch('/admin/api/credit/adjustment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          this.success = data.message;
+          // Reset form
+          this.form = {
+            amount: '',
+            description: '',
+            confirmed: false
+          };
+          this.summary = null;
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            window.location.href = '/admin/b2b/credit/transactions';
+          }, 2000);
+        } else {
+          this.error = data.error || 'Düzeltme yapılamadı';
+        }
+      } catch (error) {
+        this.error = 'Bir hata oluştu: ' + error.message;
+      } finally {
+        this.loading = false;
+      }
+    }
+  }
+}).mount('#creditAdjustmentApp');
+</script>
+{% endblock %}

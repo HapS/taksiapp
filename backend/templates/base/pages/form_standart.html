@@ -1,0 +1,239 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1>{{ page.title }}</h1>
+            
+            {% if page.description %}
+                <p class="lead">{{ page.description | safe }}</p>
+            {% endif %}
+
+            {% if page.body %}
+                <div class="mb-4">
+                    {{ page.body | safe }}
+                </div>
+            {% endif %}
+
+            <hr>
+
+            <div id="formApp">
+                <div v-if="success" class="alert alert-success">
+                    <p class="mb-0">[[ submitMessage ]]</p>
+                    <button type="button" class="btn btn-link p-0 mt-2" @click="resetForm">Yeni Form Doldur</button>
+                </div>
+
+                <form v-else @submit.prevent="handleSubmit">
+                    <div class="row">
+                        <div v-for="field in fields" :key="field.id" :class="field.col || 'col-12'" class="mb-3" v-show="isFieldVisible(field)">
+                            <label :for="field.id" class="form-label">
+                                [[ field.label ]]
+                                <span v-if="field.required" class="text-danger">*</span>
+                            </label>
+
+                            <!-- Text Inputs -->
+                            <template v-if="['text', 'email', 'number', 'date'].includes(field.type)">
+                                <input :type="field.type" 
+                                       :id="field.id" 
+                                       :name="field.name"
+                                       class="form-control" 
+                                       :placeholder="field.placeholder"
+                                       :required="field.required"
+                                       v-model="formData[field.id]">
+                            </template>
+
+                            <!-- Textarea -->
+                            <template v-else-if="field.type === 'textarea'">
+                                <textarea :id="field.id" 
+                                          :name="field.name"
+                                          class="form-control" 
+                                          :placeholder="field.placeholder"
+                                          rows="3" 
+                                          :required="field.required"
+                                          v-model="formData[field.id]"></textarea>
+                            </template>
+
+                            <!-- Select -->
+                            <template v-else-if="field.type === 'select'">
+                                <select :id="field.id" 
+                                        :name="field.name"
+                                        class="form-select" 
+                                        :required="field.required"
+                                        v-model="formData[field.id]">
+                                    <option value="">Seçiniz...</option>
+                                    <option v-for="opt in field.options" :key="opt" :value="opt">[[ opt ]]</option>
+                                </select>
+                            </template>
+
+                            <!-- Radio Buttons -->
+                            <template v-else-if="field.type === 'radio'">
+                                <div v-for="opt in field.options" :key="opt" class="form-check">
+                                    <input class="form-check-input" type="radio" 
+                                           :name="field.id" 
+                                           :id="field.id + opt" 
+                                           :value="opt" 
+                                           :required="field.required"
+                                           v-model="formData[field.id]">
+                                    <label class="form-check-label" :for="field.id + opt">
+                                        [[ opt ]]
+                                    </label>
+                                </div>
+                            </template>
+
+                            <!-- Checkbox -->
+                            <template v-else-if="field.type === 'checkbox'">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           :id="field.id" 
+                                           :name="field.name"
+                                           :required="field.required"
+                                           v-model="formData[field.id]">
+                                    <label class="form-check-label" :for="field.id">
+                                        Evet, onaylıyorum / kabul ediyorum
+                                    </label>
+                                </div>
+                            </template>
+
+                            <!-- File -->
+                            <template v-else-if="field.type === 'file'">
+                                <input type="file" 
+                                       :id="field.id" 
+                                       :name="field.name"
+                                       class="form-control" 
+                                       :required="field.required"
+                                       @change="handleFileChange(field.id, $event)">
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary" :disabled="loading">
+                            <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
+                            [[ loading ? 'Gönderiliyor...' : 'Gönder' ]]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+        delimiters: ["[[", "]]"],
+        setup() {
+            {% if page.data.form_settings and page.data.form_settings.fields %}
+            const fields = ref({{ page.data.form_settings.fields | json_encode | safe }});
+            {% else %}
+            const fields = ref([]);
+            {% endif %}
+
+            {% if page.data.form_settings and page.data.form_settings.submitMessage %}
+            const submitMessage = ref("{{ page.data.form_settings.submitMessage | safe }}");
+            {% else %}
+            const submitMessage = ref("Form başarıyla gönderildi!");
+            {% endif %}
+            const formData = ref({});
+            const loading = ref(false);
+            const success = ref(false);
+
+            const isFieldVisible = (field) => {
+                if (!field.visibilityRules || field.visibilityRules.length === 0) return true;
+                
+                return field.visibilityRules.some(rule => {
+                    if (!rule.targetField) return true;
+                    const targetVal = formData.value[rule.targetField];
+                    
+                    if (rule.values && rule.values.length > 0) {
+                        return rule.values.includes(targetVal);
+                    }
+                    
+                    if (rule.value) {
+                        return targetVal == rule.value;
+                    }
+                    
+                    return false;
+                });
+            };
+
+            const handleFileChange = (fieldId, event) => {
+                const file = event.target.files[0];
+                formData.value[fieldId] = file;
+            };
+
+            const handleSubmit = async () => {
+                loading.value = true;
+                try {
+                    // Prepare FormData
+                    const fd = new FormData();
+                    // Important: Add form_id first so backend can use it for folder structure
+                    fd.append('form_id', "{{ page.id }}");
+
+                    fields.value.forEach(field => {
+                        const value = formData.value[field.id];
+                        if (value !== undefined) {
+                            const key = field.name || field.id;
+                            
+                            if (field.type === 'file' && value instanceof File) {
+                                // For files, append directly (backend handles file saving)
+                                fd.append(key, value);
+                            } else {
+                                // For other fields, send structured JSON object as string
+                                const structuredData = {
+                                    label: field.label,
+                                    value: value
+                                };
+                                fd.append(key, JSON.stringify(structuredData));
+                            }
+                        }
+                    });
+
+                    // Send to API
+                    const response = await fetch('/api/form', {
+                        method: 'POST',
+                        body: fd
+                        // Note: Do NOT set Content-Type header manually for FormData, 
+                        // browser will set it with boundary automatically
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok && result.success) {
+                        success.value = true;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        alert(result.message || 'Bir hata oluştu, lütfen tekrar deneyiniz.');
+                    }
+                } catch (error) {
+                    console.error('Submit error:', error);
+                    alert('Bir hata oluştu, lütfen tekrar deneyiniz.');
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            const resetForm = () => {
+                formData.value = {};
+                success.value = false;
+            };
+
+            return {
+                fields,
+                formData,
+                loading,
+                success,
+                submitMessage,
+                isFieldVisible,
+                handleFileChange,
+                handleSubmit,
+                resetForm
+            };
+        }
+    }).mount('#formApp');
+</script>
+{% endblock %}

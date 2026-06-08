@@ -1,0 +1,99 @@
+{% extends "@@theme@@/base.html" %}
+{% block main_style %}style="flex: 1; display: flex; align-items: center; justify-content: center;"{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+                <div class="card shadow-sm" style="overflow: hidden;">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold mb-2">{{ t(key="register_hesap_olustur", lang=current_language) }}</h2>
+                            <p class="text-body-secondary">{{ t(key="register_hemen_ucretsiz_kayit_ol", lang=current_language) }}</p>
+                        </div>
+
+                        <form method="post" action="/register">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="first_name" class="form-label fw-semibold">{{ t(key="register_ad", lang=current_language) }}</label>
+                                        <input type="text" class="form-control {% if field_errors and field_errors.first_name %}is-invalid{% endif %}" 
+                                               id="first_name" name="first_name" 
+                                               value="{% if old_input and old_input.first_name %}{{ old_input.first_name }}{% endif %}">
+                                        {% if field_errors and field_errors.first_name %}
+                                        <div class="invalid-feedback">
+                                            {{ t(key="register_" ~ field_errors.first_name, lang=current_language) }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="last_name" class="form-label fw-semibold">{{ t(key="register_soyad", lang=current_language) }}</label>
+                                        <input type="text" class="form-control {% if field_errors and field_errors.last_name %}is-invalid{% endif %}" 
+                                               id="last_name" name="last_name"
+                                               value="{% if old_input and old_input.last_name %}{{ old_input.last_name }}{% endif %}">
+                                        {% if field_errors and field_errors.last_name %}
+                                        <div class="invalid-feedback">
+                                            {{ t(key="register_" ~ field_errors.last_name, lang=current_language) }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-semibold">{{ t(key="register_kullanici_adi", lang=current_language) }}</label>
+                                <input type="text" class="form-control {% if field_errors and field_errors.username %}is-invalid{% endif %}" 
+                                       id="username" name="username" required
+                                       value="{% if old_input and old_input.username %}{{ old_input.username }}{% endif %}">
+                                {% if field_errors and field_errors.username %}
+                                <div class="invalid-feedback">
+                                    {{ t(key="register_" ~ field_errors.username, lang=current_language) }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-semibold">{{ t(key="register_eposta", lang=current_language) }}</label>
+                                <input type="text" class="form-control {% if field_errors and field_errors.email %}is-invalid{% endif %}" 
+                                       id="email" name="email" required
+                                       value="{% if old_input and old_input.email %}{{ old_input.email }}{% endif %}">
+                                {% if field_errors and field_errors.email %}
+                                <div class="invalid-feedback">
+                                    {{ t(key="register_" ~ field_errors.email, lang=current_language) }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label fw-semibold">{{ t(key="register_sifre", lang=current_language) }}</label>
+                                <input type="password" class="form-control {% if field_errors and field_errors.password %}is-invalid{% endif %}" 
+                                       id="password" name="password" required>
+                                {% if field_errors and field_errors.password %}
+                                <div class="invalid-feedback">
+                                    {{ t(key="register_" ~ field_errors.password, lang=current_language) }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="password_confirm" class="form-label fw-semibold">{{ t(key="register_sifre_tekrar", lang=current_language) }}</label>
+                                <input type="password" class="form-control" id="password_confirm" name="password_confirm" required >
+                            </div>
+                            
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-lg btn-success">
+                                    <i class="bi bi-person-plus me-2"></i>{{ t(key="register_kayit_ol", lang=current_language) }}
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p class="text-body-secondary mb-0">{{ t(key="register_zaten_hesabiniz_var_mi", lang=current_language) }} <a href="/login" class="text-decoration-none fw-semibold">{{ t(key="register_giris_yapin", lang=current_language) }}</a></p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1274 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Kategori Grupları - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2" id="vocabularyApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">{{ title }}</h4>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div v-if="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <!-- Vocabulary List -->
+  <div v-else class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="flex-grow-1 me-3">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            v-model="filters.search"
+            @input="debounceSearch"
+            placeholder="Kategori grubu ara..."
+          />
+        </div>
+        <div class="">
+          <button type="button" class="btn btn-sm btn-dark" @click="showCreateModal">
+            <i class="bi bi-plus-circle-dotted"></i> Yeni Kategori Grubu
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-hover table-sm">
+          <thead class="table-dark small">
+            <tr>
+              <th style="width: 40px;"><i class="bi bi-arrows-move"></i></th>
+              <!--<th @click="changeSort('order')" title="Sıra ile sırala" class="sortable">
+                Sıra <i class="ms-1" :class="getSortIcon('order')"></i>
+              </th>-->
+              <th @click="changeSort('id')" title="ID ile sırala" class="sortable">
+                ID <i class="ms-1" :class="getSortIcon('id')"></i>
+              </th>
+              <th>Kategori Grubu</th>
+              <th @click="changeSort('vocabulary_type')" title="Tip ile sırala" class="sortable">
+                Tip <i class="ms-1" :class="getSortIcon('vocabulary_type')"></i>
+              </th>
+              <th>Açıklama</th>
+              <th @click="changeSort('gcx')" title="GCX ile sırala" class="sortable">
+                GCX <i class="ms-1" :class="getSortIcon('gcx')"></i>
+              </th>
+              <th @click="changeSort('lock')" title="Kilit ile sırala" class="sortable">
+                Kilit <i class="ms-1" :class="getSortIcon('lock')"></i>
+              </th>
+              <th @click="changeSort('hide')" title="Gizli ile sırala" class="sortable">
+                Gizli <i class="ms-1" :class="getSortIcon('hide')"></i>
+              </th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="sortable-vocabularies" class="align-middle small">
+            <tr v-for="vocabulary in vocabularies" :key="vocabulary.id" :data-id="vocabulary.id" class="sortable-row">
+              <td class="text-center sortable-handle" style="cursor: move; width: 40px;">
+                <i class="bi bi-grip-vertical text-muted"></i>
+              </td>
+
+              <!--<td class="text-center text-muted">[[ vocabulary.order_id || '-' ]]</td>-->
+              <td class="fw-bold">[[ vocabulary.id ]]</td>
+              <td>
+                <a :href="`/admin/taxonomy/vocabularies/${vocabulary.id}/terms`" title="Terimleri Yönet" class="text-decoration-none text-dark">
+                  <i class="bi bi-diagram-3-fill text-primary"></i> [[ getVocabularyTitle(vocabulary) ]]
+                </a>
+              </td>
+              <td class="text-capitalize">[[ vocabulary.vocabulary_type ]]</td>
+              <td class="text-muted">[[ getVocabularyDescription(vocabulary) || 'Açıklama yok' ]]</td>
+              <td class="text-center">
+                <span v-if="vocabulary.gcx" class="badge bg-success" title="Global Context'te">
+                  <i class="bi bi-globe"></i> GCX
+                </span>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td class="text-center">
+                <span v-if="vocabulary.lock" class="badge bg-secondary" title="Kilitli">
+                  <i class="bi bi-lock"></i> Kilit
+                </span>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td class="text-center">
+                <span v-if="vocabulary.hide" class="badge bg-dark" title="Gizli">
+                  <i class="bi bi-eye-slash"></i> Gizli
+                </span>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td class="text-nowrap d-flex justify-content-end">
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-primary"
+                    @click="editVocabulary(vocabulary)"
+                    title="Düzenle"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <a
+                    :href="`/admin/taxonomy/vocabularies/${vocabulary.id}/terms`"
+                    class="btn btn-warning"
+                    title="Terimleri Yönet"
+                  >
+                    <i class="bi bi-tags-fill"></i>
+                  </a>
+                  <button
+                    v-if="vocabulary.vocabulary_type === 'product_attributes'"
+                    class="btn btn-info"
+                    @click="manageVocabularyCategories(vocabulary)"
+                    title="Kategori İlişkileri"
+                  >
+                    <i class="bi bi-diagram-3"></i>
+                  </button>
+                  <button
+                    class="btn btn-danger"
+                    @click="deleteVocabulary(vocabulary.id)"
+                    title="Sil"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="vocabularies.length === 0">
+              <td colspan="10" class="text-center text-muted py-4">
+                <i class="bi bi-tags"></i> Henüz kategori grubu bulunmuyor
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal fade" id="vocabularyModal" tabindex="-1" aria-labelledby="vocabularyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="vocabularyModalLabel">
+            [[ editingVocabulary ? 'Kategori Grubu Düzenle' : 'Yeni Kategori Grubu' ]]
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="saveVocabulary">
+            <!-- Multi-language tabs -->
+            <ul class="nav nav-tabs" id="langTabs" role="tablist">
+              <li
+                v-for="(langName, langCode) in supportedLanguages"
+                :key="langCode"
+                class="nav-item"
+                role="presentation"
+              >
+                <button
+                  class="nav-link"
+                  :class="{ active: activeTab === langCode }"
+                  @click="activeTab = langCode"
+                  type="button"
+                >
+                  [[ langName ]]
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="langTabContent">
+              <div
+                v-for="(langName, langCode) in supportedLanguages"
+                :key="langCode"
+                class="tab-pane fade"
+                :class="{ 'show active': activeTab === langCode }"
+                role="tabpanel"
+              >
+                <div class="mb-3">
+                  <label class="form-label">Kategori Grubu Adı ([[ langName ]]) *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="form.data[langCode].title"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Açıklama ([[ langName ]])</label>
+                  <textarea
+                    class="form-control"
+                    rows="3"
+                    v-model="form.data[langCode].description"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vocabulary Type - Outside language tabs -->
+            <div class="mt-4 pt-3 border-top">
+              <div class="mb-3">
+                <label class="form-label">Kategori Grubu Türü / Category Group Type</label>
+                <select
+                  class="form-select"
+                  v-model="form.vocabulary_type"
+                >
+                  <option
+                    v-for="type in vocabularyTypes"
+                    :key="type"
+                    :value="type"
+                  >
+                    [[ type ]]
+                  </option>
+                </select>
+                <small class="form-text text-muted">
+                  Bu kategori grubunun türünü seçin / Select the type of this vocabulary group.
+                </small>
+              </div>
+
+              <!-- Product Attributes specific fields -->
+              <div v-if="form.vocabulary_type === 'product_attributes'" class="mt-3">
+                <div class="mb-3">
+                  <label class="form-label">Vocabulary Name (Internal) *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    v-model="form.vocabulary_name"
+                    placeholder="e.g. marka, renk, malzeme"
+                    required
+                  />
+                  <small class="form-text text-muted">
+                    Internal name used in code (lowercase, no spaces)
+                  </small>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Attribute Type</label>
+                  <select class="form-select" v-model="form.attribute_type">
+                    <option value="checkbox">Checkbox (Multiple selection)</option>
+                    <option value="select">Select (Single selection)</option>
+                    <option value="radio">Radio (Single selection)</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="form.required" id="required">
+                    <label class="form-check-label" for="required">
+                      Zorunlu Alan
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="form.filterable" id="filterable">
+                    <label class="form-check-label" for="filterable">
+                      Filtrelerde Göster
+                    </label>
+                  </div>
+                </div>
+
+
+              </div>
+
+              <!-- Global Context Checkbox - Tüm vocabulary türleri için -->
+              <div class="mt-3 pt-3 border-top">
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="form.gcx" id="gcx-global">
+                    <label class="form-check-label" for="gcx-global">
+                      <i class="bi bi-globe text-primary"></i> Global Context'e Ekle
+                    </label>
+                    <small class="form-text text-muted d-block">
+                      Bu vocabulary tüm sayfalarda kullanılabilir olur (menü, footer, kategoriler vb.)
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 pt-3 border-top">
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="form.lock" id="lock-vocabulary">
+                    <label class="form-check-label" for="lock-vocabulary">
+                      Kategori Grubunu Kilitle
+                    </label>
+                    <small class="form-text text-muted d-block">
+                      Kilitli kategori grupları düzenlenemez veya silinemez.
+                    </small>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="form.hide" id="hide-vocabulary">
+                    <label class="form-check-label" for="hide-vocabulary">
+                      Kategori Grubunu Gizle
+                    </label>
+                    <small class="form-text text-muted d-block">
+                      Gizli kategori grupları kullanıcılar tarafından görünmez.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="saveVocabulary"
+            :disabled="saving"
+          >
+            <span
+              v-if="saving"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+            ></span>
+            [[ editingVocabulary ? 'Güncelle' : 'Kaydet' ]]
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vocabulary-Category Relationships Modal -->
+  <div class="modal fade" id="vocabularyCategoriesModal" tabindex="-1" aria-labelledby="vocabularyCategoriesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="vocabularyCategoriesModalLabel">
+            Kategori İlişkileri - [[ selectedVocabulary?.data?.langs?.tr?.title || 'Vocabulary' ]]
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div v-if="loadingCategories" class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+          </div>
+
+          <div v-else>
+            <p class="text-muted mb-3">
+              Bu attribute vocabulary'sinin hangi ürün kategorilerinde kullanılacağını seçin:
+            </p>
+
+            <div class="category-tree p-2 border rounded bg-light" style="max-height: 400px; overflow-y: auto;">
+              <!-- Recursive kategori ağacı -->
+              <div v-for="category in hierarchicalCategories" :key="category.id" class="mb-2">
+                <category-item
+                  :term="category"
+                  :selected-ids="selectedCategoryIds"
+                  @toggle="toggleCategorySelection"
+                  :level="0"
+                ></category-item>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="saveVocabularyCategories"
+            :disabled="savingCategories"
+          >
+            <span
+              v-if="savingCategories"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+            ></span>
+            Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const { createApp, ref, computed, onMounted } = Vue;
+
+  // CategoryItem Component - Inline definition for hierarchical display
+  const CategoryItemComponent = {
+    name: 'CategoryItem',
+    delimiters: ["[[", "]]"],
+    props: {
+      term: Object,
+      selectedIds: Array,
+      level: {
+        type: Number,
+        default: 0
+      }
+    },
+    emits: ['toggle'],
+    template: `
+      <div class="mb-1">
+        <div class="form-check" :style="{ marginLeft: (level * 20) + 'px' }">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            :value="term.id"
+            :checked="selectedIds.includes(term.id)"
+            @change="$emit('toggle', term.id)"
+            :id="'term-' + term.id"
+          >
+          <label class="form-check-label" :for="'term-' + term.id">
+            <span v-if="level === 0" class="fw-semibold" :class="{ 'text-danger opacity-50': term.publish === false }">
+              <i v-if="term.publish === false" class="bi bi-eye-slash me-1 text-danger"></i>
+              <i v-else class="bi bi-folder text-primary"></i> [[ term.title ]]
+            </span>
+            <span v-else :class="{ 'text-danger opacity-50': term.publish === false }">
+              <i v-if="term.publish === false" class="bi bi-eye-slash me-1 text-danger"></i>
+              <i v-else class="bi bi-arrow-return-right text-muted me-1"></i> [[ term.title ]]
+            </span>
+          </label>
+        </div>
+
+        <!-- Alt kategoriler recursive -->
+        <div v-if="term.children && term.children.length > 0">
+          <category-item
+            v-for="childTerm in term.children"
+            :key="childTerm.id"
+            :term="childTerm"
+            :selected-ids="selectedIds"
+            @toggle="$emit('toggle', $event)"
+            :level="level + 1"
+          ></category-item>
+        </div>
+      </div>
+    `
+  };
+
+  createApp({
+    delimiters: ["[[", "]]"],
+    components: {
+      'category-item': CategoryItemComponent
+    },
+    setup() {
+      // Reactive state
+      const vocabularies = ref([]);
+      const loading = ref(false);
+      const saving = ref(false);
+      const searchTimeout = ref(null);
+
+      const filters = ref({
+        search: "",
+        sort_by: "order",
+        sort_order: "asc",
+      });
+      const editingVocabulary = ref(null);
+      const vocabularyTypes = ref([
+        "category",
+        "tag",
+        "menu",
+        "product_attributes",
+        "options"
+      ]);
+
+      // Supported languages (dynamic from API)
+      const supportedLanguages = ref({});
+      const loadingLanguages = ref(false);
+      const activeTab = ref('tr');
+
+      // Vocabulary-Category relationships
+      const selectedVocabulary = ref(null);
+      const availableCategories = ref([]);
+      const selectedCategoryIds = ref([]);
+      const loadingCategories = ref(false);
+      const savingCategories = ref(false);
+      const vocabularyType = ref(`{{ vocabulary_type | default(value="") }}`); // Yeni eklenen satır
+
+      // Helper function to build hierarchical structure from flat list
+      const buildHierarchy = (flatList) => {
+        const map = {};
+        const roots = [];
+
+        // First pass: create map of all items
+        flatList.forEach(item => {
+          map[item.id] = { ...item, children: [] };
+        });
+
+        // Second pass: build hierarchy
+        flatList.forEach(item => {
+          if (item.parent_id && map[item.parent_id]) {
+            map[item.parent_id].children.push(map[item.id]);
+          } else {
+            roots.push(map[item.id]);
+          }
+        });
+
+        return roots;
+      };
+
+      // Computed property for hierarchical categories
+      const hierarchicalCategories = computed(() => {
+        // content-types/product/terms endpoint already returns hierarchical data
+        return availableCategories.value;
+      });
+
+      const form = ref({
+        vocabulary_type: "category",
+        vocabulary_name: "",
+        attribute_type: "checkbox",
+        required: false,
+        filterable: true,
+        gcx: false,
+        lock: false,
+        hide: false,
+        applicable_categories: [],
+        data: {}
+      });
+
+      // URL Management
+      const getUrlParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+          search: urlParams.get("search") || "",
+          sort_by: urlParams.get("sort_by") || "order",
+          sort_order: urlParams.get("sort_order") || "asc",
+        };
+      };
+
+      const updateUrl = (params) => {
+        const url = new URL(window.location);
+
+        if (params.search && params.search.trim()) {
+          url.searchParams.set("search", params.search.trim());
+        } else {
+          url.searchParams.delete("search");
+        }
+
+        if (params.sort_by) {
+          url.searchParams.set("sort_by", params.sort_by);
+        } else {
+          url.searchParams.delete("sort_by");
+        }
+
+        if (params.sort_order) {
+          url.searchParams.set("sort_order", params.sort_order);
+        } else {
+          url.searchParams.delete("sort_order");
+        }
+
+        window.history.pushState({}, "", url);
+      };
+
+      // Helper functions
+      const getVocabularyTitle = (vocabulary) => {
+        if (!vocabulary || !vocabulary.data) return 'Başlıksız';
+
+        const lang = 'tr'; // Default language
+
+        // Yeni format: data.langs.tr.title
+        if (vocabulary.data.langs && vocabulary.data.langs[lang] && vocabulary.data.langs[lang].title) {
+          return vocabulary.data.langs[lang].title;
+        }
+
+        // Alternatif format: data.tr.title
+        if (vocabulary.data[lang] && vocabulary.data[lang].title) {
+          return vocabulary.data[lang].title;
+        }
+
+        // Fallback: vocabulary_type
+        return vocabulary.vocabulary_type || 'Başlıksız';
+      };
+
+      const getVocabularyDescription = (vocabulary) => {
+        if (!vocabulary || !vocabulary.data) return '';
+
+        const lang = 'tr'; // Default language
+
+        // Yeni format: data.langs.tr.description
+        if (vocabulary.data.langs && vocabulary.data.langs[lang] && vocabulary.data.langs[lang].description) {
+          return vocabulary.data.langs[lang].description;
+        }
+
+        // Alternatif format: data.tr.description
+        if (vocabulary.data[lang] && vocabulary.data[lang].description) {
+          return vocabulary.data[lang].description;
+        }
+
+        return '';
+      };
+
+      const debounceSearch = () => {
+        clearTimeout(searchTimeout.value);
+        searchTimeout.value = setTimeout(() => {
+          updateUrl(filters.value);
+          loadVocabularies();
+        }, 500);
+      };
+
+      const changeSort = (field) => {
+        if (filters.value.sort_by === field) {
+          filters.value.sort_order = filters.value.sort_order === 'asc' ? 'desc' : 'asc';
+        } else {
+          filters.value.sort_by = field;
+          filters.value.sort_order = 'asc';
+        }
+        updateUrl(filters.value);
+        loadVocabularies();
+      };
+
+      const getSortIcon = (field) => {
+        if (filters.value.sort_by !== field) return '';
+        return filters.value.sort_order === 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill';
+      };
+
+      // Methods
+      const loadVocabularies = async () => {
+        loading.value = true;
+        try {
+          const params = new URLSearchParams({
+            ...(filters.value.search && { search: filters.value.search }),
+            ...(filters.value.sort_by && { sort_by: filters.value.sort_by }),
+            ...(filters.value.sort_order && { sort_order: filters.value.sort_order }),
+          });
+
+          console.log("Loading vocabularies for type:", vocabularyType.value);
+          if (vocabularyType.value) {
+            const response = await fetch(`/admin/api/vocabularies/type/${vocabularyType.value}?${params}`);
+            const result = await response.json();
+            if (response.ok && result.success) {
+              vocabularies.value = result.data || [];
+            } else {
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+              });
+
+              Toast.fire({
+                icon: 'error',
+                title: 'Kategori grupları yüklenirken hata oluştu: ' + (result.error || "Bilinmeyen hata")
+              });
+            }
+            loading.value = false;
+            return;
+          }
+
+          const response = await fetch(`/admin/api/vocabularies?${params}`);
+
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            vocabularies.value = result.data || [];
+          } else {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Kategori grupları yüklenirken hata oluştu: ' + (result.error || "Bilinmeyen hata")
+            });
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Kategori grupları yüklenirken hata oluştu: ' + error.message
+          });
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      const showCreateModal = () => {
+        editingVocabulary.value = null;
+        resetForm();
+        const modal = new bootstrap.Modal(
+          document.getElementById("vocabularyModal")
+        );
+        modal.show();
+      };
+
+      const editVocabulary = (vocabulary) => {
+        editingVocabulary.value = vocabulary;
+        form.value.vocabulary_type = vocabulary.vocabulary_type || "category";
+
+        // Load additional fields for product_attributes
+        if (vocabulary.data) {
+          form.value.vocabulary_name = vocabulary.data.name || "";
+          form.value.attribute_type = vocabulary.data.type || "checkbox";
+          form.value.required = vocabulary.data.required || false;
+          form.value.filterable = vocabulary.data.filterable !== false; // default true
+          form.value.applicable_categories = vocabulary.data.applicable_categories || [];
+
+        }
+
+        // Load gcx field
+        form.value.gcx = vocabulary.gcx || false;
+        form.value.lock = vocabulary.lock || false;
+        form.value.hide = vocabulary.hide || false;
+
+        // Dinamik dillere göre form data'yı doldur
+        if (vocabulary.data) {
+          Object.keys(supportedLanguages.value).forEach(lang => {
+            if (!form.value.data[lang]) {
+              form.value.data[lang] = { title: "", description: "" };
+            }
+            // Try langs.lang structure first
+            if (vocabulary.data.langs && vocabulary.data.langs[lang]) {
+              form.value.data[lang] = {
+                title: vocabulary.data.langs[lang].title || "",
+                description: vocabulary.data.langs[lang].description || ""
+              };
+            }
+            // Fallback to direct lang structure
+            else if (vocabulary.data[lang]) {
+              form.value.data[lang] = {
+                title: vocabulary.data[lang].title || "",
+                description: vocabulary.data[lang].description || ""
+              };
+            }
+          });
+        }
+
+        const modal = new bootstrap.Modal(
+          document.getElementById("vocabularyModal")
+        );
+        modal.show();
+      };
+
+      const saveVocabulary = async () => {
+        // Validation - tüm diller için kontrol
+        for (const [langCode, langName] of Object.entries(supportedLanguages.value)) {
+          if (!form.value.data[langCode]?.title?.trim()) {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'warning',
+              title: `${langName} kategori grubu adı zorunludur!`
+            });
+            return;
+          }
+        }
+
+        saving.value = true;
+        try {
+          const url = editingVocabulary.value
+            ? `/admin/api/vocabularies/${editingVocabulary.value.id}`
+            : "/admin/api/vocabularies";
+
+          const method = editingVocabulary.value ? "PUT" : "POST";
+
+          // Wrap data with langs key before sending
+          const payload = {
+            vocabulary_type: form.value.vocabulary_type,
+            gcx: form.value.gcx || false,
+            lock: form.value.lock || false,
+            hide: form.value.hide || false,
+            data: {
+              langs: form.value.data,
+              name: form.value.vocabulary_name || '',
+              type: form.value.attribute_type || 'checkbox',
+              required: form.value.required || false,
+              filterable: form.value.filterable || true,
+              applicable_categories: form.value.applicable_categories || []
+            }
+          };
+
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });          const result = await response.json();
+
+          if (response.ok && result.success) {
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("vocabularyModal")
+            );
+            modal.hide();
+            loadVocabularies();
+
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: editingVocabulary.value
+                ? 'Kategori grubu güncellendi!'
+                : 'Kategori grubu oluşturuldu!'
+            });
+          } else {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Kategori grubu kaydedilirken hata oluştu: ' + (result.error || "Bilinmeyen hata")
+            });
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Kategori grubu kaydedilirken hata oluştu: ' + error.message
+          });
+        } finally {
+          saving.value = false;
+        }
+      };
+
+      const deleteVocabulary = async (id) => {
+        const result = await Swal.fire({
+          title: 'Emin misiniz?',
+          text: 'Bu kategori grubunu silmek istediğinizden emin misiniz? Tüm alt kategoriler de silinecek!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Evet, Sil',
+          cancelButtonText: 'İptal'
+        });
+
+        if (!result.isConfirmed) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/admin/api/vocabularies/${id}`, {
+            method: "DELETE",
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            loadVocabularies();
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Kategori grubu silindi!'
+            });
+          } else {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Kategori grubu silinirken hata oluştu: ' + (result.error || "Bilinmeyen hata")
+            });
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Kategori grubu silinirken hata oluştu: ' + error.message
+          });
+        }
+      };
+
+      const resetForm = () => {
+        form.value.vocabulary_type = "category";
+        form.value.vocabulary_name = "";
+        form.value.attribute_type = "checkbox";
+        form.value.required = false;
+        form.value.filterable = true;
+        form.value.gcx = false;
+        form.value.lock = false;
+        form.value.hide = false;
+        form.value.applicable_categories = [];
+
+        // Dinamik dillere göre form data'yı sıfırla
+        const formData = {};
+        Object.keys(supportedLanguages.value).forEach(lang => {
+          formData[lang] = { title: "", description: "" };
+        });
+        form.value.data = formData;
+      };
+
+      // Load languages from API
+      const loadLanguages = async () => {
+        loadingLanguages.value = true;
+        try {
+          const response = await fetch('/admin/api/languages');
+          const data = await response.json();
+          if (response.ok) {
+            // API'den gelen map'i direkt kullan
+            supportedLanguages.value = data.supported_languages;
+
+            // Form data'yı dillere göre initialize et
+            const formData = {};
+            Object.keys(data.supported_languages).forEach(lang => {
+              formData[lang] = { title: "", description: "" };
+            });
+            form.value.data = formData;
+
+            // İlk dili aktif tab yap
+            const langs = Object.keys(data.supported_languages);
+            if (langs.length > 0) {
+              activeTab.value = langs[0];
+            }
+          }
+        } catch (error) {
+          console.error('Error loading languages:', error);
+          supportedLanguages.value = { tr: "Türkçe", en: "English", de: "Deutsch" };
+          form.value.data = {
+            tr: { title: "", description: "" },
+            en: { title: "", description: "" },
+            de: { title: "", description: "" }
+          };
+        } finally {
+          loadingLanguages.value = false;
+        }
+      };
+
+      // Initialize Sortable
+      let sortableInstance = null;
+      const initSortable = () => {
+        const el = document.getElementById('sortable-vocabularies');
+        if (el && !sortableInstance) {
+          sortableInstance = new Sortable(el, {
+            animation: 150,
+            handle: '.sortable-handle',
+            ghostClass: 'sortable-ghost',
+            onEnd: async (evt) => {
+              const items = el.querySelectorAll('.sortable-row');
+              const newOrder = Array.from(items).map((item, index) => ({
+                id: parseInt(item.dataset.id),
+                order_id: index + 1
+              }));
+
+              await updateVocabularyOrder(newOrder);
+            }
+          });
+        }
+      };
+
+      // Manage vocabulary-category relationships
+      const manageVocabularyCategories = async (vocabulary) => {
+        selectedVocabulary.value = vocabulary;
+        selectedCategoryIds.value = [];
+
+        // Load product categories (vocabulary_id = 1)
+        await loadProductCategories();
+
+        // Load existing relationships
+        await loadVocabularyCategories(vocabulary.id);
+
+        const modalEl = document.getElementById('vocabularyCategoriesModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      };
+
+      const loadProductCategories = async () => {
+        loadingCategories.value = true;
+        try {
+          // Use existing content-types endpoint that returns hierarchical data
+          const response = await fetch('/admin/api/content-types/product/terms?ghost=true');
+          const result = await response.json();
+
+          console.log('Categories API response:', result);
+
+          if (response.ok) {
+            // This endpoint returns NestedTerm array directly, not wrapped in success/data
+            availableCategories.value = result || [];
+          }
+        } catch (error) {
+          console.error('Error loading categories:', error);
+        } finally {
+          loadingCategories.value = false;
+        }
+      };
+
+      const loadVocabularyCategories = async (vocabularyId) => {
+        try {
+          const response = await fetch(`/admin/api/vocabularies/${vocabularyId}/categories`);
+          if (response.ok) {
+            const result = await response.json();
+            selectedCategoryIds.value = result.category_ids || [];
+          }
+        } catch (error) {
+          console.error('Error loading vocabulary categories:', error);
+        }
+      };
+
+      const toggleCategorySelection = (categoryId) => {
+        const index = selectedCategoryIds.value.indexOf(categoryId);
+        if (index > -1) {
+          selectedCategoryIds.value.splice(index, 1);
+        } else {
+          selectedCategoryIds.value.push(categoryId);
+        }
+      };
+
+      const saveVocabularyCategories = async () => {
+        if (!selectedVocabulary.value) return;
+
+        savingCategories.value = true;
+        try {
+          const response = await fetch(`/admin/api/vocabularies/${selectedVocabulary.value.id}/categories`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              category_ids: selectedCategoryIds.value
+            })
+          });
+
+          if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('vocabularyCategoriesModal'));
+            modal.hide();
+
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Kategori ilişkileri güncellendi.'
+            });
+          } else {
+            throw new Error('Kaydetme işlemi başarısız');
+          }
+        } catch (error) {
+          console.error('Error saving vocabulary categories:', error);
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Kategori ilişkileri kaydedilirken hata oluştu.'
+          });
+        } finally {
+          savingCategories.value = false;
+        }
+      };
+
+      // Update vocabulary order via API
+      const updateVocabularyOrder = async (orderData) => {
+        try {
+          const response = await fetch('/admin/api/vocabularies/update-order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ orders: orderData })
+          });
+
+          if (response.ok) {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Sıralama güncellendi!'
+            });
+          } else {
+            throw new Error('Sıralama güncellenemedi');
+          }
+        } catch (error) {
+          console.error('Order update error:', error);
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Sıralama güncellenirken hata oluştu.'
+          });
+          // Reload to restore original order
+          loadVocabularies();
+        }
+      };
+
+      // Lifecycle
+      onMounted(async () => {
+        const urlParams = getUrlParams();
+        filters.value = { ...urlParams };
+
+        await loadLanguages();
+        await loadVocabularies();
+
+        // Initialize sortable after content is loaded
+        setTimeout(initSortable, 100);
+
+        window.addEventListener("popstate", () => {
+          const urlParams = getUrlParams();
+          filters.value = { ...urlParams };
+          loadVocabularies();
+        });
+      });
+
+      // Return for template
+      return {
+        vocabularies,
+        loading,
+        saving,
+        filters,
+        editingVocabulary,
+        supportedLanguages,
+        loadingLanguages,
+        activeTab,
+        form,
+        getVocabularyTitle,
+        getVocabularyDescription,
+        loadVocabularies,
+        showCreateModal,
+        editVocabulary,
+        saveVocabulary,
+        deleteVocabulary,
+        resetForm,
+        vocabularyTypes,
+        debounceSearch,
+        changeSort,
+        getSortIcon,
+
+        // Vocabulary-Category relationships
+        selectedVocabulary,
+        availableCategories,
+        hierarchicalCategories,
+        selectedCategoryIds,
+        loadingCategories,
+        savingCategories,
+        manageVocabularyCategories,
+        loadProductCategories,
+        loadVocabularyCategories,
+        saveVocabularyCategories,
+        toggleCategorySelection,
+      };
+    },
+  }).mount("#vocabularyApp");
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable i { font-size: 0.8rem; }
+th.sortable .bi { font-size: 0.85rem; }
+
+.sortable-ghost {
+  opacity: 0.4;
+  background: #f8f9fa;
+}
+
+.sortable-row {
+  transition: background-color 0.2s;
+}
+
+.sortable-row:hover {
+  background-color: #f8f9fa;
+}
+
+.sortable-handle {
+  cursor: move;
+}
+
+/* Modal z-index fix for overlapping issues */
+.modal {
+  z-index: 1060 !important;
+}
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+.sortable-handle:hover {
+  background-color: #e9ecef;
+}
+</style>
+{% endblock %}

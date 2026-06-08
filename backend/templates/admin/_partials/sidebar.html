@@ -1,0 +1,92 @@
+<!-- Admin Sidebar -->
+<div id="sidebar" class="bg-white">
+  <div class="sidebar-content pt-1">
+    <div class="card border-0 radius-4">
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush elborder">
+          <a href="/admin" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center">
+            <i class="bi bi-speedometer fs-4 me-3 mx-3"></i> Dashboard
+          </a>
+        </div>
+
+        <div class="list-group list-group-flush elborder">
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> Taxonomy
+            </h6>
+          </div>
+
+          <a href="/admin/taxonomy" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'taxonomy' in current_path %}active{% endif %}">
+            <i class="bi bi-diagram-3 fs-4 me-3 mx-3"></i> Taxonomy
+          </a>
+
+           <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> Medya Kütüphanesi
+            </h6>
+          </div>
+
+          <a href="/admin/media" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'media' in current_path %}active{% endif %}">
+            <i class="bi bi-images fs-4 me-3 mx-3"></i> Medya Yönetimi
+          </a>
+
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> İçerik Yönetimi
+            </h6>
+          </div>
+
+          <a href="/admin/contents" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'contents' in current_path %}active{% endif %}">
+            <i class="bi bi-file-earmark-text fs-4 me-3 mx-3"></i> İçerikler
+          </a>
+
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> E-Ticaret
+            </h6>
+          </div>
+
+          <a href="/admin/orders" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'orders' in current_path and 'returns' not in current_path %}active{% endif %}">
+            <i class="bi bi-cart-check fs-4 me-3 mx-3"></i> Siparişler
+          </a>
+
+          <a href="/admin/returns" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'returns' in current_path %}active{% endif %}">
+            <i class="bi bi-arrow-return-left fs-4 me-3 mx-3"></i> İade Talepleri
+          </a>
+
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> Mail Sistemi
+            </h6>
+          </div>
+
+          <a href="/admin/mailer" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'mailer' in current_path %}active{% endif %}">
+            <i class="bi bi-envelope-check fs-4 me-3 mx-3"></i> Mail Kuyruğu
+          </a>
+
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> Kullanıcı Yönetimi
+            </h6>
+          </div>
+
+          <a href="/admin/users" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'users' in current_path %}active{% endif %}">
+            <i class="bi bi-person-badge fs-4 me-3 mx-3"></i> Kullanıcılar
+          </a>
+
+
+
+          <div class="bg-dark text-white p-3">
+            <h6 class="me-3 mx-3 mb-0">
+              <i class="bi bi-three-dots-vertical text-danger"></i> Ayarlar
+            </h6>
+          </div>
+
+          <a href="/admin/settings" class="list-group-item list-group-item-action border-0 lh-lg fw-medium d-flex align-items-center {% if current_path and 'settings' in current_path %}active{% endif %}">
+            <i class="bi bi-gear fs-4 me-3 mx-3"></i> Ayarlar
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

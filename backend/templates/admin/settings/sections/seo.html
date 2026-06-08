@@ -1,0 +1,156 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/seo" enctype="multipart/form-data">
+
+  <!-- Varsayılan SEO Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-search me-2"></i>Varsayılan SEO Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Bu ayarlar, sayfa bazında SEO bilgisi girilmediğinde varsayılan olarak kullanılır.
+      </div>
+
+      <!-- Language Tabs -->
+      <ul class="nav nav-tabs mb-4" id="seoLanguageTabs" role="tablist">
+        {% for lang in supported_languages %}
+        <li class="nav-item" role="presentation">
+          <button class="nav-link {% if loop.first %}active{% endif %}"
+                  id="tab-{{ lang }}"
+                  data-bs-toggle="tab"
+                  data-bs-target="#lang-{{ lang }}"
+                  type="button"
+                  role="tab">{{ lang | upper }}</button>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="tab-content" id="seoLanguageTabContent">
+        {% for lang in supported_languages %}
+        <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+             id="lang-{{ lang }}"
+             role="tabpanel"
+             aria-labelledby="tab-{{ lang }}">
+
+          <!-- SEO Title -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-uppercase text-muted">SEO Başlığı</label>
+            <input type="text"
+                   class="form-control"
+                   name="seo_title_{{ lang }}"
+                   value="{{ settings.langs[lang].seo_title }}"
+                   placeholder="Varsayılan SEO başlığı"
+                   maxlength="60">
+            <div class="form-text">Önerilen: 50-60 karakter</div>
+          </div>
+
+          <!-- SEO Description -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-uppercase text-muted">SEO Açıklaması</label>
+            <textarea class="form-control"
+                      name="seo_description_{{ lang }}"
+                      rows="3"
+                      placeholder="Varsayılan SEO açıklaması"
+                      maxlength="160">{{ settings.langs[lang].seo_description }}</textarea>
+            <div class="form-text">Önerilen: 150-160 karakter</div>
+          </div>
+
+          <!-- SEO Image -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-uppercase text-muted">Varsayılan SEO Görseli</label>
+            <input type="url"
+                   class="form-control"
+                   name="seo_image_{{ lang }}"
+                   value="{{ settings.langs[lang].seo_image }}"
+                   placeholder="https://example.com/seo-image.jpg">
+            <div class="form-text">
+              Sosyal medyada paylaşıldığında gösterilecek görsel URL'i. Önerilen boyut: 1200x630px
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Robots.txt Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-robot me-2"></i>Robots.txt Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="mb-0">
+        <label class="form-label fw-bold small text-uppercase text-muted">Robots.txt İçeriği</label>
+        <textarea class="form-control font-monospace"
+                  name="robots"
+                  rows="8"
+                  placeholder="User-agent: *
+Allow: /">{{ settings.robots }}</textarea>
+        <div class="form-text">
+          <i class="bi bi-info-circle me-1"></i>
+          Arama motoru robotlarının sitenizi nasıl tarayacağını belirleyen robots.txt içeriğini buradan düzenleyebilirsiniz.
+          <code>/robots.txt</code> adresinden yayınlanacaktır.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEO İpuçları -->
+  <div class="card shadow-sm mb-4 border-info">
+    <div class="card-header bg-info text-white">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-lightbulb me-2"></i>SEO İpuçları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="fw-bold">Başlık (Title) İpuçları:</h6>
+          <ul class="small">
+            <li>50-60 karakter arası tutun</li>
+            <li>Ana anahtar kelimeyi başa koyun</li>
+            <li>Marka adını sona ekleyin</li>
+            <li>Her sayfa için benzersiz olsun</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h6 class="fw-bold">Açıklama (Description) İpuçları:</h6>
+          <ul class="small">
+            <li>150-160 karakter arası tutun</li>
+            <li>Sayfanın içeriğini özetleyin</li>
+            <li>Harekete geçirici ifadeler kullanın</li>
+            <li>Anahtar kelimeleri doğal şekilde yerleştirin</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <h6 class="fw-bold">SEO Görseli İpuçları:</h6>
+          <ul class="small">
+            <li>Boyut: 1200x630 piksel (Facebook, Twitter için ideal)</li>
+            <li>Dosya boyutu: 1MB'dan küçük</li>
+            <li>Format: JPG, PNG veya WebP</li>
+            <li>Metin içeriyorsa okunabilir olsun</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

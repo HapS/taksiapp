@@ -1,0 +1,200 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if page %}İçerik Düzenle{% else %}Yeni İçerik{% endif %} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2 mb-4" id="contentEditApp">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div class="w-100">
+      <h4 class="h4 mb-0 pb-0 fw-bolder">[[ isEditing ? 'İçerik Düzenle' : 'Yeni İçerik' ]]</h4>
+      <nav aria-label="breadcrumb" class="mb-0 d-flex align-items-center w-100" style="height:30px">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item">
+            <a id="breadcrumb-content-management" href="{% if page %}/admin/contents?content_type={{ page.content_type }}{% else %}/admin/contents{% endif %}" title="İçerik listesine dön">
+              <i class="bi bi-house-door"></i> İçerik Yönetimi
+            </a>
+          </li>
+          <!-- Breadcrumb hierarchy -->
+          <template v-for="(breadcrumb, index) in pageBreadcrumbs" :key="breadcrumb.id">
+            <li class="breadcrumb-item">
+              <a :href="breadcrumb.url"
+                :title="breadcrumb.has_children ? `${breadcrumb.title} klasörünü aç` : `${breadcrumb.title} sayfasını düzenle`">
+                <i :class="breadcrumb.has_children ? 'bi bi-folder' : 'bi bi-folder-open'"></i>
+                [[ breadcrumb.title ]]
+                <small v-if="breadcrumb.has_children" class="text-muted ms-1">([[ breadcrumb.children_count ]])</small>
+              </a>
+            </li>
+          </template>
+          <li class="breadcrumb-item active">
+            <i class="bi bi-pencil"></i>
+            [[ isEditing ? 'Düzenle' : (parentPage ? 'Yeni Alt İçerik' : 'Yeni İçerik') ]]
+          </li>
+        </ol>
+
+        <button class="btn btn-success d-flex align-items-center ms-auto" @click="saveContent" :disabled="saving">
+          <i class="bi bi-save2 me-1"></i> [[ saving ? (isEditing ? 'Güncelleniyor...' : 'Kaydediliyor...') : (isEditing
+          ? 'Güncelle' : 'Kaydet') ]]
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div v-if="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <!-- Content Form -->
+  <div v-else class="row">
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-body">
+          {% include "admin/contents/partials/form/language_tabs.html" %}
+
+          <div class="tab-content mt-3" id="langTabContent">
+            <div v-for="(langName, langCode, index) in sortedLanguages" :key="langCode" class="tab-pane fade"
+              :class="{ 'show active': index === 0 }" :id="langCode" role="tabpanel"
+              :aria-labelledby="`${langCode}-tab`">
+
+              {% include "admin/contents/partials/form/fields.html" %}
+              {% include "admin/contents/partials/form/media.html" %}
+            </div>
+          </div>
+
+          <div class="mt-4">
+            {% include "admin/contents/partials/form/attributes.html" %}
+            {% include "admin/contents/partials/form/product.html" %}
+          </div>
+
+          <div class="mb-3">
+            <button class="btn btn-success" @click="saveContent" :disabled="saving">
+              <i class="bi bi-save2 me-1"></i> [[ saving ? (isEditing ? 'Güncelleniyor...' : 'Kaydediliyor...') : (isEditing
+              ? 'Güncelle' : 'Kaydet') ]]
+            </button>
+            {#
+              <a :href="`/admin/contents?content_type=${form.content_type}`" class="btn btn-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Geri Dön
+              </a>
+            #}
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3">
+      {% include "admin/contents/partials/sidebar/publish.html" %}
+      {% include "admin/contents/partials/sidebar/parent.html" %}
+      {% include "admin/contents/partials/sidebar/categories.html" %}
+      {% include "admin/contents/partials/sidebar/tags.html" %}
+      {% include "admin/contents/partials/sidebar/page_aliases.html" %}
+    </div>
+  </div>
+
+  {% include "admin/contents/partials/modals/parent_page.html" %}
+  {% include "admin/contents/partials/modals/media_edit.html" %}
+  {% include "admin/contents/partials/modals/media_library.html" %}
+</div>
+
+{# Vue.js Application Scripts #}
+<script src="https://unpkg.com/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="/static/admin/js/content-editor/components.js"></script>
+<script src="/static/admin/js/content-editor/form-builder.js"></script>
+<script src="/static/admin/js/content-editor/media-manager.js"></script>
+<script src="/static/admin/js/content-editor/main.js"></script>
+<script>
+  // Initialize content editor
+  const contentId = {% if page_id %}"{{ page_id }}"{% else %} null{% endif %};
+  const app = window.initContentEditor(contentId);
+  app.mount("#contentEditApp");
+  // Expose editor app globally for breadcrumbs and other small integrations
+  window.contentEditorApp = app;
+
+
+  // Breadcrumb: redirect to list filtered by current content_type if available
+  (function(){
+    const el = document.getElementById('breadcrumb-content-management');
+    if (!el) return;
+    el.addEventListener('click', function(e){
+      // If server already set content_type param, do nothing
+      if (this.getAttribute('href') && this.getAttribute('href').includes('content_type=')) return;
+
+      // Try to read content_type from Vue app instance
+      try {
+        const editor = window.contentEditorApp;
+        let ct = null;
+        if (editor && editor._instance && editor._instance.proxy && editor._instance.proxy.form) {
+          ct = editor._instance.proxy.form.content_type;
+        } else if (window.initContentEditor && window.initContentEditor.__lastForm) {
+          // fallback if helper exposes form (unlikely)
+          ct = window.initContentEditor.__lastForm?.content_type;
+        }
+
+        if (ct) {
+          e.preventDefault();
+          window.location.href = `/admin/contents?content_type=${encodeURIComponent(ct)}`;
+        }
+      } catch (err) {
+        // ignore errors, fallback to default href
+        console.error('Breadcrumb redirect error:', err);
+      }
+    });
+  })();
+
+
+</script>
+
+<style>
+  .alias-row {
+    transition: all 0.3s ease;
+  }
+
+  .alias-row:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .alias-row code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  .tox-tinymce {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+  }
+
+  /* Attribute form styles */
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  .hover-bg-light:hover {
+    background-color: #f8f9fa;
+  }
+
+  .z-3 {
+    z-index: 1030;
+  }
+
+  /* Breadcrumb truncation to allow the save button to sit on the far right */
+  nav[aria-label="breadcrumb"] .breadcrumb {
+    flex: 1 1 auto;      /* allow it to shrink/grow inside the nav flex container */
+    min-width: 0;        /* allow flex child to shrink below its content size */
+    overflow: hidden;
+  }
+
+  /* Ensure breadcrumb items/trailing links truncate with ellipsis */
+  nav[aria-label="breadcrumb"] .breadcrumb .breadcrumb-item,
+  nav[aria-label="breadcrumb"] .breadcrumb .breadcrumb-item a {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+
+</style>
+{% endblock %}

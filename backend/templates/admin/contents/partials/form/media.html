@@ -1,0 +1,265 @@
+<!-- Media Management (Only in Edit Mode) -->
+<div v-if="isEditing" class="mb-3">
+    <hr class="my-4">
+    <h6 class="mb-3">
+        <i class="bi bi-images"></i> Medya Dosyaları ([[ langName ]])
+    </h6>
+
+    <!-- Upload Section -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Dosya Yükle</label>
+                        <input type="file" class="form-control form-control-sm" :id="`fileInput-${langCode}`"
+                            @change="handleMediaUpload($event, langCode)"
+                            accept="image/*,video/*,audio/*,.webp,.pdf,.doc,.docx" multiple>
+                        <div class="form-text">Resim, video, ses, PDF ve Word dosyaları yükleyebilirsiniz</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">veya</label>
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100" @click="openMediaLibrary(langCode)">
+                        <i class="bi bi-images"></i> Medya Kütüphanesinden Seç
+                    </button>
+                    <div class="form-text">Seçtiğiniz dosyanın bu sayfaya özel kopyasını oluşturur</div>
+                </div>
+            </div>
+
+            <div v-if="uploadingMedia[langCode]" class="mb-2">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%">
+                        Yükleniyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media List - Grouped by Type -->
+    <div v-if="form.data[langCode].media && (groupedMedia(langCode).cover.length > 0 || groupedMedia(langCode).icon.length > 0 || groupedMedia(langCode).video.length > 0 || groupedMedia(langCode).gallery.length > 0 || groupedMedia(langCode).document.length > 0)">
+        <!-- Cover Images -->
+        <div v-if="groupedMedia(langCode).cover.length > 0" class="mb-4">
+            <h6 class="mb-2"><i class="bi bi-image"></i> Kapak Görselleri</h6>
+            <div class="row g-3" :id="`sortable-cover-${langCode}`" :data-lang="langCode" data-type="cover">
+                <div v-for="(media, index) in groupedMedia(langCode).cover" :key="media.id" :data-id="media.id"
+                    class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                    <div class="card h-100 media-thumbnail">
+                        <div class="position-relative"
+                            @click="openMediaModal(langCode, 'cover', index)"
+                            style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="get_media_images_thumbnail(media.url)"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else
+                                class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center"
+                                style="height: 100px;">
+                                <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]"
+                                    class="fs-1"></i>
+                                <small class="text-muted mt-2">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                                <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1"
+                                    style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-primary">Kapak</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+
+                                <button @click.stop="removeMedia(langCode, 'cover', index)"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                                [[ media.title || media.file_name ]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Icon Images -->
+        <div v-if="groupedMedia(langCode).icon.length > 0" class="mb-4">
+            <h6 class="mb-2"><i class="bi bi-star"></i> İkon Görselleri</h6>
+            <div class="row g-3" :id="`sortable-icon-${langCode}`" :data-lang="langCode" data-type="icon">
+                <div v-for="(media, index) in groupedMedia(langCode).icon" :key="media.id" :data-id="media.id"
+                    class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                    <div class="card h-100 media-thumbnail">
+                        <div class="position-relative"
+                            @click="openMediaModal(langCode, 'icon', index)"
+                            style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="get_media_images_thumbnail(media.url)"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else
+                                class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center"
+                                style="height: 100px;">
+                                <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]"
+                                    class="fs-1"></i>
+                                <small class="text-muted mt-2">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                                <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1"
+                                    style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-success">İkon</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+
+                                <button @click.stop="removeMedia(langCode, 'icon', index)"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                                [[ media.title || media.file_name ]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Videos -->
+        <div v-if="groupedMedia(langCode).video.length > 0" class="mb-4">
+            <h6 class="mb-2"><i class="bi bi-play-circle"></i> Videolar</h6>
+            <div class="row g-3" :id="`sortable-video-${langCode}`" :data-lang="langCode" data-type="video">
+                <div v-for="(media, index) in groupedMedia(langCode).video" :key="media.id" :data-id="media.id"
+                    class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                    <div class="card h-100 media-thumbnail">
+                        <div class="position-relative"
+                            @click="openMediaModal(langCode, 'video', index)"
+                            style="cursor: pointer;">
+                            <div class="card-img-top bg-dark d-flex flex-column align-items-center justify-content-center"
+                                style="height: 100px;">
+                                <i class="bi bi-play-circle fs-1 text-white"></i>
+                                <small class="text-white mt-2 text-truncate px-2" style="max-width: 100%;">[[
+                                    media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                                <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1"
+                                    style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-danger">Video</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+
+                                <button @click.stop="removeMedia(langCode, 'video', index)"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                                [[ media.title || media.file_name ]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Files -->
+        <div v-if="groupedMedia(langCode).document.length > 0" class="mb-4">
+            <h6 class="mb-2"><i class="bi bi-file-earmark-text"></i> Dökümanlar</h6>
+            <div class="row g-3" :id="`sortable-document-${langCode}`" :data-lang="langCode" data-type="document">
+                <div v-for="(media, index) in groupedMedia(langCode).document" :key="media.id" :data-id="media.id"
+                    class="col-lg-2 col-md-2 col-sm-4 col-2 sortable-item">
+                    <div class="card h-100 media-thumbnail">
+                        <div class="position-relative"
+                            @click="openMediaModal(langCode, 'document', index)"
+                            style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="media.url"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else
+                                class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center"
+                                style="height: 100px;">
+                                <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]"
+                                    class="fs-1"></i>
+                                <small class="text-muted mt-2 text-truncate px-2" style="max-width: 100%;">[[
+                                    media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                                <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1"
+                                    style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-secondary">Döküman</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+
+                                <button @click.stop="removeMedia(langCode, 'document', index)"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                                [[ media.title || media.file_name ]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Images -->
+        <div v-if="groupedMedia(langCode).gallery.length > 0" class="mb-4">
+            <h6 class="mb-2"><i class="bi bi-images"></i> Galeri Görselleri</h6>
+            <div class="row g-3" :id="`sortable-gallery-${langCode}`" :data-lang="langCode" data-type="gallery">
+                <div v-for="(media, index) in groupedMedia(langCode).gallery" :key="media.id" :data-id="media.id"
+                    class="col-lg-2 col-md-2 col-sm-2 col-6 sortable-item">
+                    <div class="card h-100 media-thumbnail">
+                        <div class="position-relative"
+                            @click="openMediaModal(langCode, 'gallery', index)"
+                            style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="get_media_images_thumbnail(media.url)"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else
+                                class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center"
+                                style="height: 100px;">
+                                <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]"
+                                    class="fs-1"></i>
+                                <small class="text-muted mt-2 text-truncate px-2" style="max-width: 100%;">[[
+                                    media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                                <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1"
+                                    style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-info">Galeri</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+
+                                <button @click.stop="removeMedia(langCode, 'gallery', index)"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                                [[ media.title || media.file_name ]]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-else class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Bu dil için henüz medya dosyası eklenmemiş.
+    </div>
+</div>

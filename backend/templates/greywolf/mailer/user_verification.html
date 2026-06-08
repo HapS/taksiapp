@@ -1,0 +1,39 @@
+{% extends "@@theme@@/mailer/base.html" %}
+
+{% block title %}Hesap Doğrulama - Backend-RS{% endblock %}
+
+{% block header_title %}Hesap Doğrulama{% endblock %}
+{% block header_subtitle %}Hesabınızı aktifleştirmek için son adım{% endblock %}
+
+{% block content %}
+<h2>Merhaba {{name}}! 👋</h2>
+
+<p>Backend-RS'e hoş geldiniz! Hesabınızı aktifleştirmek için aşağıdaki doğrulama kodunu kullanın.</p>
+
+<div class="highlight-box">
+    <h3 style="margin-bottom: 15px; color: #495057;">📧 E-posta Adresiniz</h3>
+    <p style="font-weight: 600; color: #667eea;">{{email}}</p>
+</div>
+
+<div class="code-box">
+    {{verification_code}}
+</div>
+
+<div class="warning-box">
+    <p><strong>⏰ Önemli:</strong> Bu doğrulama kodu <strong>15 dakika</strong> geçerlidir.</p>
+    <p>Güvenliğiniz için bu kodu kimseyle paylaşmayın.</p>
+</div>
+
+<p>Doğrulama kodunu girdikten sonra hesabınıza tam erişim sağlayabileceksiniz.</p>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="#" class="btn">Hesabımı Doğrula</a>
+</div>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6c757d;">
+    <strong>Bu e-postayı siz talep etmediyseniz:</strong><br>
+    Herhangi bir işlem yapmanıza gerek yoktur. Bu e-postayı güvenle silebilirsiniz.
+</p>
+{% endblock %}

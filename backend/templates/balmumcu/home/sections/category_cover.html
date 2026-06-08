@@ -1,0 +1,88 @@
+<!-- Category Icons/Cards Section (category_icons.html) -->
+<section class="category-cover-wrapper py-5" data-section-id="{{ section.id }}" style="background-color: {{ section.background_color | default(value='transparent') }};">
+    <div class="container">
+        <div class="row g-1 justify-content-center">
+            {% for term in section.items %}
+                <div class="col-4 col-md-4 col-lg-4" data-aos="zoom-in" data-aos-delay="{{ loop.index0 * 100 }}">
+                    {% set lang_data = term.data.langs[current_language] %}
+                    {% set cover = "" %}
+                    {% if lang_data.media.cover and lang_data.media.cover | length > 0 %}
+                        {% set cover = lang_data.media.cover[0].url | thumb(size="801x328", crop="center") %}
+                    {% endif %}
+
+                    {% if lang_data.menu_url %}
+                        {% set url = lang_data.menu_url %}
+                    {% else %}
+                        {% set cat_slug = lang_data.title | default(value='cat') | slugify %}
+                        {% set url = "/" ~ current_language ~ "/products/category/" ~ cat_slug ~ "-" ~ term.id %}
+                    {% endif %}
+
+                    <a href="{{ url }}" class="category-cover-card text-decoration-none group">
+                        <div class="card h-100  shadow-sm transition-all duration-300 hover-translate-y-n2 overflow-hidden">
+                            <div class="card-body p-0 border-0">
+                                <div class="card-image">
+                                    {% if cover %}
+                                        <img src="{{ cover }}" alt="{{ lang_data.title }}" class="w-100">
+                                    {% endif %}
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if has_admin_access %}
+            <small>category_icons.html</small>
+        {% endif %}
+
+    </div>
+</section>
+
+<style>
+
+.category-cover-card .card {
+    background: var(--bs-body-bg);
+}
+
+.category-cover-card:hover .card {
+    background: var(--bs-primary);
+    color: white !important;
+}
+
+.category-cover-card:hover .text-dark,
+.category-cover-card:hover .text-muted {
+    color: white !important;
+}
+
+.category-cover-card:hover .category-icon-wrapper img {
+    transform: scale(1.1);
+}
+
+.category-cover-card:hover .category-icon-wrapper .bg-primary-subtle {
+    background: rgba(255,255,255,0.2) !important;
+    color: white !important;
+}
+
+.category-cover-card:hover .view-all-text {
+    opacity: 1 !important;
+    color: white !important;
+}
+
+.category-icon-wrapper img {
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.transition-all { transition: all 0.3s ease; }
+.duration-300 { transition-duration: 300ms; }
+.hover-translate-y-n2:hover { transform: translateY(-0.5rem); }
+.hover-shadow-lg:hover { box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; }
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

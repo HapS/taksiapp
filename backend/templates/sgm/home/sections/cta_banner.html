@@ -1,0 +1,28 @@
+<!-- CTA Banner Section (IklimaPro Style) -->
+<section class="py-5 cta-banner-iklima" data-section-id="{{ section.id }}">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8 text-center text-lg-start mb-4 mb-lg-0">
+                <h2 class="text-white fw-bold mb-2">{{ section.title }}</h2>
+                {% if section.description %}
+                    <p class="text-white-50 mb-0">{{ section.description }}</p>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 text-center text-lg-end">
+                {% for item in section.items %}
+                    {% set lang_data = item.data.langs[current_language] %}
+                    {% if loop.first %}
+                        <a href="{{ item.url | default(value='tel:08501234567') }}" class="btn btn-hero text-white btn-lg">
+                            {% if lang_data.icon %}
+                                <i class="{{ lang_data.icon }} me-2"></i>
+                            {% else %}
+                                <i class="bi bi-telephone me-2"></i>
+                            {% endif %}
+                            {{ item.title }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,318 @@
+{% if global.vocabularies.1.hierarchical_terms %}
+<div id="category-sidebar">
+  <div class="csb-wrap">
+    {% for category in global.vocabularies.1.hierarchical_terms %}
+    <div class="csb-l1-item">
+
+      {% if category.children %}
+      <div class="csb-l1-row" onclick="toggleL1(this)">
+        <span class="csb-title">
+          {% if category.data.term_icon %}
+            {{ category.data.term_icon | safe }}
+          {% elif category.term_icon %}
+            <i class="{{ category.term_icon }} me-2"></i>
+          {% endif %}
+          {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+        </span>
+        <span class="csb-chevron">›</span>
+      </div>
+      {% else %}
+      <a href="/{{ current_language }}/products/category/{{ category.data.langs[current_language].slug | default(value=category.slugs[current_language]) }}-{{ category.id }}" class="csb-l1-row">
+        <span class="csb-title">
+          {% if category.data.term_icon %}
+            {{ category.data.term_icon | safe }}
+          {% elif category.term_icon %}
+            <i class="{{ category.term_icon }} me-2"></i>
+          {% endif %}
+          {{ category.data.langs[current_language].title | default(value=category.titles[current_language]) }}
+        </span>
+      </a>
+      {% endif %}
+
+      {% if category.children %}
+      <div class="csb-children">
+        {% for subcategory in category.children %}
+        <div class="csb-l2-item">
+          <div class="csb-l2-row">
+            <a href="/{{ current_language }}/products/category/{{ subcategory.data.langs[current_language].slug | default(value=subcategory.slugs[current_language]) }}-{{ subcategory.id }}"
+               class="csb-l2-link"
+               onclick="event.stopPropagation()">
+              {{ subcategory.data.langs[current_language].title | default(value=subcategory.titles[current_language]) }}
+            </a>
+            {% if subcategory.children %}
+            <button class="csb-l2-btn" onclick="toggleL2(this)">
+              <span class="csb-chevron">›</span>
+            </button>
+            {% endif %}
+          </div>
+
+          {% if subcategory.children %}
+          <div class="csb-l3">
+            {% for sub2category in subcategory.children %}
+            <div class="csb-l2-item">
+              <div class="csb-l2-row">
+                <a href="/{{ current_language }}/products/category/{{ sub2category.data.langs[current_language].slug | default(value=sub2category.slugs[current_language]) }}-{{ sub2category.id }}"
+                   class="csb-l2-link"
+                   onclick="event.stopPropagation()">
+                  {{ sub2category.data.langs[current_language].title | default(value=sub2category.titles[current_language]) }}
+                </a>
+                {% if sub2category.children %}
+                <button class="csb-l2-btn" onclick="toggleL2(this)">
+                  <span class="csb-chevron">›</span>
+                </button>
+                {% endif %}
+              </div>
+
+              {% if sub2category.children %}
+              <div class="csb-l3">
+                {% for sub3category in sub2category.children %}
+                <div class="csb-l3-item">
+                  <a href="/{{ current_language }}/products/category/{{ sub3category.data.langs[current_language].slug | default(value=sub3category.slugs[current_language]) }}-{{ sub3category.id }}"
+                     class="csb-l3-link">
+                    {{ sub3category.data.langs[current_language].title | default(value=sub3category.titles[current_language]) }}
+                  </a>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+function toggleL1(row) {
+  var children = row.nextElementSibling;
+  var icon = row.querySelector('.csb-chevron');
+  if (!children) return;
+  var isOpen = children.classList.contains('open');
+
+  // Close all other L1 sub-menus
+  document.querySelectorAll('#category-sidebar .csb-children').forEach(function(c) {
+    c.classList.remove('open');
+  });
+  document.querySelectorAll('#category-sidebar .csb-l1-row .csb-chevron').forEach(function(i) {
+    i.classList.remove('open');
+  });
+  // Also clean up any open L2/L3 sub-menus and their icons
+  document.querySelectorAll('#category-sidebar .csb-l3').forEach(function(l3) {
+    l3.classList.remove('open');
+  });
+  document.querySelectorAll('#category-sidebar .csb-l2-btn .csb-chevron').forEach(function(i) {
+    i.classList.remove('open');
+  });
+
+  if (!isOpen) {
+    children.classList.add('open');
+    if (icon) icon.classList.add('open');
+    setTimeout(function() {
+      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 50);
+  }
+}
+
+function toggleL2(btn) {
+  var item = btn.closest('.csb-l2-item');
+  var l3 = item.querySelector('.csb-l3');
+  var icon = btn.querySelector('.csb-chevron');
+  if (!l3) return;
+  var isOpen = l3.classList.contains('open');
+
+  if (!isOpen) {
+    // We are opening this category. Close all other open .csb-l3 panels
+    // that are NOT ancestors/parents of the current button.
+    document.querySelectorAll('#category-sidebar .csb-l3.open').forEach(function(otherL3) {
+      if (!otherL3.contains(btn)) {
+        otherL3.classList.remove('open');
+        var otherItem = otherL3.closest('.csb-l2-item');
+        if (otherItem) {
+          var otherIcon = otherItem.querySelector('.csb-l2-row > .csb-l2-btn > .csb-chevron');
+          if (otherIcon) otherIcon.classList.remove('open');
+        }
+      }
+    });
+    l3.classList.add('open');
+    if (icon) icon.classList.add('open');
+  } else {
+    // We are closing this category. Close it and recursively close all child panels
+    l3.classList.remove('open');
+    if (icon) icon.classList.remove('open');
+
+    l3.querySelectorAll('.csb-l3.open').forEach(function(childL3) {
+      childL3.classList.remove('open');
+      var childItem = childL3.closest('.csb-l2-item');
+      if (childItem) {
+        var childIcon = childItem.querySelector('.csb-l2-row > .csb-l2-btn > .csb-chevron');
+        if (childIcon) childIcon.classList.remove('open');
+      }
+    });
+  }
+}
+</script>
+
+<style>
+#category-sidebar {
+  width: 100%;
+}
+
+.csb-wrap {
+  width: 100%;
+  height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /*border: 1px solid #dee2e6;*/
+  border-radius: 0rem;
+  background: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: #dee2e6 transparent;
+}
+
+.csb-wrap::-webkit-scrollbar {
+  width: 4px;
+}
+.csb-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.csb-wrap::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 0px;
+}
+
+.csb-l1-item {
+  border-bottom: 1px solid #e9ecef;
+  transform: none !important;
+}
+.csb-l1-item:last-child {
+  border-bottom: none;
+}
+
+.csb-l1-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: #f8f9fa;
+  transition: none !important;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+a.csb-l1-row {
+  text-decoration: none;
+}
+.csb-l1-row:hover {
+  background: #f1f3f5;
+  transform: none !important;
+}
+.csb-l1-row:hover .csb-title {
+  color: #0d6efd;
+  transform: none !important;
+}
+
+.csb-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #212529;
+  transform: none !important;
+}
+
+.csb-chevron {
+  display: inline-block;
+  font-size: 0.8rem;
+  color: #adb5bd;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.csb-chevron.open {
+  transform: rotate(90deg);
+}
+
+.csb-children {
+  display: none;
+  transform: none !important;
+}
+.csb-children.open {
+  display: block;
+}
+
+.csb-l2-item {
+  border-top: 1px solid #e9ecef;
+  transform: none !important;
+}
+
+.csb-l2-row {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 1rem 0.55rem 1.4rem;
+  background: #fff;
+  transition: background 0.15s;
+  transform: none !important;
+}
+.csb-l2-row:hover {
+  background: #f8f9fa;
+}
+
+.csb-l2-link {
+  font-size: 0.85rem;
+  color: #495057;
+  text-decoration: none;
+  flex-grow: 1;
+}
+.csb-l2-link:hover {
+  color: #0d6efd;
+}
+
+.csb-l2-btn {
+  background: none;
+  border: none;
+  padding: 0 0 0 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.csb-l2-btn:hover .csb-chevron {
+  color: #0d6efd;
+}
+
+.csb-l3 {
+  display: none;
+}
+.csb-l3.open {
+  display: block;
+}
+
+.csb-l3-item {
+  border-top: 1px solid #e9ecef;
+}
+
+.csb-l3-link {
+  display: block;
+  padding: 0.45rem 1rem 0.45rem 2.2rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-decoration: none;
+  background: #fafafa;
+  transition: background 0.15s, color 0.15s;
+}
+.csb-l3-link:hover {
+  color: #0d6efd;
+  background: #f1f3f5;
+}
+</style>

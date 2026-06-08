@@ -1,0 +1,44 @@
+{% if supported_currencies_list and supported_currencies_list | length > 1 %}
+
+<div class="currency-switcher">
+    {% for cur in supported_currencies_list %}
+    <a href="javascript:void(0)"
+       class="currency-pill {% if cur.is_active %}active{% endif %}"
+       title="{{ cur.name }}"
+       data-currency="{{ cur.code }}"
+       onclick="switchCurrency('{{ cur.code }}')">
+        {{ cur.code }}
+    </a>
+    {% endfor %}
+</div>
+
+<script>
+function switchCurrency(currencyCode) {
+    fetch('/api/currencies/current', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency: currencyCode })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            // Cookie'ye de kaydet (30 gün)
+            document.cookie = `display_currency=${currencyCode};path=/;max-age=${60*60*24*30};SameSite=Lax`;
+            // Sayfayı yenile (yeni para birimi ile fiyatlar güncellenir)
+            window.location.reload();
+        } else {
+            console.error('Para birimi değiştirilemedi:', result.message);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Hata',
+                text: result.message,
+            });
+        }
+    })
+    .catch(err => {
+        console.error('Para birimi değiştirme hatası:', err);
+    });
+}
+</script>
+{% endif %}

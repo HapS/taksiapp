@@ -1,0 +1,97 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block title %}{{ title | default(value="Ödeme Başarılı") }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 20px;">
+                <div class="card-header bg-success text-white text-center py-4 border-0">
+                    <div class="mb-3">
+                        <i class="bi bi-check-circle-fill" style="font-size: 4.5rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));"></i>
+                    </div>
+                    <h2 class="fw-bold mb-0">{{ title }}</h2>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <h4 class="text-success fw-semibold mb-3">{{ message }}</h4>
+                        <p class="text-muted fs-5">
+                            {{ t(key="Siparişiniz_başarıyla_alındı_ve_işleme_koyuldu._Detayları_aşağıda_bulabilirsiniz.", default="Siparişiniz başarıyla alındı ve işleme koyuldu. Detayları aşağıda bulabilirsiniz.", lang=current_language) }}
+                        </p>
+                    </div>
+
+                    <div class="bg-light rounded-4 p-4 mb-5 border border-light-subtle">
+                        <h5 class="fw-bold mb-4 border-bottom pb-2">
+                            <i class="bi bi-receipt me-2"></i>{{ t(key="Sipariş_Bilgileri", default="Sipariş Bilgileri", lang=current_language) }}
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="text-muted d-block small text-uppercase fw-bold">{{ t(key="Sipariş_Numarası", default="Sipariş Numarası", lang=current_language) }}</span>
+                                <span class="fw-bold fs-5 text-dark">#{{ cart.order_id }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block small text-uppercase fw-bold">{{ t(key="Ödeme_Yöntemi", default="Ödeme Yöntemi", lang=current_language) }}</span>
+                                <span class="fw-semibold">
+                                    <i class="bi bi-credit-card me-2"></i>
+                                    {{ provider_name }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Sipariş Özeti -->
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold mb-3">{{ t(key="Sipariş_Özeti", default="Sipariş Özeti", lang=current_language) }}</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">{{ t(key="Ürün_Toplamı:", default="Ürün Toplamı:", lang=current_language) }}</span>
+                                <span>{{ product_total_formatted }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">{{ t(key="Kargo_Ücreti:", default="Kargo Ücreti:", lang=current_language) }}</span>
+                                {% if is_free_shipping %}
+                                <span class="text-success">{{ t(key="Ücretsiz", default="Ücretsiz", lang=current_language) }}</span>
+                                {% else %}
+                                <span>{{ cargo_price_formatted }}</span>
+                                {% endif %}
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">{{ t(key="Genel_Toplam:", default="Genel Toplam:", lang=current_language) }}</span>
+                                <span class="fw-bold fs-5 text-success">{{ total_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-4 small">
+                            {{ t(key="Siparişinizin_detayları_e_posta_adresinize_gönderilmiştir.", default="Siparişinizin detayları e-posta adresinize gönderilmiştir.", lang=current_language) }}<br>
+                            {{ t(key="Sipariş_durumunuzu_xxx_sayfasından_takip_edebilirsiniz.", default="Sipariş durumunuzu Siparişlerim sayfasından takip edebilirsiniz.", lang=current_language) }}
+                        </p>
+                        <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                            <a href="/my-account/orders" class="btn btn-success btn-lg px-4 rounded-pill shadow-sm transition-hover">
+                                <i class="bi bi-list-ul me-2"></i>{{ t(key="Siparişlerim", default="Siparişlerim", lang=current_language) }}
+                            </a>
+                            <a href="/" class="btn btn-outline-primary btn-lg px-4 rounded-pill transition-hover">
+                                <i class="bi bi-house me-2"></i>{{ t(key="Ana_Sayfa", default="Ana Sayfa", lang=current_language) }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: all 0.1s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
+{% endblock %}

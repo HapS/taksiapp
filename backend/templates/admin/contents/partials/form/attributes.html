@@ -1,0 +1,283 @@
+<!-- Product Attributes Section -->
+<div class="card mb-4" v-if="form.content_type === 'product'">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-4">Ürün Özellikleri</h4>
+
+            <div>
+                <button type="button"
+                        class="btn btn-sm btn-warning me-2"
+                        @click="showVariantGenerationModal"
+                        :disabled="!hasSelectedAttributes"
+                        title="Seçili özellik gruplarından varyant oluştur (mevcut varyantlar korunur)">
+                    <i class="bi bi-gear-fill"></i>
+                    Varyant Oluştur
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-success"
+                        @click="loadAvailableVocabularies"
+                        :disabled="loadingVocabularies">
+                    <i class="bi bi-arrow-clockwise" :class="{'fa-spin': loadingVocabularies}"></i>
+                    Yenile
+                </button>
+            </div>
+        </div>
+
+
+
+        <!-- Step 1: Vocabulary Selection -->
+        <div class="mb-4">
+            <h6 class="mb-3">
+                <i class="bi bi-1-circle text-primary me-2"></i>
+                Özellik Gruplarını Seçin
+            </h6>
+
+            <!-- Loading Vocabularies -->
+            <div v-if="loadingVocabularies" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Özellik grupları yükleniyor...
+            </div>
+
+            <!-- Vocabulary Selection -->
+            <div v-else-if="availableVocabularies && availableVocabularies.length > 0" class="row">
+                <div v-for="vocabulary in availableVocabularies" :key="vocabulary.id" class="col-md-2 col-sm-2 mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               :id="`vocab_${vocabulary.id}`"
+                               :value="vocabulary.id"
+                               v-model="selectedVocabularyIds"
+                               @change="onVocabularySelectionChange">
+                        <label class="form-check-label" :for="`vocab_${vocabulary.id}`">
+                            <strong>[[ vocabulary.title ]]</strong>
+                            <small class="text-muted d-block">[[ vocabulary.description ]]</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Vocabularies -->
+            <div v-else class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Henüz özellik grubu tanımlanmamış.
+                <button type="button" class="btn btn-sm btn-link p-0" @click="loadAvailableVocabularies">
+                    Yenile
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Attribute Selection -->
+        <div v-if="selectedVocabularies.length > 0">
+            <h6 class="mb-3">
+                <i class="bi bi-2-circle text-primary me-2"></i>
+                Özellik Değerlerini Seçin
+            </h6>
+
+            <!-- Loading Attributes -->
+            <div v-if="loadingAttributes" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Özellik değerleri yükleniyor...
+            </div>
+
+            <!-- Attribute Cards -->
+            <div v-else class="row">
+                <div v-for="vocabulary in selectedVocabularies" :key="vocabulary.id" class="col-md-3 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    [[ vocabulary.title ]]
+                                    <span v-if="vocabulary.required" class="text-warning">*</span>
+                                </h6>
+                                <button type="button"
+                                        class="btn btn-sm btn-light text-dark border"
+                                        @click="showAddNewAttributeValue[vocabulary.name] = !showAddNewAttributeValue[vocabulary.name]">
+                                    <i class="bi bi-plus-circle-dotted"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                        <div class="card-body">
+                            <!-- Yeni değer ekleme formu -->
+                            <div v-if="showAddNewAttributeValue[vocabulary.name]" class="mb-3 p-3 bg-light rounded">
+                                <div class="input-group input-group-sm">
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           v-model="newAttributeValues[vocabulary.name]"
+                                           :placeholder="`Yeni ${vocabulary.title.toLowerCase()} değeri`"
+                                           @keyup.enter="addNewAttributeValue(vocabulary)">
+                                    <button type="button"
+                                            class="btn btn-success"
+                                            @click="addNewAttributeValue(vocabulary)"
+                                            :disabled="!newAttributeValues[vocabulary.name]?.trim()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            @click="showAddNewAttributeValue[vocabulary.name] = false; newAttributeValues[vocabulary.name] = ''">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Attribute Values -->
+                            <div v-if="vocabulary.values && vocabulary.values.length > 0" class="row">
+                                <div v-for="value in vocabulary.values"
+                                     :key="value.id"
+                                     class="col-12 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               :id="`attr_${vocabulary.name}_${value.id}`"
+                                               :value="value.id"
+                                               v-model="form.product.attributes[vocabulary.name]"
+                                               @change="onAttributeChange(vocabulary)">
+                                        <label class="form-check-label"
+                                               :for="`attr_${vocabulary.name}_${value.id}`">
+                                            [[ value.display_value ]]
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- No Values -->
+                            <div v-else class="text-muted text-center py-3">
+                                <i class="bi bi-inbox"></i>
+                                Henüz değer eklenmemiş
+                            </div>
+
+                            <!-- Seçili değerleri göster -->
+                            <div v-if="form.product.attributes[vocabulary.name] && Array.isArray(form.product.attributes[vocabulary.name]) && form.product.attributes[vocabulary.name].length > 0"
+                                 class="mt-3 pt-3 border-top">
+                                <small class="text-muted">Seçili değerler:</small>
+                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                    <template v-for="selectedId in (form.product.attributes[vocabulary.name] || [])" :key="selectedId">
+                                        <!-- Bilinen değerler için mavi badge -->
+                                        <span v-if="getAttributeValueTitle(vocabulary, selectedId) !== 'Bilinmeyen'"
+                                              class="badge bg-light text-dark border d-flex align-items-center gap-1"
+                                              style="font-size: 0.7rem; cursor: pointer;"
+                                              @click="removeAttributeValue(vocabulary, selectedId)"
+                                              :title="`${getAttributeValueTitle(vocabulary, selectedId)} - Kaldırmak için tıklayın`">
+                                            [[ getAttributeValueTitle(vocabulary, selectedId) ]]
+                                            <i class="bi bi-x-circle"></i>
+                                        </span>
+                                        <!-- Bilinmeyen değerler için sarı badge -->
+                                        <span v-else
+                                              class="badge bg-light text-dark border d-flex align-items-center gap-1"
+                                              style="font-size: 0.7rem; cursor: pointer;"
+                                              @click="removeAttributeValue(vocabulary, selectedId)"
+                                              title="Bilinmeyen değer - Kaldırmak için tıklayın">
+                                            Bilinmeyen (ID: [[ selectedId ]])
+                                            <i class="bi bi-x-circle"></i>
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Selection State -->
+        <div v-else-if="availableVocabularies && availableVocabularies.length > 0" class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Özellik değerlerini görmek için yukarıdan <strong>özellik gruplarını</strong> seçin.
+        </div>
+    </div>
+</div>
+
+<!-- Variant Generation Modal -->
+<div class="modal fade" id="variantGenerationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-gear-fill text-warning me-2"></i>
+                    Varyant Oluştur
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    <i class="bi bi-info-circle"></i>
+                    Hangi özellik gruplarından varyant oluşturmak istediğinizi seçin.
+                    Seçilen grupların tüm kombinasyonları varyant olarak oluşturulacak.
+                    <br>
+                    <small class="text-success">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Mevcut varyantlar korunur:</strong> Zaten var olan varyantlar ve medya dosyaları silinmez.
+                    </small>
+                    <br>
+                    <small class="text-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Ürün seçenekleri temizlenir:</strong> Mevcut manuel seçenekler silinip sadece seçili özelliklerden oluşturulur.
+                    </small>
+                </p>
+
+                <!-- Varyant oluşturma için grup seçimi -->
+                <div v-if="selectedVocabulariesForVariants && selectedVocabulariesForVariants.length > 0">
+                    <h6 class="mb-3">Varyant Oluşturma İçin Özellik Grupları:</h6>
+
+                    <div class="row">
+                        <div v-for="vocabulary in selectedVocabulariesForVariants" :key="vocabulary.id" class="col-12 mb-3">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               :id="`variant_vocab_${vocabulary.id}`"
+                                               :value="vocabulary.id"
+                                               v-model="selectedVariantVocabularyIds">
+                                        <label class="form-check-label fw-bold" :for="`variant_vocab_${vocabulary.id}`">
+                                            [[ vocabulary.title ]]
+                                            <span class="badge bg-secondary ms-2">
+                                                [[ getSelectedAttributeCount(vocabulary) ]] değer
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Seçili değerleri göster -->
+                                    <div class="mt-2">
+                                        <small class="text-muted">Seçili değerler:</small>
+                                        <div class="mt-1 d-flex flex-wrap gap-1">
+                                            <template v-for="selectedId in (form.product.attributes[vocabulary.name] || [])" :key="selectedId">
+                                                <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
+                                                    [[ getAttributeValueTitle(vocabulary, selectedId) ]]
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Varyant sayısı tahmini -->
+                    <div v-if="selectedVariantVocabularyIds.length > 0" class="alert alert-info">
+                        <i class="bi bi-calculator"></i>
+                        <strong>Tahmini Varyant Sayısı:</strong>
+                        [[ calculateVariantCount() ]] varyant oluşturulacak
+                    </div>
+                </div>
+
+                <div v-else class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Varyant oluşturmak için önce özellik değerleri seçmelisiniz.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    İptal
+                </button>
+                <button type="button"
+                        class="btn btn-warning"
+                        @click="generateVariantsFromSelectedAttributes"
+                        :disabled="selectedVariantVocabularyIds.length === 0">
+                    <i class="bi bi-gear-fill"></i>
+                    [[ calculateVariantCount() ]] Varyant Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

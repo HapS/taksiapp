@@ -1,0 +1,62 @@
+<!-- Tags Card -->
+<div class="card mb-4" v-if="form.content_type != 'form'">
+    <div class="card-header">
+        <h6 class="m-0"><i class="bi bi-hash"></i> Etiketler (Tags)</h6>
+    </div>
+    <div class="card-body">
+        <div v-if="loadingTags" class="text-center">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Etiketler yükleniyor...</span>
+            </div>
+        </div>
+
+        <div v-else>
+            <!-- Tag Input with Autocomplete -->
+            <div class="mb-3">
+                <label class="form-label small">Etiket Ekle</label>
+                <div class="position-relative">
+                    <input type="text" class="form-control form-control-sm" v-model="tagSearch" @input="searchTags"
+                        @keydown.enter.prevent="addTagFromInput" @keydown.down.prevent="navigateTagSuggestions(1)"
+                        @keydown.up.prevent="navigateTagSuggestions(-1)" placeholder="Etiket ara veya yeni ekle...">
+
+                    <!-- Autocomplete Dropdown -->
+                    <div v-if="tagSuggestions.length > 0"
+                        class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                        style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                        <div v-for="(tag, index) in tagSuggestions" :key="tag.id" @click="addTag(tag)"
+                            @mouseenter="selectedTagIndex = index"
+                            :class="['p-2', 'cursor-pointer', 'border-bottom', selectedTagIndex === index ? 'bg-light' : '']"
+                            style="cursor: pointer;">
+                            <i class="bi bi-hash text-muted"></i> [[ getTagTitle(tag) ]]
+                            <small class="text-muted" v-if="tag.data?.langs?.tr?.description || tag.data?.tr?.description || tag.description"> - [[
+                                tag.data?.langs?.tr?.description || tag.data?.tr?.description || tag.description ]]</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-text">Enter tuşuna basarak yeni etiket oluşturabilirsiniz</div>
+            </div>
+
+            <!-- Selected Tags -->
+            <div v-if="selectedTags.length > 0" class="mt-3 p-2 bg-light rounded">
+                <small class="text-success d-block mb-1">
+                    <i class="bi bi-check-circle"></i> [[ selectedTags.length ]] etiket seçildi
+                </small>
+                <div class="d-flex flex-wrap gap-1">
+                    <span v-for="tag in selectedTags" :key="tag.id"
+                        class="badge bg-primary d-flex align-items-center gap-1"
+                        style="font-size: 0.7rem; cursor: pointer;" @click="removeTag(tag.id)"
+                        title="Kaldırmak için tıklayın">
+                        [[ getTagTitle(tag) ]]
+                        <i class="bi bi-x-circle"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div v-else class="mt-3 p-2 bg-light rounded">
+                <small class="text-muted d-block">
+                    Henüz etiket eklenmedi.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>

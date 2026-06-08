@@ -1,0 +1,97 @@
+<!-- Category Icons/Cards Section (category_icons.html) -->
+<section class="category-icons-wrapper py-5" data-section-id="{{ section.id }}" style="background-color: {{ section.background_color | default(value='transparent') }};">
+    <div class="container">
+        <h4 class="section-title mb-1">{{ section.title }}</h4>
+
+        <div class="row g-2 justify-content-center">
+            {% for term in section.items %}
+                <div class="col-6 col-md-4 col-lg-2" data-aos="zoom-in" data-aos-delay="{{ loop.index0 * 100 }}">
+                    {% set lang_data = term.data.langs[current_language] %}
+                    {% set cover = "" %}
+                    {% if lang_data.media.cover and lang_data.media.cover | length > 0 %}
+                        {% set cover = lang_data.media.cover[0].url %}
+                    {% endif %}
+
+                    {% if lang_data.menu_url %}
+                        {% set url = lang_data.menu_url %}
+                    {% else %}
+                        {% set cat_slug = lang_data.title | slugify | default(value='cat') %}
+                        {% set url = "/" ~ current_language ~ "/products/category/" ~ cat_slug ~ "-" ~ term.id %}
+                    {% endif %}
+
+                    <a href="{{ url }}" class="category-icon-card text-decoration-none group">
+                        <div class="card h-100  shadow-sm transition-all duration-300 hover-translate-y-n2 hover-shadow-lg  overflow-hidden">
+                            <div class="card-body p-4 text-center">
+                                <div class="category-icon-wrapper mb-3 mx-auto">
+                                    {% if cover %}
+                                        <img src="{{ cover }}" alt="{{ lang_data.title }}" class="img-fluid rounded-circle object-fit-cover shadow-sm border" style="width: 80px; height: 80px;">
+                                    {% else %}
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary mx-auto shadow-sm" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-tag fs-2"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <h6 class="fw-bold text-dark text-primary-emphasis mb-0 line-clamp-2">{{ lang_data.title | default(value="Kategori") }}</h6>
+
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+
+
+.category-icon-card .card {
+    background: var(--bs-body-bg);
+}
+
+.category-icon-card:hover .card {
+    background: var(--bs-primary);
+    color: white !important;
+}
+
+.category-icon-card:hover .text-dark,
+.category-icon-card:hover .text-muted {
+    color: white !important;
+}
+
+.category-icon-card:hover .category-icon-wrapper img {
+    border-color: rgba(255,255,255,0.5) !important;
+    transform: scale(1.1);
+}
+
+.category-icon-card:hover .category-icon-wrapper .bg-primary-subtle {
+    background: rgba(255,255,255,0.2) !important;
+    color: white !important;
+}
+
+.category-icon-card:hover .view-all-text {
+    opacity: 1 !important;
+    color: white !important;
+}
+
+/* Dark theme - h6 title visibility */
+[data-bs-theme="dark"] .category-icon-card h6 {
+    color: var(--bs-body-color) !important;
+}
+
+.category-icon-wrapper img {
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.transition-all { transition: all 0.3s ease; }
+.duration-300 { transition-duration: 300ms; }
+.hover-translate-y-n2:hover { transform: translateY(-0.5rem); }
+.hover-shadow-lg:hover { box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; }
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

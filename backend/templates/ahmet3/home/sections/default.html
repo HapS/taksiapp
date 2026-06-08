@@ -1,0 +1,26 @@
+<!-- Default Section (Fallback) -->
+<div class="container py-5">
+  <h2 class="section-title mb-4">{{ section.title }}</h2>
+  
+  <div class="row">
+    {% for item in section.items %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        {% if item.image %}
+        <a href="{{ item.url }}">
+          <img src="{{ item.image }}" class="card-img-top" alt="{{ item.title }}">
+        </a>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{{ item.url }}">{{ item.title }}</a>
+          </h5>
+          {% if item.excerpt %}
+          <p class="card-text">{{ item.excerpt | truncate(length=150) }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>

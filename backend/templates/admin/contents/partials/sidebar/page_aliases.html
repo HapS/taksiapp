@@ -1,0 +1,53 @@
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0"><i class="bi bi-collection"></i> Alt İçerikler</h6>
+        <button type="button" class="btn btn-sm btn-success" @click="addSubContent">
+            <i class="bi bi-plus-circle"></i> Ekle
+        </button>
+    </div>
+    <div class="card-body">
+        <div v-if="form.sub_contents.length === 0" class="text-muted text-center py-3">
+            <i class="bi bi-info-circle"></i> Henüz alt içerik eklenmedi
+        </div>
+
+        <div v-for="(subContent, index) in form.sub_contents" :key="index"
+             class="sub-content-row mb-3 p-3 border rounded bg-light">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Alt İçerik Adı</label>
+                    <input type="text"
+                           class="form-control form-control-sm"
+                           v-model="subContent.name"
+                           placeholder="örn: ilgili-urunler">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">İçerik ID</label>
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           v-model.number="subContent.content_id"
+                           placeholder="58"
+                           min="1">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button"
+                            class="btn btn-sm btn-danger w-100"
+                            @click="removeSubContent(index)"
+                            title="Sil">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Açıklama (Opsiyonel)</label>
+                    <input type="text"
+                           class="form-control form-control-sm"
+                           v-model="subContent.description"
+                           placeholder="Bu alt içeriğin ne için kullanıldığını açıklayın">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

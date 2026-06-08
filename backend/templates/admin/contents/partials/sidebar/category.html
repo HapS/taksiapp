@@ -1,0 +1,41 @@
+<!-- Ana Kategori (Single Select) -->
+<div class="card mb-4" v-if="form.content_type != 'form'">
+    <div class="card-header">
+        <h6 class="m-0"><i class="bi bi-tags"></i> Ana Kategori</h6>
+    </div>
+    <div class="card-body">
+        <div v-if="loadingTerms" class="text-center">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Kategoriler yükleniyor...</span>
+            </div>
+        </div>
+
+        <div v-else>
+            <div v-if="availableTerms.length === 0" class="text-muted small">
+                Bu içerik türü için kategori bulunamadı.
+            </div>
+
+            <div v-else>
+                <select v-model="form.term_master_id" class="form-select form-select-sm" @change="onMasterCategoryChange">
+                    <option :value="null">Kategori Seçiniz</option>
+                    <template v-for="term in availableTerms" :key="term.id">
+                        <category-option :term="term" :level="0"></category-option>
+                    </template>
+                </select>
+
+                <!-- Seçim özeti -->
+                <div v-if="form.term_master_id" class="mt-3 p-2 bg-light rounded">
+                    <small class="text-success d-block">
+                        <i class="bi bi-check-circle"></i> Seçili: <strong>[[ getTermTitle(form.term_master_id)
+                            ]]</strong>
+                    </small>
+                </div>
+                <div v-else class="mt-3 p-2 bg-light rounded">
+                    <small class="text-muted d-block">
+                        Henüz kategori seçilmedi.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

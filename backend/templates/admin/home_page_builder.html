@@ -1,0 +1,1501 @@
+{% extends "admin/base.html" %} {% block title %}Ana Sayfa Yöneticisi - Admin
+Panel{% endblock %} {% block content %}
+<style>
+  /* Homepage Builder - Active list item gri renk */
+  .list-group-item.active {
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+  }
+  .list-group-item.active .text-muted {
+    color: #6c757d !important;
+  }
+  /* Sortable styles */
+  .sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+  }
+  .sortable-handle {
+    cursor: move;
+  }
+  .sortable-handle:hover {
+    background-color: #dee2e6;
+  }
+</style>
+<div class="container-fluid mt-2" id="homeapp">
+  <div
+    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom"
+  >
+    <div>
+      <h4 class="h4 mb-0 pb-0 fw-bolder">Ana Sayfa Oluşturucu</h4>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div v-if="lastSaved" class="d-flex align-items-center text-muted small">
+        <i class="bi bi-check-circle text-success me-1"></i>
+        Son kaydedilme: [[ lastSaved ]]
+      </div>
+      <button class="btn btn-primary" @click="manualSave" :disabled="saving">
+        <i class="bi bi-save2"></i> [[ saving ? 'Kaydediliyor...' : 'Kaydet' ]]
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Sol Panel - Section Listesi -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Bölümler</h5>
+          <button class="btn btn-primary btn-sm" @click="addSection">
+            <i class="bi bi-plus"></i> Bölüm Ekle
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div v-if="sections.length === 0" class="p-3 text-muted text-center">
+            Henüz bölüm eklenmemiş
+          </div>
+          <div v-else class="list-group list-group-flush" id="sortable-sections">
+            <div
+              v-for="(section, index) in sections"
+              :key="section.id"
+              class="list-group-item d-flex justify-content-between align-items-center"
+              :class="{ 'active': selectedSectionId === section.id }"
+              :data-id="section.id"
+              @click="() => selectSection(section.id)"
+              style="cursor: pointer;"
+            >
+              <div class="sortable-handle d-flex align-items-center me-2" @click.stop>
+                <i class="bi bi-grip-vertical text-muted"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="fw-bold">[[ section.order ]]. [[ getSectionTitle(section) ]]</div>
+                <small class="text-muted">[[ section.template ]] - [[ section.source.type ]]</small>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :id="'active-' + section.id"
+                    v-model="section.active"
+                    @click.stop
+                  >
+                </div>
+                <button
+                  class="btn btn-danger btn-sm"
+                  @click.stop="removeSection(index)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sağ Panel - Section Ayarları -->
+    <div class="col-lg-8">
+      <div v-if="selectedSection" class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Bölüm Ayarları</h5>
+        </div>
+        <div class="card-body">
+          <!-- Çok Dilli Başlık ve Açıklama -->
+          <div class="card mb-4 border-0">
+            <div class="card-body p-0">
+              <!-- Language Tabs -->
+              <ul class="nav nav-tabs mb-4" id="sectionLangTabs" role="tablist">
+                {% for lang, lang_name in supported_languages %}
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link {% if loop.first %}active{% endif %}"
+                          id="section-tab-{{ lang }}"
+                          data-bs-toggle="tab"
+                          data-bs-target="#section-lang-{{ lang }}"
+                          type="button"
+                          role="tab">{{ lang | upper }}</button>
+                </li>
+                {% endfor %}
+              </ul>
+
+              <div class="tab-content" id="sectionLangTabContent">
+                {% for lang, lang_name in supported_languages %}
+                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                     id="section-lang-{{ lang }}"
+                     role="tabpanel"
+                     aria-labelledby="section-tab-{{ lang }}">
+
+                   <!-- Section Başlığı -->
+                  <div class="mb-4" v-if="selectedSection.langs && selectedSection.langs['{{ lang }}']">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Bölüm Başlığı ({{ lang_name }})</label>
+                    <input type="text"
+                           class="form-control"
+                           v-model="selectedSection.langs['{{ lang }}'].title"
+                           placeholder="Bölüm başlığı giriniz"
+                           maxlength="100">
+                  </div>
+
+                  <!-- Section Açıklaması -->
+                  <div class="mb-4" v-if="selectedSection.langs && selectedSection.langs['{{ lang }}']">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Bölüm Açıklaması ({{ lang_name }})</label>
+                    <textarea class="form-control"
+                              v-model="selectedSection.langs['{{ lang }}'].description"
+                              placeholder="Bölüm açıklaması giriniz (opsiyonel)"
+                              rows="3"
+                              maxlength="500"></textarea>
+                  </div>
+
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Temel Ayarlar -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Şablon</label>
+              <select class="form-select" v-model="selectedSection.template">
+                <option value="">Şablon Seçin</option>
+                <option v-for="tpl in availableSectionTemplates" :key="tpl" :value="tpl">[[ tpl ]]</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Section Arka Plan Rengi</label>
+              <div class="d-flex gap-2 align-items-center">
+                <input
+                  type="color"
+                  class="form-control form-control-color p-0"
+                  v-model="backgroundColorHex"
+                  title="Bölüm arka plan rengini seçin"
+                  style="width: 60px; min-width: 60px;">
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Opaklık</small>
+                    <small class="text-muted">[[ backgroundOpacity ]]%</small>
+                  </div>
+                  <input
+                    type="range"
+                    class="form-range"
+                    v-model.number="backgroundOpacity"
+                    min="0"
+                    max="100"
+                    step="5">
+                </div>
+                <div
+                  class="border rounded"
+                  :style="{ backgroundColor: selectedSection.background_color, width: '40px', height: '40px' }"
+                  title="Renk önizleme">
+                </div>
+              </div>
+              <small class="form-text text-muted">0% = Tamamen Şeffaf, 100% = Tamamen Opak</small>
+            </div>
+          </div>
+
+          <!-- Veri Kaynağı Seçimi - Yeni UI -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Kaynak Türü</label>
+              <select class="form-select" v-model="sourceCategory" @change="onSourceCategoryChange">
+                <option value="content">İçerik</option>
+                <option value="category">Kategori</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Seçim Şekli</label>
+              <select class="form-select" v-model="selectionMode" @change="onSelectionModeChange">
+                <option value="automatic">Otomatik</option>
+                <option value="manual">Manuel</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Sıra</label>
+              <input
+                type="number"
+                class="form-control"
+                v-model.number="selectedSection.order"
+                min="1"
+                @change="updateSectionOrder"
+              >
+            </div>
+          </div>
+
+          <!-- İçerik + Otomatik -->
+          <div v-if="sourceCategory === 'content' && selectionMode === 'automatic'" class="border rounded p-3 mb-3">
+            <h6>Otomatik İçerik Ayarları</h6>
+            <div class="row">
+              <div class="col-md-4">
+                <label class="form-label">İçerik Türü</label>
+                <select class="form-select" v-model="selectedSection.source.content_type" @change="onContentTypeChange">
+                  <option value="">Hepsi</option>
+                  <option value="page">Sayfa</option>
+                  <option value="blog">Blog</option>
+                  <option value="news">Haber</option>
+                  <option value="product">Ürün</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Limit</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  v-model.number="selectedSection.source.limit"
+                  min="1"
+                  max="50"
+                >
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Sıralama</label>
+                <select class="form-select" v-model="selectedSection.source.order_by">
+                  <option value="created_at_desc">En Yeni</option>
+                  <option value="created_at_asc">En Eski</option>
+                  <option value="title_asc">Başlık A-Z</option>
+                  <option value="title_desc">Başlık Z-A</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtreler -->
+            <div class="mt-3">
+              <label class="form-label">Filtreler</label>
+              <div v-for="(filter, filterIndex) in selectedSection.source.filters" :key="filterIndex" class="row mb-2">
+                <div class="col-md-4">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Anahtar"
+                    v-model="filter.key"
+                  >
+                </div>
+                <div class="col-md-6">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Değer"
+                    v-model="filter.value"
+                  >
+                </div>
+                <div class="col-md-2">
+                  <button
+                    class="btn btn-danger btn-sm w-100"
+                    @click="removeFilter(filterIndex)"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <button class="btn btn-outline-primary btn-sm" @click="addFilter">
+                <i class="bi bi-plus"></i> Filtre Ekle
+              </button>
+            </div>
+          </div>
+
+          <!-- İçerik + Manuel -->
+          <div v-if="sourceCategory === 'content' && selectionMode === 'manual'" class="border rounded p-3 mb-3">
+            <h6>Manuel İçerik Seçimi
+              <span v-if="selectedSection.source.content_type" class="badge bg-info ms-2">
+                [[ selectedSection.source.content_type === 'mixed' ? 'Karışık Türler' : selectedSection.source.content_type ]]
+              </span>
+            </h6>
+
+            <!-- İçerik türü filtresi ve arama -->
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="form-label">İçerik Türü Filtresi</label>
+                <select class="form-select form-select-sm" v-model="manualContentTypeFilter" @change="filterManualContent">
+                  <option value="">Hepsi</option>
+                  <option value="page">Sayfa</option>
+                  <option value="blog">Blog</option>
+                  <option value="news">Haber</option>
+                  <option value="product">Ürün</option>
+                </select>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label">Arama</label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  v-model="manualSearchFilter"
+                  @input="debounceManualSearch"
+                  placeholder="İçerik başlığında ara..."
+                >
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Mevcut İçerikler</label>
+                <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
+                  <div v-if="loadingContent" class="text-center p-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                      <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <div class="mt-2 small text-muted">İçerikler yükleniyor...</div>
+                  </div>
+                  <div v-else-if="availableContent.length === 0" class="text-center p-3 text-muted">
+                    İçerik bulunamadı
+                  </div>
+                  <div v-else>
+                    <div
+                      v-for="item in availableContent"
+                      :key="item.id"
+                      class="form-check"
+                    >
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="'content-' + item.id"
+                        :value="item.id"
+                        v-model="selectedSection.source.selected_items"
+                        @change="updateManualContentType"
+                      >
+                      <label class="form-check-label" :for="'content-' + item.id">
+                        [[ item.title ]] <small class="text-muted">([[ item.type ]])</small>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Seçili İçerikler ([[ selectedSection.source.selected_items.length ]])</label>
+                <div class="border rounded p-2" style="height: 200px; overflow-y: auto;" :id="'sortable-items-' + selectedSection.id">
+                  <div
+                    v-for="(itemId, index) in selectedSection.source.selected_items"
+                    :key="itemId"
+                    :data-id="itemId"
+                    class="d-flex justify-content-between align-items-center mb-1 p-1 bg-light rounded sortable-selected-item"
+                  >
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-grip-vertical text-muted me-2 sortable-handle" style="cursor: move;"></i>
+                      <span>[[ getContentById(itemId)?.title ]]</span>
+                    </div>
+                    <div class="d-flex gap-1">
+                      <a :href="'/admin/contents/' + (getContentById(itemId)?.type || 'page') + '/' + itemId" target="_blank" class="btn btn-sm btn-outline-primary" title="Düzenle">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        @click="removeSelectedItem(index)"
+                        title="Kaldır"
+                      >
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kategori Ayarları -->
+          <div v-if="sourceCategory === 'category'" class="border rounded p-3 mb-3">
+            <h6>Kategori Ayarları</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Kategori Seç</label>
+                <select class="form-select" v-model="selectedSection.source.vocabulary_id" @change="onVocabularyChange">
+                  <option value="">Kategori Seçin</option>
+                  <option v-for="vocab in availableVocabularies" :key="vocab.id" :value="vocab.id">
+                    [[ vocab.title ]] ([[ vocab.vocabulary_type ]])
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6" v-if="selectionMode === 'automatic'">
+                <label class="form-label">Limit</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  v-model.number="selectedSection.source.limit"
+                  min="1"
+                  max="50"
+                >
+              </div>
+            </div>
+
+            <div class="row mb-3" v-if="selectionMode === 'automatic'">
+              <div class="col-md-12">
+                <label class="form-label">Sıralama</label>
+                <select class="form-select" v-model="selectedSection.source.order_by">
+                  <option value="order_id_asc">Sıra (A-Z)</option>
+                  <option value="order_id_desc">Sıra (Z-A)</option>
+                  <option value="created_at_desc">En Yeni</option>
+                  <option value="created_at_asc">En Eski</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Manuel Kategori Seçimi -->
+            <div v-if="selectionMode === 'manual' && selectedSection.source.vocabulary_id" class="row">
+              <div class="col-md-6">
+                <label class="form-label">Mevcut Kategoriler</label>
+                <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
+                  <div v-if="loadingTerms" class="text-center p-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                      <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <div class="mt-2 small text-muted">Kategoriler yükleniyor...</div>
+                  </div>
+                  <div v-else-if="availableTerms.length === 0" class="text-center p-3 text-muted">
+                    Kategori bulunamadı
+                  </div>
+                  <div v-else>
+                    <div
+                      v-for="term in availableTerms"
+                      :key="term.id"
+                      class="form-check"
+                    >
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="'term-' + term.id"
+                        :value="term.id"
+                        v-model="selectedSection.source.selected_terms"
+                      >
+                      <label class="form-check-label" :for="'term-' + term.id" :class="{ 'text-danger': term.publish === false }">
+                        [[ term.title ]]
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Seçili Kategoriler ([[ selectedSection.source.selected_terms.length ]])</label>
+                <div class="border rounded p-2" style="height: 200px; overflow-y: auto;" :id="'sortable-terms-' + selectedSection.id">
+                  <div
+                    v-for="(termId, index) in selectedSection.source.selected_terms"
+                    :key="termId"
+                    :data-id="termId"
+                    class="d-flex justify-content-between align-items-center mb-1 p-1 bg-light rounded sortable-selected-term"
+                  >
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-grip-vertical text-muted me-2 sortable-handle" style="cursor: move;"></i>
+                      <span>[[ getTermById(termId)?.title ]]</span>
+                    </div>
+                    <div class="d-flex gap-1">
+                      <a :href="'/admin/taxonomy/vocabularies/' + selectedSection.source.vocabulary_id + '/terms/' + termId" target="_blank" class="btn btn-sm btn-outline-primary" title="Düzenle">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        @click="removeSelectedTerm(index)"
+                        title="Kaldır"
+                      >
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bölüm seçilmediğinde -->
+      <div v-else class="card">
+        <div class="card-body text-center text-muted">
+          <i class="bi bi-arrow-left"></i>
+          Sol panelden bir bölüm seçin veya yeni bölüm ekleyin
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug Panel (geliştirme için) -->
+  <div class="row mt-4" v-if="showDebug">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Debug - JSON Çıktısı</h6>
+        </div>
+        <div class="card-body">
+          <pre class="bg-light p-3 rounded small">[[ JSON.stringify(sections, null, 2) ]]</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+ const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } = Vue;
+
+ const app = createApp({
+    delimiters: ['[[', ']]'],
+   setup() {
+     // Reactive state
+     const sections = ref([]);
+     const selectedSectionId = ref(null);
+     const showDebug = ref(false); // Debug paneli için
+
+     // Yeni UI state
+     const sourceCategory = ref('content'); // 'content' veya 'category'
+     const selectionMode = ref('automatic'); // 'automatic' veya 'manual'
+     const manualContentTypeFilter = ref(''); // Manuel seçim için içerik türü filtresi
+     const manualSearchFilter = ref(''); // Manuel seçim için arama filtresi
+     const saving = ref(false); // Kaydetme durumu
+     const lastSaved = ref(''); // Son kaydetme zamanı
+
+     // Mock data - Mevcut içerikler (API'den çekilecek)
+     const availableContent = ref([]);
+     const loadingContent = ref(false);
+
+     // Seçili içerikler için cache (id -> {id, title, type})
+     const selectedItemsCache = ref({});
+
+     // Seçili termler için cache (id -> {id, title})
+     const selectedTermsCache = ref({});
+
+     // Vocabulary data
+     const availableVocabularies = ref([]);
+     const loadingVocabularies = ref(false);
+
+      // Terms data (vocabulary seçildiğinde yüklenir)
+       const availableTerms = ref([]);
+       const loadingTerms = ref(false);
+       const availableSectionTemplates = ref([]);
+
+      // Arka plan rengi için ayrı state
+      const backgroundColorHex = ref('#ffffff');
+      const backgroundOpacity = ref(100);
+
+      // Renk ve opaklığı birleştir
+      function updateBackgroundColor() {
+        if (selectedSection.value) {
+          const hex = backgroundColorHex.value.replace('#', '');
+          const r = parseInt(hex.substring(0, 2), 16);
+          const g = parseInt(hex.substring(2, 4), 16);
+          const b = parseInt(hex.substring(4, 6), 16);
+          const a = (backgroundOpacity.value / 100).toFixed(2);
+          selectedSection.value.background_color = `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+      }
+
+      // background_color değiştiğinde hex ve opacity ayarla
+      function parseBackgroundColor(color) {
+        if (!color) {
+          backgroundColorHex.value = '#ffffff';
+          backgroundOpacity.value = 100;
+          return;
+        }
+
+        // rgba(r, g, b, a) formatını parse et
+        const rgbaMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (rgbaMatch) {
+          const r = parseInt(rgbaMatch[1]);
+          const g = parseInt(rgbaMatch[2]);
+          const b = parseInt(rgbaMatch[3]);
+          const a = rgbaMatch[4] ? parseFloat(rgbaMatch[4]) : 1;
+
+          // RGB to Hex
+          const toHex = (n) => n.toString(16).padStart(2, '0');
+          backgroundColorHex.value = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+          backgroundOpacity.value = Math.round(a * 100);
+        } else if (color.startsWith('#')) {
+          // Hex format
+          backgroundColorHex.value = color.length === 4 ? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}` : color;
+          backgroundOpacity.value = 100;
+        } else {
+          backgroundColorHex.value = '#ffffff';
+          backgroundOpacity.value = 100;
+        }
+      }
+
+      // Computed properties
+     const selectedSection = computed(() => {
+       return sections.value.find(s => s.id === selectedSectionId.value) || null;
+     });
+
+     // API Functions - Homepage CRUD (Tek endpoint)
+     async function loadHomepageSections() {
+       try {
+         const response = await fetch('/admin/api/homepage');
+         if (!response.ok) {
+           throw new Error('API hatası');
+         }
+
+         const result = await response.json();
+         sections.value = result.sections || [];
+
+          // Desteklenen dilleri al (Object.keys ile array'e çevir)
+          const supportedLangs = Object.keys({{ supported_languages | json_encode | safe }});
+
+          // Her section'ın source yapısını kontrol et ve eksik alanları tamamla
+          sections.value.forEach(section => {
+            if (section.source) {
+              // Eksik alanları tamamla
+              if (!section.source.selected_terms) {
+                section.source.selected_terms = [];
+              }
+              if (!section.source.selection_type) {
+                section.source.selection_type = 'automatic';
+              }
+              if (!section.source.selected_items) {
+                section.source.selected_items = [];
+              }
+              if (!section.source.filters) {
+                section.source.filters = [];
+              }
+            }
+
+            // Geriye uyumluluk: Eski section'lara langs alanı ekle
+            if (!section.langs) {
+              section.langs = {};
+              supportedLangs.forEach(lang => {
+                section.langs[lang] = {
+                  title: '',
+                  description: ''
+                };
+              });
+            }
+          });
+
+         // İlk section'ı seç
+         if (sections.value.length > 0) {
+           selectedSectionId.value = sections.value[0].id;
+           // İlk section'ın verilerini yükle
+           await selectSection(sections.value[0].id);
+         }
+       } catch (error) {
+         console.error('Homepage sections yükleme hatası:', error);
+         alert('Homepage sections yüklenirken hata oluştu: ' + error.message);
+       }
+     }
+
+     async function saveHomepageSections() {
+       saving.value = true;
+       try {
+         const response = await fetch('/admin/api/homepage', {
+           method: 'PUT',
+           headers: {
+             'Content-Type': 'application/json'
+           },
+           body: JSON.stringify({
+             sections: sections.value
+           })
+         });
+
+         if (!response.ok) {
+           throw new Error('API hatası');
+         }
+
+         const result = await response.json();
+
+         // Son kaydetme zamanını güncelle
+         const now = new Date();
+         lastSaved.value = now.toLocaleTimeString('tr-TR', {
+           hour: '2-digit',
+           minute: '2-digit',
+           second: '2-digit'
+         });
+
+         console.log('Homepage saved:', result.message);
+         return result;
+       } catch (error) {
+         console.error('Homepage kaydetme hatası:', error);
+         throw error;
+       } finally {
+         saving.value = false;
+       }
+     }
+
+     // Manuel kaydetme fonksiyonu
+     async function manualSave() {
+       try {
+         await saveHomepageSections();
+         // Başarı mesajı (opsiyonel)
+         console.log('Manuel kaydetme başarılı');
+       } catch (error) {
+         alert('Kaydetme hatası: ' + error.message);
+       }
+     }
+     async function fetchContents(contentType = '', limit = 100, search = '') {
+       loadingContent.value = true;
+       try {
+         const params = new URLSearchParams({
+           simple_format: 'true',
+           limit: limit.toString(),
+           page: '1',
+           parent_id: 'null' // Sadece ana içerikleri getir (alt sayfalar değil)
+         });
+
+         // Content type - boş değilse ekle, boşsa backend tüm tipleri döndürecek
+         if (contentType && contentType.trim()) {
+           params.append('content_type', contentType);
+         }
+
+         // Search - boş değilse ekle
+         if (search && search.trim()) {
+           params.append('search', search.trim());
+         }
+
+         const response = await fetch(`/admin/api/contents?${params}`);
+         if (!response.ok) {
+           throw new Error('API hatası');
+         }
+
+         const result = await response.json();
+         return result.data || [];
+       } catch (error) {
+         console.error('İçerik yükleme hatası:', error);
+         return [];
+       } finally {
+         loadingContent.value = false;
+       }
+     }
+
+     // İçerikleri yükle
+     async function loadAllContents() {
+       const contents = await fetchContents();
+       availableContent.value = contents.map(item => ({
+         id: item.id,
+         title: item.title,
+         type: item.content_type
+       }));
+     }
+
+     // Vocabulary'leri yükle
+     async function fetchVocabularies() {
+       loadingVocabularies.value = true;
+       try {
+         const response = await fetch('/admin/api/homepage/vocabularies');
+         if (!response.ok) {
+           throw new Error('API hatası');
+         }
+
+         const result = await response.json();
+         return result.vocabularies || [];
+       } catch (error) {
+         console.error('Vocabulary yükleme hatası:', error);
+         return [];
+       } finally {
+         loadingVocabularies.value = false;
+       }
+     }
+
+     async function loadAllVocabularies() {
+       const vocabularies = await fetchVocabularies();
+       availableVocabularies.value = vocabularies;
+     }
+
+     async function loadSectionTemplates() {
+       try {
+         const response = await fetch('/admin/api/section-templates');
+         if (response.ok) {
+           availableSectionTemplates.value = await response.json();
+         }
+       } catch (error) {
+         console.error('Section templates yükleme hatası:', error);
+       }
+     }
+
+     // Vocabulary'e ait termleri yükle
+     async function fetchTermsByVocabulary(vocabularyId) {
+       if (!vocabularyId) return [];
+
+       loadingTerms.value = true;
+       try {
+         const response = await fetch(`/admin/api/vocabularies/${vocabularyId}/terms?limit=500`);
+         if (!response.ok) {
+           throw new Error('API hatası');
+         }
+
+         const result = await response.json();
+         console.log('Terms API response:', result);
+
+         // API response format: { success: true, data: { data: [...], meta: {...} } }
+         if (result.success && result.data && result.data.data) {
+           return result.data.data;
+         }
+         return [];
+       } catch (error) {
+         console.error('Term yükleme hatası:', error);
+         return [];
+       } finally {
+         loadingTerms.value = false;
+       }
+     }
+
+     async function loadTermsForVocabulary(vocabularyId) {
+       const terms = await fetchTermsByVocabulary(vocabularyId);
+
+       if (Array.isArray(terms)) {
+         availableTerms.value = terms.map(term => {
+           const langs = term.data?.langs || {};
+           const title = (langs.tr && langs.tr.title) ||
+                         (langs.en && langs.en.title) ||
+                         Object.values(langs).find(l => l.title)?.title ||
+                         `Term ${term.id}`;
+           return { id: term.id, publish: term.publish, title, data: term.data };
+         });
+         // Cache'e de yaz
+         const newCache = { ...selectedTermsCache.value };
+         availableTerms.value.forEach(t => { newCache[t.id] = t; });
+         selectedTermsCache.value = newCache;
+       } else {
+         availableTerms.value = [];
+       }
+     }
+
+     // Helper functions
+     function generateId() {
+        return Math.floor(Math.random() * 100000000000000000).toString();
+      }
+
+      function createNewSection() {
+        // Desteklenen dilleri al (Object.keys ile array'e çevir)
+        const supportedLangs = Object.keys({{ supported_languages | json_encode | safe }});
+        const langs = {};
+
+        supportedLangs.forEach(lang => {
+          langs[lang] = {
+            title: '',
+            description: ''
+          };
+        });
+
+        // Varsayılan dil için başlık ata
+        const defaultLang = supportedLangs[0] || 'tr';
+        langs[defaultLang].title = `Section ${sections.value.length + 1}`;
+
+        return {
+          id: generateId(),
+          //title: `Section ${sections.value.length + 1}`,
+          langs: langs,
+          template: '',
+          order: sections.value.length + 1,
+          source: {
+            type: 'automatic',
+            content_type: '',
+            vocabulary_id: '',
+            selection_type: 'automatic',
+            limit: 6,
+            order_by: 'created_at_desc',
+            filters: [],
+            selected_items: [],
+            selected_terms: []
+          },
+          settings: {},
+          active: true
+        };
+      }
+
+     function getContentById(id) {
+       // Önce cache'e bak, sonra availableContent'e
+       if (selectedItemsCache.value[id]) return selectedItemsCache.value[id];
+       return availableContent.value.find(item => item.id === id);
+     }
+
+     // Seçili item'ları cache'e yükle (cache'de olmayanları API'den çek)
+     async function fetchSelectedItemsToCache(ids) {
+       const missing = ids.filter(id => !selectedItemsCache.value[id]);
+       await Promise.all(missing.map(async (id) => {
+         try {
+           const res = await fetch(`/admin/api/contents/${id}`);
+           if (!res.ok) return;
+           const item = await res.json();
+           const langs = item.data?.langs || {};
+           const title = (langs.tr && langs.tr.title) ||
+                         (langs.en && langs.en.title) ||
+                         Object.values(langs).find(l => l.title)?.title ||
+                         `İçerik ${id}`;
+           selectedItemsCache.value = {
+             ...selectedItemsCache.value,
+             [id]: { id: item.id, title, type: item.content_type }
+           };
+         } catch (e) {
+           console.error('Content fetch error for id', id, e);
+         }
+       }));
+     }
+
+      function getTermById(id) {
+        if (selectedTermsCache.value[id]) return selectedTermsCache.value[id];
+        return availableTerms.value.find(term => term.id === id);
+      }
+
+      // Section başlığını çok dilli olarak al
+      function getSectionTitle(section) {
+        if (!section) return '';
+
+        // Desteklenen dilleri al (Object.keys ile array'e çevir)
+        const supportedLangs = Object.keys({{ supported_languages | json_encode | safe }});
+        const defaultLang = supportedLangs[0] || 'tr';
+
+        // Çok dilli başlığı kontrol et
+        if (section.langs && section.langs[defaultLang] && section.langs[defaultLang].title) {
+          return section.langs[defaultLang].title;
+        }
+
+        // Başlık yoksa sadece sıra numarası göster
+        return `Bölüm ${section.order}`;
+      }
+
+     // Manuel term seçimi yönetimi
+     function removeSelectedTerm(index) {
+       if (selectedSection.value) {
+         selectedSection.value.source.selected_terms.splice(index, 1);
+       }
+     }
+
+     // Section order management
+     function updateSectionOrder() {
+       if (selectedSection.value) {
+         // Sections'ı order'a göre sırala
+         sections.value.sort((a, b) => a.order - b.order);
+       }
+     }
+
+     // Section management
+     function addSection() {
+       const newSection = createNewSection();
+       sections.value.push(newSection);
+       selectedSectionId.value = newSection.id;
+
+       // Auto-save kaldırıldı - kullanıcı manuel kaydet butonunu kullanacak
+     }
+
+     function removeSection(index) {
+       if (!confirm('Bu bölümü silmek istediğinizden emin misiniz?')) {
+         return;
+       }
+
+       const sectionToRemove = sections.value[index];
+       sections.value.splice(index, 1);
+
+       // Seçili bölüm silindiyse seçimi temizle
+       if (selectedSectionId.value === sectionToRemove.id) {
+         selectedSectionId.value = sections.value.length > 0 ? sections.value[0].id : null;
+       }
+
+       // Sıraları yeniden düzenle
+       sections.value.forEach((section, idx) => {
+         section.order = idx + 1;
+       });
+
+       // Auto-save kaldırıldı - kullanıcı manuel kaydet butonunu kullanacak
+     }
+
+     async function selectSection(sectionId) {
+       console.log('Selecting section:', sectionId);
+       selectedSectionId.value = sectionId;
+
+       // Seçilen section'ın vocabulary ayarlarını kontrol et ve gerekirse termleri yükle
+       const section = sections.value.find(s => s.id === sectionId);
+       console.log('Found section:', section);
+
+       if (section && section.source) {
+         console.log('Section source:', section.source);
+
+         // Eksik alanları tamamla
+         if (!section.source.selected_terms) {
+           section.source.selected_terms = [];
+         }
+         if (!section.source.selection_type) {
+           section.source.selection_type = 'automatic';
+         }
+
+         // UI state'i güncelle
+         updateUIStateFromSection();
+
+         // Eğer vocabulary source ve manuel seçim modundaysa termleri yükle
+         if (section.source.type === 'vocabulary' &&
+             section.source.selection_type === 'manual' &&
+             section.source.vocabulary_id) {
+           console.log('Loading terms for vocabulary:', section.source.vocabulary_id);
+           loadTermsForVocabulary(section.source.vocabulary_id);
+         }
+         // Eğer manuel content seçim modundaysa içerikleri yükle
+         else if (section.source.type === 'manual') {
+           console.log('Loading content for manual section, content_type:', section.source.content_type);
+
+           // Eğer content_type boşsa ve seçili item'lar varsa, otomatik tespit et
+           if (!section.source.content_type && section.source.selected_items && section.source.selected_items.length > 0) {
+             // Önce tüm içerikleri yükle
+             await loadAllContents();
+             // Sonra content_type'ı tespit et
+             updateManualContentType();
+           }
+
+           // Section'ın content_type'ına göre filtreyi ayarla
+           if (section.source.content_type && section.source.content_type !== 'mixed') {
+             manualContentTypeFilter.value = section.source.content_type;
+           } else {
+             manualContentTypeFilter.value = '';
+           }
+           // İçerikleri yükle
+           filterManualContent();
+         }
+         else {
+           // Vocabulary source değilse veya otomatik modsa term listesini temizle
+           console.log('Clearing terms list');
+           availableTerms.value = [];
+         }
+       }
+     }
+
+     // Kaynak türü değiştiğinde (İçerik / Kategori)
+     function onSourceCategoryChange() {
+       if (!selectedSection.value) return;
+
+       if (sourceCategory.value === 'content') {
+         // İçerik seçildi
+         if (selectionMode.value === 'automatic') {
+           selectedSection.value.source = {
+             type: 'automatic',
+             content_type: '',
+             limit: 6,
+             order_by: 'created_at_desc',
+             filters: [],
+             selected_items: [],
+             selected_terms: [],
+             selection_type: 'automatic',
+           };
+         } else {
+           selectedSection.value.source = {
+             type: 'manual',
+             content_type: '',
+             limit: 6,
+             order_by: 'created_at_desc',
+             filters: [],
+             selected_items: [],
+             selected_terms: [],
+             selection_type: 'manual'
+           };
+           filterManualContent();
+         }
+       } else {
+         // Kategori seçildi
+         selectedSection.value.source = {
+           type: 'vocabulary',
+           vocabulary_id: '',
+           selection_type: selectionMode.value,
+           limit: 10,
+           order_by: 'order_id_asc',
+           filters: [],
+           selected_items: [],
+           selected_terms: []
+         };
+         availableTerms.value = [];
+       }
+     }
+
+     // Seçim şekli değiştiğinde (Otomatik / Manuel)
+     async function onSelectionModeChange() {
+       if (!selectedSection.value) return;
+
+       if (sourceCategory.value === 'content') {
+         // İçerik modu
+         if (selectionMode.value === 'automatic') {
+           selectedSection.value.source.type = 'automatic';
+           selectedSection.value.source.selection_type = 'automatic';
+           selectedSection.value.source.selected_items = [];
+         } else {
+           selectedSection.value.source.type = 'manual';
+           selectedSection.value.source.selection_type = 'manual';
+           filterManualContent();
+         }
+       } else {
+         // Kategori modu
+         selectedSection.value.source.selection_type = selectionMode.value;
+
+         if (selectionMode.value === 'manual' && selectedSection.value.source.vocabulary_id) {
+           await loadTermsForVocabulary(selectedSection.value.source.vocabulary_id);
+         } else {
+           availableTerms.value = [];
+         }
+       }
+     }
+
+     // UI state'i section'dan güncelle
+     function updateUIStateFromSection() {
+       if (!selectedSection.value) return;
+
+       const sourceType = selectedSection.value.source.type;
+
+       if (sourceType === 'vocabulary') {
+         sourceCategory.value = 'category';
+         selectionMode.value = selectedSection.value.source.selection_type || 'automatic';
+       } else {
+         sourceCategory.value = 'content';
+         selectionMode.value = sourceType === 'manual' ? 'manual' : 'automatic';
+       }
+     }
+
+     // Template and source type changes (eski - uyumluluk için)
+     function onSourceTypeChange() {
+       // Artık kullanılmıyor, onSourceCategoryChange ve onSelectionModeChange kullanılıyor
+     }
+
+     // İçerik türü değiştiğinde o türdeki içerikleri yükle
+     async function onContentTypeChange() {
+       if (selectedSection.value && selectedSection.value.source.type === 'automatic') {
+         const contentType = selectedSection.value.source.content_type;
+         // İçerik türü seçilmişse o türdeki içerikleri, seçilmemişse tüm içerikleri getir
+         const contents = await fetchContents(contentType, 100);
+         availableContent.value = contents.map(item => ({
+           id: item.id,
+           title: item.title,
+           type: item.content_type
+         }));
+       }
+     }
+
+     // Vocabulary değiştiğinde
+     async function onVocabularyChange() {
+       if (selectedSection.value && selectedSection.value.source.type === 'vocabulary') {
+         const vocabularyId = selectedSection.value.source.vocabulary_id;
+         console.log('Vocabulary changed:', vocabularyId);
+
+         // Seçili termleri temizle (sadece vocabulary değiştiğinde)
+         selectedSection.value.source.selected_terms = [];
+
+         // Eğer manuel seçim modundaysa termleri yükle
+         if (selectionMode.value === 'manual' && vocabularyId) {
+           await loadTermsForVocabulary(vocabularyId);
+         } else {
+           // Otomatik modda term listesini temizle
+           availableTerms.value = [];
+         }
+       }
+     }
+
+     // Vocabulary seçim türü değiştiğinde (artık kullanılmıyor - onSelectionModeChange kullanılıyor)
+     async function onVocabularySelectionTypeChange() {
+       // Uyumluluk için boş bırakıldı
+     }
+
+     // Filter management (for automatic source)
+     function addFilter() {
+       if (selectedSection.value) {
+         selectedSection.value.source.filters.push({
+           key: '',
+           value: ''
+         });
+       }
+     }
+
+     function removeFilter(index) {
+       if (selectedSection.value) {
+         selectedSection.value.source.filters.splice(index, 1);
+       }
+     }
+
+     // Manuel içerik filtresi
+     async function filterManualContent() {
+       const contents = await fetchContents(
+         manualContentTypeFilter.value,
+         100,
+         manualSearchFilter.value
+       );
+       availableContent.value = contents.map(item => ({
+         id: item.id,
+         title: item.title,
+         type: item.content_type
+       }));
+     }
+
+     // Debounced search için
+     let searchTimeout = null;
+     function debounceManualSearch() {
+       clearTimeout(searchTimeout);
+       searchTimeout = setTimeout(() => {
+         filterManualContent();
+       }, 500); // 500ms bekle
+     }
+
+     // Manual content management
+     function removeSelectedItem(index) {
+       if (selectedSection.value) {
+         selectedSection.value.source.selected_items.splice(index, 1);
+         updateManualContentType();
+       }
+     }
+
+     // Manuel seçimde content_type'ı otomatik güncelle
+     async function updateManualContentType() {
+       if (selectedSection.value && selectedSection.value.source.type === 'manual') {
+         const selectedItems = selectedSection.value.source.selected_items;
+         if (selectedItems.length === 0) {
+           selectedSection.value.source.content_type = '';
+           return;
+         }
+
+         // Önce cache'e yükle
+         await fetchSelectedItemsToCache(selectedItems);
+
+         // Seçili içeriklerin türlerini kontrol et
+         const contentTypes = new Set();
+         selectedItems.forEach(itemId => {
+           const content = getContentById(itemId);
+           if (content) {
+             contentTypes.add(content.type);
+           }
+         });
+
+         // Eğer hepsi aynı türdeyse o türü set et, değilse 'mixed' yap
+         if (contentTypes.size === 1) {
+           selectedSection.value.source.content_type = Array.from(contentTypes)[0];
+         } else if (contentTypes.size > 1) {
+           selectedSection.value.source.content_type = 'mixed';
+         } else {
+           selectedSection.value.source.content_type = '';
+         }
+       }
+     }
+
+     // Initialize with empty data
+     function initializeApp() {
+       // Boş başlangıç - kullanıcı manuel olarak bölüm ekleyecek
+       sections.value = [];
+       selectedSectionId.value = null;
+     }
+
+     // Sortable instance
+     let sortableInstance = null;
+     let itemsSortableInstance = null;
+     let termsSortableInstance = null;
+
+      function initSortable() {
+        const el = document.getElementById('sortable-sections');
+        if (el) {
+          // Önce mevcut instance'ı yok et
+          if (sortableInstance) {
+            sortableInstance.destroy();
+            sortableInstance = null;
+          }
+
+          sortableInstance = new Sortable(el, {
+            animation: 150,
+            handle: '.sortable-handle',
+            ghostClass: 'sortable-ghost',
+            onEnd: (evt) => {
+              // Sürüklenen öğeyi ve yeni pozisyonunu al
+              const itemEl = evt.item;
+              const newIndex = evt.newIndex;
+              const oldIndex = evt.oldIndex;
+
+              // Sürüklenen öğeden section ID'yi al
+              const sectionId = parseFloat(itemEl.dataset.id);
+
+              // Öğeyi eski pozisyonundan kaldır
+              const movedSection = sections.value.splice(oldIndex, 1)[0];
+
+              // Yeni pozisyona ekle
+              sections.value.splice(newIndex, 0, movedSection);
+
+              // Tüm section'ların order değerlerini yeni dizi pozisyonlarına göre güncelle
+              sections.value.forEach((section, index) => {
+                section.order = index + 1;
+              });
+
+              console.log('Bölümler yeniden sıralandı:', sections.value.map(s => s.id));
+            }
+          });
+        }
+      }
+
+     // Seçili içerikler için sortable
+     function initItemsSortable() {
+       if (!selectedSection.value) return;
+
+       // Önceki instance'ı temizle
+       if (itemsSortableInstance) {
+         itemsSortableInstance.destroy();
+         itemsSortableInstance = null;
+       }
+
+       const el = document.getElementById('sortable-items-' + selectedSection.value.id);
+       if (el) {
+         itemsSortableInstance = new Sortable(el, {
+           animation: 150,
+           handle: '.sortable-handle',
+           ghostClass: 'sortable-ghost',
+           onEnd: (evt) => {
+             // Yeni sıralamayı al
+             const items = el.querySelectorAll('.sortable-selected-item');
+             const newOrder = Array.from(items).map(item => parseInt(item.dataset.id));
+
+             // selected_items array'ini güncelle
+             selectedSection.value.source.selected_items = newOrder;
+
+             console.log('Selected items reordered:', newOrder);
+           }
+         });
+       }
+     }
+
+     // Seçili termler için sortable
+     function initTermsSortable() {
+       if (!selectedSection.value) return;
+
+       // Önceki instance'ı temizle
+       if (termsSortableInstance) {
+         termsSortableInstance.destroy();
+         termsSortableInstance = null;
+       }
+
+       const el = document.getElementById('sortable-terms-' + selectedSection.value.id);
+       if (el) {
+         termsSortableInstance = new Sortable(el, {
+           animation: 150,
+           handle: '.sortable-handle',
+           ghostClass: 'sortable-ghost',
+           onEnd: (evt) => {
+             // Yeni sıralamayı al
+             const items = el.querySelectorAll('.sortable-selected-term');
+             const newOrder = Array.from(items).map(item => parseInt(item.dataset.id));
+
+             // selected_terms array'ini güncelle
+             selectedSection.value.source.selected_terms = newOrder;
+
+             console.log('Selected terms reordered:', newOrder);
+           }
+         });
+       }
+     }
+
+      // Section seçildiğinde sortable'ları başlat ve rengi parse et
+      watch(selectedSectionId, () => {
+        nextTick(() => {
+          initItemsSortable();
+          initTermsSortable();
+          // Seçilen section'ın arka plan rengini parse et
+          if (selectedSection.value) {
+            parseBackgroundColor(selectedSection.value.background_color);
+          }
+          // Seçili item'ların title'larını cache'e yükle
+          const ids = selectedSection.value?.source?.selected_items || [];
+          if (ids.length > 0) fetchSelectedItemsToCache(ids);
+          // Seçili term'lerin title'larını cache'e yükle
+          const termIds = selectedSection.value?.source?.selected_terms || [];
+          const vocabId = selectedSection.value?.source?.vocabulary_id;
+          if (termIds.length > 0 && vocabId) loadTermsForVocabulary(vocabId);
+        });
+      });
+
+      // Renk veya opaklık değiştiğinde background_color'i güncelle
+      watch([backgroundColorHex, backgroundOpacity], () => {
+        updateBackgroundColor();
+      });
+
+      // selected_items değiştiğinde sortable'ı yeniden başlat
+     watch(() => selectedSection.value?.source?.selected_items?.length, () => {
+       nextTick(() => {
+         initItemsSortable();
+       });
+       // Seçili item'ların title'larını cache'e yükle
+       const ids = selectedSection.value?.source?.selected_items || [];
+       if (ids.length > 0) fetchSelectedItemsToCache(ids);
+     });
+
+      // selected_terms değiştiğinde sortable'ı yeniden başlat
+      watch(() => selectedSection.value?.source?.selected_terms?.length, () => {
+        nextTick(() => {
+          initTermsSortable();
+        });
+      });
+
+      function startapp() {
+       console.log("Homepage Builder App started");
+       loadHomepageSections().then(() => {
+         // Sortable'ı sections yüklendikten sonra başlat
+         setTimeout(initSortable, 100);
+       });
+       loadAllContents(); // Gerçek içerikleri yükle
+       loadAllVocabularies(); // Vocabulary'leri yükle
+       loadSectionTemplates(); // Section template'lerini yükle
+
+       // Debug mode toggle (Ctrl+D)
+       document.addEventListener('keydown', (e) => {
+         if (e.ctrlKey && e.key === 'd') {
+           e.preventDefault();
+           showDebug.value = !showDebug.value;
+         }
+       });
+     }
+
+     // Watch kaldırıldı - otomatik kaydetme yok, sadece manuel kaydet butonu
+
+     onMounted(() => {
+       startapp();
+     });
+
+     return {
+         // State
+         sections,
+         selectedSectionId,
+         selectedSection,
+         showDebug,
+         loadingContent,
+         manualContentTypeFilter,
+         manualSearchFilter,
+         saving,
+         lastSaved,
+         sourceCategory,
+         selectionMode,
+         backgroundColorHex,
+         backgroundOpacity,
+
+         // Mock data
+        availableContent,
+        availableVocabularies,
+        loadingVocabularies,
+        availableTerms,
+        loadingTerms,
+        availableSectionTemplates,
+        selectedItemsCache,
+        selectedTermsCache,
+
+        // Computed
+        selectedSection,
+
+        // Methods
+        addSection,
+        removeSection,
+        selectSection,
+        updateSectionOrder,
+        onSourceTypeChange,
+        onSourceCategoryChange,
+        onSelectionModeChange,
+        onContentTypeChange,
+        onVocabularyChange,
+        onVocabularySelectionTypeChange,
+        addFilter,
+        removeFilter,
+        removeSelectedItem,
+        removeSelectedTerm,
+        updateManualContentType,
+        updateUIStateFromSection,
+         getContentById,
+         getTermById,
+         getSectionTitle,
+         loadAllContents,
+        loadAllVocabularies,
+        loadTermsForVocabulary,
+        fetchContents,
+        fetchVocabularies,
+        fetchTermsByVocabulary,
+        filterManualContent,
+        debounceManualSearch,
+        fetchSelectedItemsToCache,
+
+        // Homepage CRUD
+        loadHomepageSections,
+        saveHomepageSections,
+        manualSave,
+
+        // Utils
+        JSON
+     };
+   },
+ });
+ app.mount('#homeapp');
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends "admin/settings/layout.html" %}
+
+{% block settings_content %}
+<form method="POST" action="/admin/settings/advanced" enctype="multipart/form-data">
+
+  <!-- Para Birimi Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-currency-exchange me-2"></i>Para Birimi Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <!-- Varsayılan Para Birimi -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Varsayılan Para Birimi</label>
+          <select class="form-select" name="default_currency">
+            <option value="TRY" {% if default_currency == "TRY" %}selected{% endif %}>TRY - Türk Lirası</option>
+            <option value="USD" {% if default_currency == "USD" %}selected{% endif %}>USD - Amerikan Doları</option>
+            <option value="EUR" {% if default_currency == "EUR" %}selected{% endif %}>EUR - Euro</option>
+            <option value="GBP" {% if default_currency == "GBP" %}selected{% endif %}>GBP - İngiliz Sterlini</option>
+            <option value="CHF" {% if default_currency == "CHF" %}selected{% endif %}>CHF - İsviçre Frangı</option>
+            <option value="AUD" {% if default_currency == "AUD" %}selected{% endif %}>AUD - Avustralya Doları</option>
+            <option value="CAD" {% if default_currency == "CAD" %}selected{% endif %}>CAD - Kanada Doları</option>
+            <option value="AZN" {% if default_currency == "AZN" %}selected{% endif %}>AZN - Azerbaycan Manatı</option>
+            <option value="JPY" {% if default_currency == "JPY" %}selected{% endif %}>JPY - Japon Yeni</option>
+          </select>
+          <div class="form-text">Kullanıcı tercih yapmadığında kullanılacak para birimi</div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Desteklenen Para Birimleri -->
+      <h6 class="fw-bold mb-3"><i class="bi bi-globe me-2"></i>Desteklenen Para Birimleri</h6>
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Müşterilerin fiyatları görebileceği para birimlerini seçin. Seçilen para birimleri frontend'de dropdown olarak gösterilecektir.
+      </div>
+
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="TRY" id="currency_TRY" {% if supported_currency_TRY %}checked{% endif %}>
+            <label class="form-check-label" for="currency_TRY">
+              <span class="badge bg-light text-dark me-1">TRY</span> Türk Lirası
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="USD" id="currency_USD" {% if supported_currency_USD %}checked{% endif %}>
+            <label class="form-check-label" for="currency_USD">
+              <span class="badge bg-light text-dark me-1">USD</span> Amerikan Doları
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="EUR" id="currency_EUR" {% if supported_currency_EUR %}checked{% endif %}>
+            <label class="form-check-label" for="currency_EUR">
+              <span class="badge bg-light text-dark me-1">EUR</span> Euro
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="GBP" id="currency_GBP" {% if supported_currency_GBP %}checked{% endif %}>
+            <label class="form-check-label" for="currency_GBP">
+              <span class="badge bg-light text-dark me-1">GBP</span> İngiliz Sterlini
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="CHF" id="currency_CHF" {% if supported_currency_CHF %}checked{% endif %}>
+            <label class="form-check-label" for="currency_CHF">
+              <span class="badge bg-light text-dark me-1">CHF</span> İsviçre Frangı
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="AUD" id="currency_AUD" {% if supported_currency_AUD %}checked{% endif %}>
+            <label class="form-check-label" for="currency_AUD">
+              <span class="badge bg-light text-dark me-1">AUD</span> Avustralya Doları
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="CAD" id="currency_CAD" {% if supported_currency_CAD %}checked{% endif %}>
+            <label class="form-check-label" for="currency_CAD">
+              <span class="badge bg-light text-dark me-1">CAD</span> Kanada Doları
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="AZN" id="currency_AZN" {% if supported_currency_AZN %}checked{% endif %}>
+            <label class="form-check-label" for="currency_AZN">
+              <span class="badge bg-light text-dark me-1">AZN</span> Azerbaycan Manatı
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="supported_currencies" value="JPY" id="currency_JPY" {% if supported_currency_JPY %}checked{% endif %}>
+            <label class="form-check-label" for="currency_JPY">
+              <span class="badge bg-light text-dark me-1">JPY</span> Japon Yeni
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Müşteriler bu para birimleri arasından tercih yapabilir.</div>
+
+    </div>
+  </div>
+
+  <!-- Default Content Ayarları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-house-door me-2"></i>Default Content Ayarları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Bu ayarlar sistemin varsayılan içeriklerini belirler.
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Ana Sayfa Content ID</label>
+          <input type="number"
+                 class="form-control"
+                 name="default_home_content_id"
+                 value="{{ default_home_content_id }}"
+                 min="1">
+          <div class="form-text">Ana sayfada gösterilecek varsayılan content'in ID'si. Bu content'in sub_contents'leri de yüklenecektir.
+            sub_contents  Sayfa, Ürün, Blog, Haber gibi içerikleri taşıyabilir</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Vocabulary ID Tanımları -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0 fw-bold">
+        <i class="bi bi-diagram-3 me-2"></i>Sistem Vocabulary ID Tanımları
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Bu ayarlar sistemin hangi vocabulary'leri kullanacağını belirler. Değiştirmeden önce taxonomy yapısını kontrol edin.
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Navbar Menü</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_navbar_menu"
+                 value="{{ vocab_navbar_menu }}"
+                 min="1">
+          <div class="form-text">Üst menüde gösterilecek vocabulary ID</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Footer Menü</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_footer_menu"
+                 value="{{ vocab_footer_menu }}"
+                 min="1">
+          <div class="form-text">Alt menüde gösterilecek vocabulary ID</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Ürün Kategorileri</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_product_categories"
+                 value="{{ vocab_product_categories }}"
+                 min="1">
+          <div class="form-text">E-ticaret ürün kategorileri vocabulary ID</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Blog Kategorileri</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_blog_categories"
+                 value="{{ vocab_blog_categories }}"
+                 min="1">
+          <div class="form-text">Blog yazıları kategorileri vocabulary ID</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Haber Kategorileri</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_news_categories"
+                 value="{{ vocab_news_categories }}"
+                 min="1">
+          <div class="form-text">Haber içerikleri kategorileri vocabulary ID</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Sayfa Kategorileri</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_page_categories"
+                 value="{{ vocab_page_categories }}"
+                 min="1">
+          <div class="form-text">Statik sayfalar kategorileri vocabulary ID</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Etiketler</label>
+          <input type="number"
+                 class="form-control"
+                 name="vocab_tags_categories"
+                 value="{{ vocab_tags_categories }}"
+                 min="1">
+          <div class="form-text">Genel etiketler vocabulary ID</div>
+        </div>
+
+
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-bold">Öntanımlı İletişim Formu</label>
+          <input type="number"
+                 class="form-control"
+                 name="default_contact_form"
+                 value="{{ default_contact_form }}"
+                 min="1">
+          <div class="form-text">Öntanımlı iletişim form ID</div>
+        </div>
+
+      </div>
+
+      <div class="row">
+
+
+
+      </div>
+
+    </div>
+  </div>
+
+
+
+
+  <!-- Save Button -->
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save"></i> </i>Ayarları Kaydet
+    </button>
+  </div>
+
+</form>
+{% endblock %}

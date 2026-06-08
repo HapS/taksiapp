@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="{{ current_language | default(value='tr') }}" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ settings.site_favicon | safe }}">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <!-- Vue.js 3 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- Theme Script - Inline and optimized -->
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+
+
+    <!-- Preload and async load Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link href="/static/css/base.css" rel="stylesheet">
+
+    <!-- custom css js start -->
+    {{ settings.analytics_code | safe }}
+    {{ settings.custom_css | safe }}
+    {{ settings.custom_js | safe }}
+
+    <!-- custom css js end -->
+
+
+    {% block header %}{% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        {% include "@@theme@@/_partials/navbar.html" %}
+    </header>
+
+    <main class="main mt-3" id="main-content" {% block main_style %}{% endblock %}>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="mt-auto mt-5 bg-body-secondary border-top border-3 border-secondary-subtle py-4 footer-bg">
+        {% include "@@theme@@/_partials/footer.html" %}
+    </footer>
+
+    <!-- Bootstrap JS - Normal load for proper functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+    <script>
+        // Theme toggle functionality
+        const getStoredTheme = () => localStorage.getItem('theme');
+        const setStoredTheme = theme => localStorage.setItem('theme', theme);
+        const getPreferredTheme = () => {
+            const storedTheme = getStoredTheme();
+            if (storedTheme) return storedTheme;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+
+        const setTheme = theme => {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            updateThemeIcon(theme);
+        };
+
+        const updateThemeIcon = theme => {
+            const icon = document.querySelector('#theme-toggle i');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            }
+        };
+
+        // Update icon on page load (theme already set in head)
+        updateThemeIcon(getPreferredTheme());
+
+        // Theme toggle button handler
+        const toggleTheme = () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setStoredTheme(newTheme);
+            setTheme(newTheme);
+        };
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            const storedTheme = getStoredTheme();
+            if (!storedTheme) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        const navbarTop = document.querySelector('.navbar-top-element');
+        const body = document.body;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            const isMobile = window.innerWidth < 768; // Bootstrap md breakpoint
+
+            if (currentScroll > 50) {
+                // Scroll yapıldığında navbar-top-element'i gizle (sadece desktop'ta)
+                if (navbarTop && !isMobile) {
+                    navbarTop.classList.add('hidden');
+                }
+                // Body padding'i azalt (sadece desktop'ta)
+                if (!isMobile) {
+                    body.style.paddingTop = '56px';
+                }
+                navbar.classList.add('scrolled');
+            } else {
+                // Sayfa en üstteyken navbar-top-element'i göster (sadece desktop'ta)
+                if (navbarTop && !isMobile) {
+                    navbarTop.classList.remove('hidden');
+                }
+                // Body padding'i artır (sadece desktop'ta)
+                if (!isMobile) {
+                    body.style.paddingTop = '98px';
+                }
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Add active class to current page nav link
+        const currentPath = window.location.pathname.replace(/\/$/, ''); // Remove trailing slash
+        const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+
+        navLinks.forEach(link => {
+            const linkPath = new URL(link.href).pathname.replace(/\/$/, '');
+
+            // Exact match only - simple and reliable
+            if (currentPath === linkPath) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+
+
+
+
+    {% block js %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</body>
+
+</html>

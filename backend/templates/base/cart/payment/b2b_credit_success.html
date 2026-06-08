@@ -1,0 +1,176 @@
+{% extends "@@theme@@/base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Başarı Mesajı -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                    </div>
+                    <h2 class="text-success mb-3">
+                        {{ t(key="Siparişiniz_Başarıyla_Alındı!", default="Siparişiniz Başarıyla Alındı!", lang=current_language) }}
+                    </h2>
+                    <p class="lead text-muted mb-4">
+                        {{ t(key="B2B_kredili_ödemeniz_başarıyla_tamamlandı.", default="B2B kredili ödemeniz başarıyla tamamlandı.", lang=current_language) }}
+                    </p>
+
+                    {% if cart.order_id %}
+                    <div class="alert alert-info d-inline-block">
+                        <strong>{{ t(key="Sipariş_Numarası:", default="Sipariş Numarası:", lang=current_language) }}</strong>
+                        <span class="fs-5 fw-bold">#{{ cart.order_id }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Şirket Kredi Bilgileri -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        {{ t(key="Şirket_Kredi_Durumu", default="Şirket Kredi Durumu", lang=current_language) }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-building me-2"></i>
+                            {{ company_name }}
+                        </h6>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">{{ t(key="Kredi_Limiti", default="Kredi Limiti", lang=current_language) }}</small>
+                                <div class="fs-5 fw-bold">{{ credit_limit }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">{{ t(key="Kullanılan_Kredi", default="Kullanılan Kredi", lang=current_language) }}</small>
+                                <div class="fs-5 fw-bold text-danger">{{ used_credit }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">{{ t(key="Kullanılabilir_Kredi", default="Kullanılabilir Kredi", lang=current_language) }}</small>
+                                <div class="fs-5 fw-bold text-success">{{ available_credit }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            {{ t(key="Bu_sipariş_tutarı_şirketinizin_kullanılan_kredisine_eklenmiştir._Ödeme_yaptığınızda_kredi_limitiniz_yeniden_artacaktır.", default="Bu sipariş tutarı şirketinizin kullanılan kredisine eklenmiştir. Ödeme yaptığınızda kredi limitiniz yeniden artacaktır.", lang=current_language) }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sipariş Özeti -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart-check me-2"></i>
+                        {{ t(key="Sipariş_Özeti", default="Sipariş Özeti", lang=current_language) }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Ürünler -->
+                    <div class="mb-3">
+                        <h6 class="mb-3">{{ t(key="Ürünler", default="Ürünler", lang=current_language) }}</h6>
+                        {% for item in cart_items %}
+                        <div class="d-flex align-items-center mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <img src="{{ item.product_cover }}" alt="{{ item.product_title }}"
+                                 class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ item.product_title }}</div>
+                                {% if item.variant_display %}
+                                <small class="text-muted">{{ item.variant_display }}</small>
+                                {% endif %}
+                                <div class="small text-muted">
+                                    {{ t(key="Adet:", default="Adet:", lang=current_language) }} {{ item.quantity }} × {{ item.price_formatted }}
+                                </div>
+                            </div>
+                            <div class="fw-bold">{{ item.total_formatted }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Toplam -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ t(key="Ürünler_Toplamı:", default="Ürünler Toplamı:", lang=current_language) }}</span>
+                            <span class="fw-bold">{{ product_total_formatted }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ t(key="Kargo:", default="Kargo:", lang=current_language) }}</span>
+                            {% if is_free_shipping %}
+                            <span class="text-success fw-bold">{{ t(key="Ücretsiz", default="Ücretsiz", lang=current_language) }}</span>
+                            {% else %}
+                            <span class="fw-bold">{{ cargo_price_formatted }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top">
+                            <span class="fs-5 fw-bold">{{ t(key="Genel_Toplam:", default="Genel Toplam:", lang=current_language) }}</span>
+                            <span class="fs-5 fw-bold text-primary">{{ total_amount }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Ödeme Yöntemi -->
+                    <div class="alert alert-info mt-3 mb-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-credit-card-2-front fs-4 me-3"></i>
+                            <div>
+                                <strong>{{ t(key="Ödeme_Yöntemi:", default="Ödeme Yöntemi:", lang=current_language) }}</strong>
+                                <div>{{ payment_method }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bilgilendirme -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ t(key="Önemli_Bilgiler", default="Önemli Bilgiler", lang=current_language) }}
+                    </h6>
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            {{ t(key="Siparişiniz_hazırlanmaya_başlandı_ve_en_kısa_sürede_kargoya_verilecektir.", default="Siparişiniz hazırlanmaya başlandı ve en kısa sürede kargoya verilecektir.", lang=current_language) }}
+                        </li>
+                        <li class="mb-2">
+                            {{ t(key="Sipariş_durumunuzu_'Siparişlerim'_sayfasından_takip_edebilirsiniz.", default="Sipariş durumunuzu 'Siparişlerim' sayfasından takip edebilirsiniz.", lang=current_language) }}
+                        </li>
+                        <li class="mb-2">
+                            {{ t(key="Kargo_takip_numaranız_hazır_olduğunda_size_bildirilecektir.", default="Kargo takip numaranız hazır olduğunda size bildirilecektir.", lang=current_language) }}
+                        </li>
+                        <li>
+                            {{ t(key="Ödeme_vadesi_ve_detayları_için_şirket_yetkilinizle_iletişime_geçebilirsiniz.", default="Ödeme vadesi ve detayları için şirket yetkilinizle iletişime geçebilirsiniz.", lang=current_language) }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Aksiyonlar -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="/my-account/orders" class="btn btn-primary btn-lg">
+                    <i class="bi bi-bag-check me-2"></i>
+                    {{ t(key="Siparişlerim", default="Siparişlerim", lang=current_language) }}
+                </a>
+                <a href="/{{ current_language }}/products" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-shop me-2"></i>
+                    {{ t(key="Alışverişe_Devam_Et", default="Alışverişe Devam Et", lang=current_language) }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

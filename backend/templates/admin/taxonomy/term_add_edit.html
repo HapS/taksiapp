@@ -1,0 +1,2122 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if term_id %}Term Düzenle{% else %}Yeni Term{% endif %} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-2 mb-4" id="termForm">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <div class="w-100">
+      <h1 class="h4 mb-0 pb-0 fw-bolder">
+        [[ isEditing ? 'Kategori Düzenle' : 'Yeni Kategori Ekle' ]]
+      </h1>
+      <nav aria-label="breadcrumb" class="mb-0 d-flex align-items-center w-100" style="height: 30px">
+        <ol class="breadcrumb mb-0 flex-grow-1" style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <li class="breadcrumb-item">
+            <a href="/admin/taxonomy">Kategori Grupları</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a :href="`/admin/taxonomy/vocabularies/${vocabularyId}/terms`" title="Ana kategorileri görüntüle">
+              <i class="bi bi-house-door"></i> [[ vocabularyTitle ]]
+            </a>
+          </li>
+          <!-- API-generated breadcrumbs for parent hierarchy -->
+          <li v-for="(breadcrumb, index) in breadcrumbs" :key="breadcrumb.id" class="breadcrumb-item">
+            <a :href="breadcrumb.url" :title="breadcrumb.has_children ? `${breadcrumb.children_count} alt eleman var` : 'Bu seviyedeki elemanları görüntüle'">
+              <i :class="breadcrumb.has_children ? 'bi bi-folder' : 'bi bi-folder-open'"></i>
+              [[ breadcrumb.title ]]
+              <small v-if="breadcrumb.has_children" class="text-muted ms-1">([[ breadcrumb.children_count ]])</small>
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            [[ isEditing ? 'Düzenle' : 'Yeni Kategori Ekle' ]]
+          </li>
+        </ol>
+
+        <button
+          type="button"
+          class="btn btn-success d-flex align-items-center ms-auto"
+          @click="saveTerm(silent=false)"
+          :disabled="saving"
+        >
+          <span
+            v-if="saving"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          <i class="bi bi-save2 me-1"></i> [[ isEditing ? 'Güncelle' : 'Kaydet' ]]
+        </button>
+
+      </nav>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div v-if="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <!-- Content Form -->
+  <div v-else class="row">
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="m-0"><i class="bi bi-tags"></i> Kategori İçeriği</h5>
+        </div>
+        <div class="card-body">
+          <!-- Multi-language tabs -->
+          <ul class="nav nav-tabs" id="langTabs" role="tablist">
+            <li
+              v-for="(langName, langCode) in supportedLanguages"
+              :key="langCode"
+              class="nav-item"
+              role="presentation"
+            >
+              <button
+                class="nav-link"
+                :class="{ active: activeTab === langCode }"
+                @click="activeTab = langCode"
+                type="button"
+              >
+                [[ langName ]]
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content mt-3" id="langTabContent">
+            <div
+              v-for="(langName, langCode) in supportedLanguages"
+              :key="langCode"
+              class="tab-pane fade"
+              :class="{ 'show active': activeTab === langCode }"
+              role="tabpanel"
+            >
+              <div class="mb-3">
+                <label class="form-label">Menü Adı ([[ langName ]]) *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  :class="{ 'is-invalid': titleErrors[langCode] }"
+                  v-model="form.data[langCode].title"
+                  @input="validateTitleUnique(langCode)"
+                  required
+                />
+                <div class="invalid-feedback" v-if="titleErrors[langCode]">[[ titleErrors[langCode] ]]</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Açıklama ([[ langName ]])</label>
+                <textarea
+                  class="form-control"
+                  rows="3"
+                  v-model="form.data[langCode].description"
+                ></textarea>
+              </div>
+
+              <!-- Media Management -->
+              <div class="mb-3">
+                <hr class="my-4">
+                <h6 class="mb-3">
+                  <i class="bi bi-images"></i> Medya Dosyaları ([[ langName ]])
+                </h6>
+
+                <!-- Upload Section -->
+                <div class="card mb-3" v-if="isEditing">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <div class="mb-3">
+                          <label class="form-label fw-semibold">Dosya Yükle</label>
+                          <input type="file" class="form-control" :id="`fileInput-${langCode}`"
+                              @change="handleMediaUpload($event, langCode)"
+                              accept="image/*,video/*,audio/*,.webp,.pdf,.doc,.docx" multiple>
+                          <div class="form-text">Resim, video, ses, PDF ve Word dosyaları yükleyebilirsiniz</div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-semibold">veya</label>
+                        <button type="button" class="btn btn-outline-primary w-100" @click="openMediaLibrary(langCode)">
+                          <i class="bi bi-images"></i> Medya Kütüphanesinden Seç
+                        </button>
+                        <div class="form-text">Seçtiğiniz dosyanın bu kategoriye özel kopyasını oluşturur</div>
+                      </div>
+                    </div>
+
+                    <div v-if="uploadingMedia[langCode]" class="mb-2">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%">
+                          Yükleniyor...
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="alert alert-info mb-3">
+                  <i class="bi bi-info-circle"></i> Medya yüklemek için önce kategoriyi kaydetmelisiniz.
+                </div>
+
+                <!-- Media List - Grouped by Type -->
+                <div v-if="form.data[langCode].media && (groupedMedia(langCode).cover.length > 0 || groupedMedia(langCode).icon.length > 0 || groupedMedia(langCode).video.length > 0 || groupedMedia(langCode).gallery.length > 0 || groupedMedia(langCode).document.length > 0)">
+                  <!-- Cover Images -->
+                  <div v-if="groupedMedia(langCode).cover.length > 0" class="mb-4">
+                    <h6 class="mb-2"><i class="bi bi-image"></i> Kapak Görselleri</h6>
+                    <div class="row g-3" :id="`sortable-cover-${langCode}`" :data-lang="langCode" data-type="cover">
+                      <div v-for="(media, index) in groupedMedia(langCode).cover" :key="media.id" :data-id="media.id"
+                          class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                        <div class="card h-100 media-thumbnail">
+                          <div class="position-relative" @click="openMediaModal(langCode, 'cover', index)" style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="media.url"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center" style="height: 100px;">
+                              <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]" class="fs-1"></i>
+                              <small class="text-muted mt-2">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                              <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1" style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                              <span class="badge bg-primary">Kapak</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                              <button @click.stop="removeMedia(langCode, 'cover', index)" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                              [[ media.title || media.file_name ]]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Icon Images -->
+                  <div v-if="groupedMedia(langCode).icon.length > 0" class="mb-4">
+                    <h6 class="mb-2"><i class="bi bi-star"></i> İkon Görselleri</h6>
+                    <div class="row g-3" :id="`sortable-icon-${langCode}`" :data-lang="langCode" data-type="icon">
+                      <div v-for="(media, index) in groupedMedia(langCode).icon" :key="media.id" :data-id="media.id"
+                          class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                        <div class="card h-100 media-thumbnail">
+                          <div class="position-relative" @click="openMediaModal(langCode, 'icon', index)" style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="media.url"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center" style="height: 100px;">
+                              <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]" class="fs-1"></i>
+                              <small class="text-muted mt-2">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                              <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1" style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                              <span class="badge bg-success">İkon</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                              <button @click.stop="removeMedia(langCode, 'icon', index)" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                              [[ media.title || media.file_name ]]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Videos -->
+                  <div v-if="groupedMedia(langCode).video.length > 0" class="mb-4">
+                    <h6 class="mb-2"><i class="bi bi-play-circle"></i> Videolar</h6>
+                    <div class="row g-3" :id="`sortable-video-${langCode}`" :data-lang="langCode" data-type="video">
+                      <div v-for="(media, index) in groupedMedia(langCode).video" :key="media.id" :data-id="media.id"
+                          class="col-lg-2 col-md-2 col-sm-2 col-2 sortable-item">
+                        <div class="card h-100 media-thumbnail">
+                          <div class="position-relative" @click="openMediaModal(langCode, 'video', index)" style="cursor: pointer;">
+                            <div class="card-img-top bg-dark d-flex flex-column align-items-center justify-content-center" style="height: 100px;">
+                              <i class="bi bi-play-circle fs-1 text-white"></i>
+                              <small class="text-white mt-2 text-truncate px-2" style="max-width: 100%;">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                              <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1" style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                              <span class="badge bg-danger">Video</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                              <button @click.stop="removeMedia(langCode, 'video', index)" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                              [[ media.title || media.file_name ]]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gallery Images -->
+                  <div v-if="groupedMedia(langCode).gallery.length > 0" class="mb-4">
+                    <h6 class="mb-2"><i class="bi bi-images"></i> Galeri Görselleri</h6>
+                    <div class="row g-3" :id="`sortable-gallery-${langCode}`" :data-lang="langCode" data-type="gallery">
+                      <div v-for="(media, index) in groupedMedia(langCode).gallery" :key="media.id" :data-id="media.id"
+                          class="col-lg-2 col-md-2 col-sm-2 col-6 sortable-item">
+                        <div class="card h-100 media-thumbnail">
+                          <div class="position-relative" @click="openMediaModal(langCode, 'gallery', index)" style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="media.url"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center" style="height: 100px;">
+                              <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]" class="fs-1"></i>
+                              <small class="text-muted mt-2 text-truncate px-2" style="max-width: 100%;">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                              <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1" style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                              <span class="badge bg-info">Galeri</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                              <button @click.stop="removeMedia(langCode, 'gallery', index)" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                              [[ media.title || media.file_name ]]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Document Files -->
+                  <div v-if="groupedMedia(langCode).document.length > 0" class="mb-4">
+                    <h6 class="mb-2"><i class="bi bi-file-earmark-text"></i> Dökümanlar</h6>
+                    <div class="row g-3" :id="`sortable-document-${langCode}`" :data-lang="langCode" data-type="document">
+                      <div v-for="(media, index) in groupedMedia(langCode).document" :key="media.id" :data-id="media.id"
+                          class="col-lg-2 col-md-2 col-sm-4 col-2 sortable-item">
+                        <div class="card h-100 media-thumbnail">
+                          <div class="position-relative" @click="openMediaModal(langCode, 'document', index)" style="cursor: pointer;">
+                            <img v-if="media.mime_type && media.mime_type.startsWith('image/')" :src="media.url"
+                                class="card-img-top" style="height: 100px; object-fit: cover;" :alt="media.file_name">
+                            <div v-else class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center" style="height: 100px;">
+                              <i :class="[getMediaIcon(media.mime_type), getMediaIconColor(media.mime_type)]" class="fs-1"></i>
+                              <small class="text-muted mt-2 text-truncate px-2" style="max-width: 100%;">[[ media.file_name ]]</small>
+                            </div>
+                            <span class="position-absolute top-0 start-0 m-2 sortable-handle">
+                              <i class="bi bi-arrows-move text-white bg-dark bg-opacity-50 rounded p-1" style="cursor: move;" title="Sürükle"></i>
+                            </span>
+                            <span class="position-absolute top-0 end-0 m-2">
+                              <span class="badge bg-secondary">Döküman</span>
+                            </span>
+                            <div class="position-absolute bottom-0 end-0 m-2 d-flex gap-1">
+                              <button @click.stop="removeMedia(langCode, 'document', index)" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div class="card-body p-2">
+                            <p class="card-text small mb-0 text-truncate" :title="media.title || media.file_name">
+                              [[ media.title || media.file_name ]]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="alert alert-info">
+                  <i class="bi bi-info-circle"></i> Bu dil için henüz medya dosyası eklenmemiş.
+                </div>
+              </div>
+
+              <!-- Menu URL for this language (only for menu vocabulary) -->
+              <div class="mb-3">
+                <label class="form-label">Manuel URL ([[ langName ]])</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="form.data[langCode].menu_url"
+                  :placeholder="langCode === 'tr' ? '/haber' : langCode === 'en' ? '/news' : '/nachrichten'"
+                />
+                <small class="text-muted">Bu dil için özel URL (opsiyonel)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <a :href="`/admin/taxonomy/vocabularies/${vocabularyId}/terms`" class="btn btn-sm btn-secondary me-2">
+              <i class="bi bi-arrow-left"></i> Geri Dön
+            </a>
+            <button
+              type="button"
+              class="btn btn-sm btn-success"
+              @click="saveTerm(silent=false)"
+              :disabled="saving"
+            >
+              <span
+                v-if="saving"
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+              ></span>
+              <i class="bi bi-check-lg"></i> [[ isEditing ? 'Güncelle' : 'Kaydet' ]]
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3">
+      <!-- Parent Category Selection -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0">
+            <i class="bi bi-diagram-3"></i> Üst Kategori
+          </h6>
+        </div>
+        <div class="card-body">
+          <div v-if="selectedParentTerm" class="alert alert-info">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong>Üst Menü:</strong>
+                <p class="mb-0 mt-1">
+                  <i class="bi bi-arrow-return-right"></i>
+                  [[ getTermTitle(selectedParentTerm) ]]
+                </p>
+              </div>
+              <button class="btn btn-sm btn-outline-danger" @click="removeParent" title="Üst Kategoriyi Kaldır">
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-muted small mb-2">
+            <i class="bi bi-info-circle"></i> Bu bir ana kategoridir
+          </div>
+          <button class="btn btn-sm btn-outline-primary w-100" @click="showParentModal">
+            <i class="bi bi-folder-plus"></i>
+            [[ selectedParentTerm ? 'Üst Kategoriyi Değiştir' : 'Üst Kategori Seç' ]]
+          </button>
+        </div>
+      </div>
+
+      <!-- Publish Settings -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0"><i class="bi bi-gear"></i> Yayın Ayarları</h6>
+        </div>
+        <div class="card-body">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" v-model="form.publish" id="publishSwitch" />
+            <label class="form-check-label" for="publishSwitch">
+              <strong>
+                <span v-if="form.publish">Yayında</span>
+                <span v-else>Taslak</span>
+              </strong>
+            </label>
+            <div class="text-muted small">
+              <span v-if="form.publish">Bu kategori sitede görünür olacak</span>
+              <span v-else>Bu kategori sitede görünmeyecek</span>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" v-model="form.lock" id="lockSwitch" />
+            <label class="form-check-label" for="lockSwitch">
+              <strong>
+                <i class="bi bi-lock"></i>
+                <span v-if="form.lock">Kilitli</span>
+                <span v-else>Kilitsiz</span>
+              </strong>
+            </label>
+            <div class="text-muted small">
+              <span v-if="form.lock">Bu kategori düzenlenemez veya silinemez</span>
+              <span v-else>Bu kategori düzenlenebilir ve silinebilir</span>
+            </div>
+          </div>
+
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="form.hide" id="hideSwitch" />
+            <label class="form-check-label" for="hideSwitch">
+              <strong>
+                <i class="bi bi-eye-slash"></i>
+                <span v-if="form.hide">Gizli</span>
+                <span v-else>Görünür</span>
+              </strong>
+            </label>
+            <div class="text-muted small">
+              <span v-if="form.hide">Bu kategori kullanıcılar tarafından görünmez</span>
+              <span v-else>Bu kategori kullanıcılar tarafından görünür</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0"><i class="bi bi-palette"></i> Görünüm</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">İkon</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text" v-if="form.term_icon" v-html="form.term_icon"></span>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  v-model="form.term_icon"
+                  placeholder='<i class="bi bi-star"></i>'
+                />
+                <button class="btn btn-outline-secondary" type="button" @click="form.term_icon = ''" title="Temizle"><i class="bi bi-x"></i></button>
+              </div>
+              <div class="form-text">HTML ikon kodu yapıştırın</div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small fw-semibold mb-1">Renk 1</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text p-0" style="width:32px">
+                  <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color1" style="width:28px;height:28px;cursor:pointer" />
+                </span>
+                <input type="text" class="form-control form-control-sm" v-model="form.color1" placeholder="#ffffff" />
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small fw-semibold mb-1">Renk 2</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text p-0" style="width:32px">
+                  <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color2" style="width:28px;height:28px;cursor:pointer" />
+                </span>
+                <input type="text" class="form-control form-control-sm" v-model="form.color2" placeholder="#000000" />
+              </div>
+            </div>
+            <div class="mb-0">
+              <label class="form-label small fw-semibold mb-1">Renk 3</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text p-0" style="width:32px">
+                  <input type="color" class="form-control form-control-color border-0 p-0" v-model="form.color3" style="width:28px;height:28px;cursor:pointer" />
+                </span>
+                <input type="text" class="form-control form-control-sm" v-model="form.color3" placeholder="#0d6efd" />
+              </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- Menu Link Settings (only for menu vocabulary) -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0"><i class="bi bi-link-45deg"></i> İçerik Bağlantısı</h6>
+        </div>
+        <div class="card-body">
+          <p class="small text-muted mb-3">
+            <i class="bi bi-info-circle"></i> Manuel URL yoksa bu içeriğin URL'i kullanılır
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label">İçerik Türü</label>
+            <select class="form-select form-select-sm" v-model="form.content_type">
+              <option value="">Seçiniz</option>
+              <option value="page">Sayfa</option>
+              <option value="blog">Blog</option>
+              <option value="news">Haber</option>
+              <option value="product">Ürün</option>
+              <option value="term">Kategori / Term</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">İçerik ID</label>
+            <input
+              type="number"
+              class="form-control form-control-sm"
+              v-model.number="form.content_id"
+              placeholder="58"
+              min="1"
+            />
+          </div>
+
+          <!-- Arama (İçerik / Kategori) -->
+          <div class="mb-3">
+            <label class="form-label">Arama (İçerik / Kategori)</label>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control form-control-sm" v-model="contentSearchTerm" @input="contentDebouncedSearch" placeholder="Başlığa veya açıklamaya göre ara...">
+              <button class="btn btn-sm btn-outline-secondary" @click="contentPerformSearch" :disabled="contentSearchLoading">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+
+            <div v-if="contentSearchLoading" class="small text-muted">Aranıyor...</div>
+
+            <ul v-if="contentSearchResults && contentSearchResults.length" class="list-group list-group-flush small">
+              <li v-for="r in contentSearchResults" :key="r.id" class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="me-2">
+                  <div class="fw-bold">[[ r.title ]]</div>
+                  <div class="text-muted small">[[ r.description || '—' ]]</div>
+                  <div class="text-truncate" style="max-width:280px"><small class="text-muted">[[ r.url || '' ]]</small></div>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary" @click.prevent="contentSelectSearchResult(r)">Seç</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="form.content_type && form.content_id" class="alert alert-info small mb-0">
+            <i class="bi bi-info-circle"></i>
+            Otomatik URL: <code>/[lang]/[[ form.content_type ]]/[slug]-[[ form.content_id ]]</code>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Info Card -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0"><i class="bi bi-info-circle"></i> Bilgi</h6>
+        </div>
+        <div class="card-body">
+          <p class="mb-2">
+            <strong>Kategori Grubu:</strong> [[ vocabularyTitle ]]
+          </p>
+          <p class="mb-2" v-if="form.id">
+            <strong>Kategori ID:</strong> [[ form.id ]]
+          </p>
+          <p class="mb-0">
+            <strong>Vocabulary Type:</strong> {{ vocabulary.vocabulary_type }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parent Selection Modal -->
+  <div class="modal fade" id="parentModal" tabindex="-1" aria-labelledby="parentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="parentModalLabel">
+            <i class="bi bi-folder-plus"></i> Üst Kategori Seç
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Search -->
+          <div class="mb-3">
+            <input
+              type="text"
+              class="form-control"
+              v-model="parentSearchQuery"
+              @input="searchParentTerms"
+            />
+          </div>
+
+          <!-- Loading -->
+          <div v-if="loadingParents" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+          </div>
+
+          <!-- Terms List -->
+          <div v-else class="list-group" style="max-height: 400px; overflow-y: auto">
+            <button
+              v-for="term in filteredParentTerms"
+              :key="term.id"
+              type="button"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+              @click="selectParent(term)"
+              :disabled="isEditing && term.id === parseInt(termId)"
+              :style="{ paddingLeft: (20 + (term._level || 0) * 20) + 'px' }"
+            >
+              <div>
+                <i :class="term.children_count > 0 ? 'bi bi-folder-fill text-primary' : 'bi bi-tag-fill text-warning'"></i>
+                <strong class="ms-2">[[ getTermTitle(term) ]]</strong>
+                <br>
+                <small class="text-muted ms-4">
+                  <span v-if="term.parent_title">
+                    <i class="bi bi-folder"></i> [[ term.parent_title ]]
+                  </span>
+                </small>
+              </div>
+              <span v-if="term.children_count > 0" class="badge bg-secondary">
+                [[ term.children_count ]] alt menü
+              </span>
+            </button>
+            <div v-if="filteredParentTerms.length === 0" class="text-center text-muted py-4">
+              <i class="bi bi-search"></i> Kategori bulunamadı
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> İptal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Media Edit Modal -->
+  <div class="modal fade" id="mediaEditModal" tabindex="-1" aria-labelledby="mediaEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" v-if="currentMediaModal.media">
+        <div class="modal-header">
+          <h5 class="modal-title" id="mediaEditModalLabel">Medya Düzenle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-5">
+              <!-- Preview -->
+              <div class="mb-3">
+                <img v-if="currentMediaModal.media.mime_type && currentMediaModal.media.mime_type.startsWith('image/')"
+                    :src="currentMediaModal.media.url" class="img-fluid rounded" :alt="currentMediaModal.media.file_name">
+                <div v-else
+                    class="bg-light d-flex flex-column align-items-center justify-content-center rounded"
+                    style="height: 200px;">
+                  <i :class="[getMediaIcon(currentMediaModal.media.mime_type), getMediaIconColor(currentMediaModal.media.mime_type)]"
+                      class="fs-1"></i>
+                  <small class="text-muted mt-2">[[ currentMediaModal.media.file_name ]]</small>
+                </div>
+              </div>
+              <div class="small text-muted">
+                <p class="mb-1"><strong>Dosya:</strong> [[ currentMediaModal.media.file_name ]]</p>
+                <p class="mb-0"><strong>URL:</strong> <code class="small">[[ currentMediaModal.media.url ]]</code></p>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="mb-3">
+                <label class="form-label">Tip *</label>
+                <select class="form-select" v-model="currentMediaModal.newType">
+                  <option value="cover">Kapak</option>
+                  <option value="icon">İkon</option>
+                  <option value="video">Video</option>
+                  <option value="gallery">Galeri</option>
+                  <option value="document">Döküman</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Başlık</label>
+                <input type="text" class="form-control" v-model="currentMediaModal.media.title"
+                    placeholder="Medya başlığı">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Açıklama</label>
+                <textarea class="form-control" v-model="currentMediaModal.media.description" rows="3"
+                    placeholder="Kısa açıklama"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">İçerik</label>
+                <textarea class="form-control" v-model="currentMediaModal.media.content" rows="4"
+                    placeholder="Detaylı içerik"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Link</label>
+                <input type="text" class="form-control" v-model="currentMediaModal.media.link" placeholder="URL">
+              </div>
+
+              <!-- Arama (İçerik / Kategori) -->
+              <div class="mb-3">
+                <label class="form-label">Arama (İçerik / Kategori)</label>
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control form-control-sm" v-model="mediaSearchTerm" @input="mediaDebouncedSearch" placeholder="Başlığa veya açıklamaya göre ara...">
+                  <button class="btn btn-sm btn-outline-secondary" @click="mediaPerformSearch" :disabled="mediaSearchLoading">
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+
+                <div v-if="mediaSearchLoading" class="small text-muted">Aranıyor...</div>
+
+                <ul v-if="mediaSearchResults && mediaSearchResults.length" class="list-group list-group-flush small">
+                  <li v-for="r in mediaSearchResults" :key="r.id" class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="me-2">
+                      <div class="fw-bold">[[ r.title ]]</div>
+                      <div class="text-muted small">[[ r.description || '—' ]]</div>
+                      <div class="text-truncate" style="max-width:280px"><small class="text-muted">[[ r.url || '' ]]</small></div>
+                    </div>
+                    <div>
+                      <button class="btn btn-sm btn-outline-primary" @click.prevent="mediaSelectSearchResult(r)">Seç</button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" @click="removeMediaFromModal">
+            <i class="bi bi-trash"></i> Sil
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> İptal
+          </button>
+          <button type="button" class="btn btn-primary" @click="saveMediaEdit">
+            <i class="bi bi-check2"></i> Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+{# Vue.js Application Scripts #}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="/static/admin/js/content-editor/components.js"></script>
+<script src="/static/admin/js/content-editor/media-manager.js"></script>
+<script>
+  const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+  createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+      // Reactive state
+      const allTerms = ref([]);
+      const saving = ref(false);
+      const loading = ref(false);
+      const vocabularyId = {{ vocabulary.id }};
+      const vocabularyTitle = ref("{{ vocabulary.title }}");
+      const termId = {% if term_id %}{{ term_id }}{% else %}null{% endif %};
+      const isEditing = computed(() => termId && termId !== null);
+
+      // Media management state
+      const uploadingMedia = ref({});
+      const currentMediaModal = ref({
+        langCode: '',
+        mediaType: '',
+        mediaIndex: -1,
+        media: null,
+        newType: ''
+      });
+
+      // Modal state
+      const parentSearchQuery = ref('');
+      const selectedParentId = ref(null);
+      const selectedParentTerm = ref(null);
+      const loadingParents = ref(false);
+      const parentSearchTimeout = ref(null);
+      let parentModal = null;
+
+      // Supported languages (dynamic from API)
+      const supportedLanguages = ref({});
+      const loadingLanguages = ref(false);
+      const activeTab = ref('tr');
+
+      // Breadcrumbs for hierarchical navigation
+      const breadcrumbs = ref([]);
+
+      const form = ref({
+        id: termId,
+        vocabulary_id: vocabularyId,
+        parent_id: {% if parent_id %}{{ parent_id }}{% else %}null{% endif %},
+        publish: true,
+        lock: false,
+        hide: false,
+        data: {},
+        term_icon: '',
+        color1: '#ffffff',
+        color2: '#000000',
+        color3: '#0d6efd',
+        content_type: '',
+        content_id: null
+      });
+
+      // Field-level validation errors for titles (per language)
+      const titleErrors = ref({});
+
+      // Computed
+      const filteredParentTerms = computed(() => {
+        // Handle new hierarchical API response format
+        let terms = [];
+        if (allTerms.value.success && allTerms.value.data) {
+          terms = allTerms.value.data.data || [];
+        } else if (Array.isArray(allTerms.value)) {
+          terms = allTerms.value;
+        } else if (allTerms.value.data && Array.isArray(allTerms.value.data)) {
+          terms = allTerms.value.data;
+        }
+
+        // Düzenleme modundaysa, mevcut termi listeden çıkar (kendini parent yapamaz)
+        if (isEditing.value) {
+          terms = terms.filter(t => t.id !== parseInt(termId));
+        }
+
+        // Arama filtresi
+        if (parentSearchQuery.value) {
+          const search = parentSearchQuery.value.toLowerCase();
+          terms = terms.filter(term => {
+            const title = term.title || term.data?.langs?.tr?.title || term.data?.tr?.title || '';
+            return title.toLowerCase().includes(search);
+          });
+        }
+
+        // Hierarchical sorting: root items first, then children grouped by parent
+        const sortedTerms = [];
+        const termMap = new Map(terms.map(t => [t.id, t]));
+
+        // First add root items (no parent)
+        const rootTerms = terms.filter(t => !t.parent_id).sort((a, b) => {
+          const aTitle = a.title || a.data?.langs?.tr?.title || a.data?.tr?.title || '';
+          const bTitle = b.title || b.data?.langs?.tr?.title || b.data?.tr?.title || '';
+          return aTitle.localeCompare(bTitle, 'tr');
+        });
+
+        // Recursively add children
+        const addChildrenRecursive = (parentId, level = 0) => {
+          const children = terms
+            .filter(t => t.parent_id === parentId)
+            .sort((a, b) => {
+              const aTitle = a.name || a.data?.tr?.title || '';
+              const bTitle = b.name || b.data?.tr?.title || '';
+              return aTitle.localeCompare(bTitle, 'tr');
+            });
+
+          for (const child of children) {
+            child._level = level; // Add level for indentation
+            sortedTerms.push(child);
+            addChildrenRecursive(child.id, level + 1);
+          }
+        };
+
+        for (const root of rootTerms) {
+          root._level = 0;
+          sortedTerms.push(root);
+          addChildrenRecursive(root.id, 1);
+        }
+
+        return sortedTerms;
+      });
+
+      // Methods
+      const loadTerms = async () => {
+        try {
+          // Use list endpoint to get ALL terms without hierarchical filtering
+          const response = await fetch(`/admin/api/vocabularies/${vocabularyId}/terms?limit=1000&parent_id=all`);
+          const data = await response.json();
+
+          if (response.ok) {
+            allTerms.value = data || [];
+            // Re-validate titles after terms loaded (useful in edit mode)
+            validateAllTitlesUnique();
+          } else {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Kategoriler yüklenirken hata oluştu: ' + data.error
+            });
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Kategoriler yüklenirken hata oluştu: ' + error.message
+          });
+        }
+      };
+
+      const loadTermDetails = async (termId) => {
+        if (!isEditing.value) return;
+
+        loading.value = true;
+        try {
+          const response = await fetch(`/admin/api/terms/${termId}`);
+          const result = await response.json();
+
+          if (response.ok && result.success && result.data) {
+            // New response format with breadcrumbs
+            const term = result.data.term || result.data;
+            breadcrumbs.value = result.data.breadcrumbs || [];
+
+            form.value.id = term.id;
+            form.value.vocabulary_id = term.vocabulary_id;
+            form.value.parent_id = term.parent_id;
+            form.value.publish = term.publish;
+            form.value.lock = term.lock || false;
+            form.value.hide = term.hide || false;
+            form.value.term_icon = term.term_icon || '<i class="bi bi-star"></i>'
+            form.value.color1 = (term.data && term.data.color1) || '#ffffff'
+            form.value.color2 = (term.data && term.data.color2) || '#000000'
+            form.value.color3 = (term.data && term.data.color3) || '#0d6efd'
+
+            if (term.data) {
+              // Dinamik dillere göre form data'yı doldur
+              Object.keys(supportedLanguages.value).forEach(lang => {
+                if (!form.value.data[lang]) {
+                  form.value.data[lang] = {
+                    title: "",
+                    description: "",
+                    menu_url: "",
+                    media: {
+                      icon: [],
+                      cover: [],
+                      video: [],
+                      gallery: [],
+                      document: []
+                    }
+                  };
+                }
+                // API'den data.langs[lang] formatında geliyor
+                const langData = term.data.langs && term.data.langs[lang] ? term.data.langs[lang] : term.data[lang];
+                if (langData) {
+                  form.value.data[lang] = {
+                    title: langData.title || "",
+                    description: langData.description || "",
+                    menu_url: langData.menu_url || "", // Her dil için menu_url
+                    media: langData.media || {
+                      icon: [],
+                      cover: [],
+                      video: [],
+                      gallery: [],
+                      document: []
+                    }
+                  };
+                } else {
+                  // Initialize empty media structure if no data
+                  form.value.data[lang].media = {
+                    icon: [],
+                    cover: [],
+                    video: [],
+                    gallery: [],
+                    document: []
+                  };
+                }
+              });
+
+              // İçerik bağlantısı alanlarını yükle
+              form.value.content_type = term.data.content_type || '';
+              form.value.content_id = term.data.content_id || null;
+            }
+
+            // Parent bilgisini yükle
+            loadParentTerm();
+
+            // After loading term details, re-validate titles (inline messages)
+            validateAllTitlesUnique();
+          } else {
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Term detayları yüklenirken hata oluştu: ' + term.error
+            });
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Term detayları yüklenirken hata oluştu: ' + error.message
+          });
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      // Parent term bilgisini yükle
+      const loadParentTerm = () => {
+        if (!form.value.parent_id) {
+          selectedParentTerm.value = null;
+          return;
+        }
+
+        // Handle new hierarchical API response format
+        let terms = [];
+        if (allTerms.value.success && allTerms.value.data) {
+          terms = allTerms.value.data.data || [];
+        } else if (Array.isArray(allTerms.value)) {
+          terms = allTerms.value;
+        } else if (allTerms.value.data && Array.isArray(allTerms.value.data)) {
+          terms = allTerms.value.data;
+        }
+
+        const parent = terms.find(t => t.id === form.value.parent_id);
+        if (parent) {
+          selectedParentTerm.value = parent;
+        }
+      };
+
+      // Parent term ara (debounce)
+      const searchParentTerms = () => {
+        clearTimeout(parentSearchTimeout.value);
+        parentSearchTimeout.value = setTimeout(() => {
+          // Arama computed property'de yapılıyor
+        }, 300);
+      };
+
+      // Modal functions
+      const showParentModal = () => {
+        parentSearchQuery.value = '';
+
+        if (!parentModal) {
+          const modalElement = document.getElementById('parentModal');
+          parentModal = new bootstrap.Modal(modalElement);
+        }
+        parentModal.show();
+      };
+
+      // Get term title helper
+      const getTermTitle = (term) => {
+        if (!term) return 'Başlıksız';
+        // Use name field from TermResponse DTO
+        if (term.title) return term.title;
+        // Fallback to data structure - API'den data.langs.tr formatında geliyor
+        if (term.data?.langs?.tr?.title) return term.data.langs.tr.title;
+        if (term.data?.tr?.title) return term.data.tr.title;
+        if (term.data?.langs?.en?.title) return term.data.langs.en.title;
+        if (term.data?.en?.title) return term.data.en.title;
+        return 'Başlıksız';
+      };
+
+      const selectParent = (term) => {
+        form.value.parent_id = term.id;
+        selectedParentTerm.value = term;
+        parentModal.hide();
+
+        // Re-validate titles because sibling context changed
+        validateAllTitlesUnique();
+
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true
+        });
+
+        Toast.fire({
+          icon: 'success',
+          title: `"${getTermTitle(term)}" üst kategori olarak ayarlandı`
+        });
+      };
+
+      const removeParent = () => {
+        Swal.fire({
+          title: 'Emin misiniz?',
+          text: 'Üst kategori ilişkisi kaldırılacak',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Evet, Kaldır',
+          cancelButtonText: 'İptal'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.value.parent_id = null;
+            selectedParentTerm.value = null;
+
+            // Re-validate titles because sibling context changed
+            validateAllTitlesUnique();
+
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Üst kategori ilişkisi kaldırıldı'
+            });
+          }
+        });
+      };
+
+      const validateTitleUnique = (langCode) => {
+        // Reset previous error
+        titleErrors.value[langCode] = '';
+
+        const title = form.value.data[langCode]?.title?.trim() || '';
+        if (!title) {
+          titleErrors.value[langCode] = '';
+          return true;
+        }
+
+        // Build terms array from allTerms.value
+        let terms = [];
+        if (allTerms.value && allTerms.value.success && allTerms.value.data) {
+          terms = allTerms.value.data.data || [];
+        } else if (Array.isArray(allTerms.value)) {
+          terms = allTerms.value;
+        } else if (allTerms.value && allTerms.value.data && Array.isArray(allTerms.value.data)) {
+          terms = allTerms.value.data;
+        }
+
+        const normalized = title.toLowerCase();
+
+        for (const t of terms) {
+          if (form.value.id && t.id === form.value.id) continue;
+
+          const otherTitle = (t.data && ((t.data.langs && t.data.langs[langCode] && t.data.langs[langCode].title) || (t.data[langCode] && t.data[langCode].title))) || t.title || '';
+          if (!otherTitle) continue;
+
+          if (otherTitle.trim().toLowerCase() === normalized) {
+            if (t.parent_id === form.value.parent_id) {
+              titleErrors.value[langCode] = 'Bu parentın altında aynı isimde bir alt terim zaten mevcut.';
+            } else {
+              titleErrors.value[langCode] = 'Bu vocabulary içinde aynı başlığa sahip başka bir terim zaten mevcut.';
+            }
+            return false;
+          }
+        }
+
+        titleErrors.value[langCode] = '';
+        return true;
+      };
+
+      const validateAllTitlesUnique = () => {
+        let ok = true;
+        for (const langCode of Object.keys(supportedLanguages.value)) {
+          if (!validateTitleUnique(langCode)) ok = false;
+        }
+        return ok;
+      };
+
+      const saveTerm = async (silent = false) => {
+        // Validation - tüm diller için kontrol (varsa boş başlıkları yakalar)
+        for (const [langCode, langName] of Object.entries(supportedLanguages.value)) {
+          if (!form.value.data[langCode]?.title?.trim()) {
+            if (!silent) {
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+              });
+
+              Toast.fire({
+                icon: 'warning',
+                title: `${langName} kategori adı zorunludur!`
+              });
+            }
+            return;
+          }
+        }
+
+        // Client-side duplicate check
+        if (!validateAllTitlesUnique()) {
+          if (!silent) {
+            // Find first error to show summary
+            let firstErr = '';
+            for (const langCode of Object.keys(supportedLanguages.value)) {
+              if (titleErrors.value[langCode]) {
+                firstErr = titleErrors.value[langCode];
+                break;
+              }
+            }
+
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'warning',
+              title: firstErr || 'Aynı başlığa sahip bir terim zaten mevcut.'
+            });
+          }
+          return;
+        }
+
+        saving.value = true;
+        try {
+          const url = form.value.id
+            ? `/admin/api/terms/${form.value.id}`
+            : '/admin/api/terms';
+
+          const method = form.value.id ? 'PUT' : 'POST';
+
+          // Prepare payload with correct data structure
+          const payload = {
+            vocabulary_id: form.value.vocabulary_id,
+            parent_id: form.value.parent_id,
+            publish: form.value.publish,
+            lock: form.value.lock,
+            hide: form.value.hide,
+            data: {
+              langs: form.value.data,
+              content_type: form.value.content_type || undefined,
+              content_id: form.value.content_id || undefined,
+              term_icon: form.value.term_icon || '<i class="bi bi-star"></i>',
+              color1: form.value.color1 || null,
+              color2: form.value.color2 || null,
+              color3: form.value.color3 || null
+            }
+          };
+
+          // Add id for update
+          if (form.value.id) {
+            payload.id = form.value.id;
+          }
+
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            // Response boş olabilir, kontrol et
+            const contentType = response.headers.get('content-type');
+            let data = null;
+
+            if (contentType && contentType.includes('application/json')) {
+              const text = await response.text();
+              if (text) {
+                data = JSON.parse(text);
+              }
+            }
+
+            if (!silent) {
+              // Toast bildirim - başarılı
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              });
+
+              Toast.fire({
+                icon: 'success',
+                title: isEditing.value ? 'Kategori güncellendi!' : 'Kategori oluşturuldu!'
+              });
+
+              // Yeni oluşturulan kategoriye yönlendir
+              if (data && data.data && data.data.id && !isEditing.value) {
+                setTimeout(() => {
+                  window.location.href = `/admin/taxonomy/vocabularies/${vocabularyId}/terms/${data.data.id}`;
+                }, 1500);
+              }
+            } else {
+              // silent save: no modal, but update form id if new
+              if (data && data.data && data.data.id) {
+                form.value.id = data.data.id;
+              }
+            }
+          } else {
+            let errorMessage = 'Bilinmeyen hata';
+            let errorData = null;
+            try {
+              errorData = await response.json();
+              // prefer explicit error or message fields from API
+              errorMessage = errorData?.error || errorData?.message || errorMessage;
+            } catch (e) {
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+
+            if (!silent) {
+              // Toast bildirim - hata
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              });
+
+              // If it's a validation / user input error (HTTP 400), show as a warning
+              if (response.status === 400) {
+                Toast.fire({
+                  icon: 'warning',
+                  title: errorMessage
+                });
+              } else {
+                // Other errors remain as errors
+                Toast.fire({
+                  icon: 'error',
+                  title: 'Kaydetme hatası: ' + errorMessage
+                });
+              }
+            } else {
+              console.error('Kategori kaydedilirken hata oluştu:', errorMessage);
+            }
+          }
+        } catch (error) {
+          if (!silent) {
+            // Toast bildirim - sistem hatası
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 4000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+              }
+            });
+
+            Toast.fire({
+              icon: 'error',
+              title: 'Hata: ' + error.message
+            });
+          } else {
+            console.error('Kategori kaydedilirken hata oluştu:', error.message);
+          }
+        } finally {
+          saving.value = false;
+        }
+      };
+
+      // Load languages from API
+      const loadLanguages = async () => {
+        loadingLanguages.value = true;
+        try {
+          const response = await fetch('/admin/api/languages');
+          const data = await response.json();
+          if (response.ok) {
+            // API'den gelen map'i direkt kullan
+            supportedLanguages.value = data.supported_languages;
+
+            // Form data'yı dinamik dillere göre initialize et
+            const formData = {};
+            Object.keys(data.supported_languages).forEach(lang => {
+              formData[lang] = {
+                title: "",
+                description: "",
+                menu_url: "", // Her dil için menu_url
+                media: {
+                  icon: [],
+                  cover: [],
+                  video: [],
+                  gallery: [],
+                  document: []
+                }
+              };
+            });
+            form.value.data = formData;
+
+            // Initialize titleErrors for inline validation
+            Object.keys(data.supported_languages).forEach(lang => {
+              titleErrors.value[lang] = '';
+            });
+
+
+            // İlk dili aktif tab yap
+            const langs = Object.keys(data.supported_languages);
+            if (langs.length > 0) {
+              activeTab.value = langs[0];
+            }
+          }
+        } catch (error) {
+          console.error('Error loading languages:', error);
+          supportedLanguages.value = { tr: "Türkçe", en: "English" };
+          form.value.data = {
+            tr: { title: "", description: "", menu_url: "", media: { icon: [], cover: [], video: [], gallery: [], document: [] } },
+            en: { title: "", description: "", menu_url: "", media: { icon: [], cover: [], video: [], gallery: [], document: [] } }
+          };
+        } finally {
+          loadingLanguages.value = false;
+        }
+      };
+
+      // Media management functions
+      const groupedMedia = (langCode) => {
+        if (!form.value.data[langCode]?.media) {
+          return { icon: [], cover: [], video: [], gallery: [], document: [] };
+        }
+        return form.value.data[langCode].media;
+      };
+
+      const handleMediaUpload = async (event, langCode) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        // Yeni term oluştururken medya yüklemeyi engelle
+        if (!termId) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'warning',
+            title: 'Medya yüklemek için önce term\'i kaydetmelisiniz.'
+          });
+          event.target.value = ''; // Clear file input
+          return;
+        }
+
+        uploadingMedia.value[langCode] = true;
+
+        try {
+          for (const file of files) {
+            const formData = new FormData();
+            formData.append('files', file);
+
+            // URL'ye content_type ve content_id parametrelerini ekle
+            const uploadUrl = `/admin/api/media?content_type=term&content_id=${termId}`;
+
+            console.log('Uploading to:', uploadUrl);
+            console.log('DEBUG: Media upload function updated - v2.0');
+            console.log('Content Type: term, Content ID:', termId);
+            const response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: formData
+            });
+
+            console.log('Media upload response:', response.status, response.statusText);
+
+            if (response.ok) {
+              const result = await response.json();
+              if (result.uploaded && result.uploaded.length > 0) {
+                const uploadedMedia = result.uploaded[0];
+
+                // Determine media type based on mime type
+                const mediaType = getMediaTypeFromMime(uploadedMedia.mime_type);
+
+                // Initialize media structure if not exists
+                if (!form.value.data[langCode].media) {
+                  form.value.data[langCode].media = {
+                    icon: [], cover: [], video: [], gallery: [], document: []
+                  };
+                }
+
+                // Create media object in the format expected by the frontend
+                const mediaObject = {
+                  id: uploadedMedia.id,
+                  url: uploadedMedia.url,
+                  title: uploadedMedia.title || '',
+                  content: '',
+                  order_id: form.value.data[langCode].media[mediaType].length + 1,
+                  file_name: uploadedMedia.file_name,
+                  mime_type: uploadedMedia.mime_type,
+                  description: uploadedMedia.description || ''
+                };
+
+                // Add to appropriate category
+                form.value.data[langCode].media[mediaType].push(mediaObject);
+
+                // Re-initialize sortable for this category
+                setTimeout(() => {
+                  const element = document.getElementById(`sortable-${mediaType}-${langCode}`);
+                  if (element) {
+                    // Destroy existing sortable if any
+                    const existingSortable = Sortable.get(element);
+                    if (existingSortable) {
+                      existingSortable.destroy();
+                    }
+
+                    // Create new sortable
+                    new Sortable(element, {
+                      animation: 150,
+                      handle: '.sortable-handle',
+                      onEnd: (evt) => {
+                        const items = form.value.data[langCode].media[mediaType];
+                        const movedItem = items.splice(evt.oldIndex, 1)[0];
+                        items.splice(evt.newIndex, 0, movedItem);
+                        items.forEach((item, index) => {
+                          item.order_id = index + 1;
+                        });
+                      }
+                    });
+                  }
+                }, 100);
+
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 2000,
+                  timerProgressBar: true
+                });
+
+                Toast.fire({
+                  icon: 'success',
+                  title: 'Dosya başarıyla yüklendi'
+                });
+              }
+            } else {
+              const error = await response.json();
+              const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+              });
+
+              Toast.fire({
+                icon: 'error',
+                title: 'Dosya yüklenirken hata oluştu: ' + (error.error || 'Bilinmeyen hata')
+              });
+            }
+          }
+        } catch (error) {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'error',
+            title: 'Dosya yüklenirken hata oluştu: ' + error.message
+          });
+        } finally {
+          uploadingMedia.value[langCode] = false;
+          // Clear file input
+          event.target.value = '';
+        }
+      };
+
+      const getMediaTypeFromMime = (mimeType) => {
+        if (mimeType.startsWith('image/')) {
+          return 'gallery'; // Default to gallery for images
+        } else if (mimeType.startsWith('video/')) {
+          return 'video';
+        } else {
+          return 'document';
+        }
+      };
+
+      const getMediaIcon = (mimeType) => {
+        if (mimeType.startsWith('image/')) return 'bi bi-image';
+        if (mimeType.startsWith('video/')) return 'bi bi-play-circle';
+        if (mimeType.startsWith('audio/')) return 'bi bi-music-note';
+        if (mimeType.includes('pdf')) return 'bi bi-file-pdf';
+        if (mimeType.includes('word') || mimeType.includes('document')) return 'bi bi-file-word';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'bi bi-file-excel';
+        return 'bi bi-file-earmark';
+      };
+
+      const getMediaIconColor = (mimeType) => {
+        if (mimeType.startsWith('image/')) return 'text-success';
+        if (mimeType.startsWith('video/')) return 'text-danger';
+        if (mimeType.startsWith('audio/')) return 'text-info';
+        if (mimeType.includes('pdf')) return 'text-danger';
+        if (mimeType.includes('word') || mimeType.includes('document')) return 'text-primary';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'text-success';
+        return 'text-secondary';
+      };
+
+      const removeMedia = (langCode, mediaType, index) => {
+        Swal.fire({
+          title: 'Emin misiniz?',
+          text: 'Bu medya dosyası silinecek',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Evet, Sil',
+          cancelButtonText: 'İptal'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.value.data[langCode].media[mediaType].splice(index, 1);
+            const Toast = Swal.mixin({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+
+            Toast.fire({
+              icon: 'success',
+              title: 'Medya dosyası silindi'
+            });
+          }
+        });
+      };
+
+      const openMediaModal = (langCode, mediaType, index) => {
+        const media = form.value.data[langCode].media[mediaType][index];
+        currentMediaModal.value = {
+          langCode,
+          mediaType,
+          mediaIndex: index,
+          media: { ...media }, // Copy to avoid direct mutation
+          newType: mediaType // Current type as default
+        };
+
+        // Open Bootstrap modal
+        const modalElement = document.getElementById('mediaEditModal');
+        if (modalElement) {
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+        }
+      };
+
+      // ------------ Media search (term modal) ------------
+      const mediaSearchTerm = ref('');
+      const mediaSearchResults = ref([]);
+      const mediaSearchLoading = ref(false);
+      const mediaSearchTimeout = ref(null);
+
+      const mediaPerformSearch = async () => {
+        const q = (mediaSearchTerm.value || '').trim();
+        if (q.length === 0) {
+          mediaSearchResults.value = [];
+          return;
+        }
+
+        mediaSearchLoading.value = true;
+        mediaSearchResults.value = [];
+
+        try {
+          const module = 'all';
+          const lang = currentMediaModal.value?.langCode || activeTab.value || 'tr';
+          const params = new URLSearchParams({ q, module, lang });
+          const res = await fetch(`/admin/api/build-content-absolute-url/search?${params.toString()}`);
+          if (res.ok) {
+            const j = await res.json();
+            mediaSearchResults.value = j.results || [];
+          }
+        } catch (e) {
+          console.error('Media search error', e);
+        } finally {
+          mediaSearchLoading.value = false;
+        }
+      };
+
+      const mediaDebouncedSearch = () => {
+        clearTimeout(mediaSearchTimeout.value);
+        mediaSearchTimeout.value = setTimeout(() => mediaPerformSearch(), 300);
+      };
+
+      const mediaSelectSearchResult = async (r) => {
+        if (!r || !currentMediaModal.value) return;
+        currentMediaModal.value.media.link = r.url || '';
+        // Apply and save immediately
+        try {
+          await saveMediaEdit();
+        } catch (e) {
+          console.error('Error saving after media selection', e);
+          Swal.fire({ icon: 'error', title: 'Hata', text: 'Seçilen link kaydedilirken hata oluştu', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        }
+        // Clear results so user can search again if needed
+        mediaSearchResults.value = [];
+        mediaSearchTerm.value = '';
+      };
+
+      // ------------ Content/link search for the side panel ------------
+      const contentSearchTerm = ref('');
+      const contentSearchResults = ref([]);
+      const contentSearchLoading = ref(false);
+      const contentSearchTimeout = ref(null);
+
+      const contentPerformSearch = async () => {
+        const q = (contentSearchTerm.value || '').trim();
+        if (q.length === 0) {
+          contentSearchResults.value = [];
+          return;
+        }
+
+        contentSearchLoading.value = true;
+        contentSearchResults.value = [];
+
+        try {
+          const module = 'all';
+          // Try to request multilingual absolute URLs from the search endpoint when available
+          const params = new URLSearchParams({ q, module, lang: activeTab.value || 'all', absolute_urls: '1' });
+          const res = await fetch(`/admin/api/build-content-absolute-url/search?${params.toString()}`);
+          console.log('Content search response status:', res.url, res.status, res.statusText);
+          if (res.ok) {
+            const j = await res.json();
+            console.log('Content search results:', j);
+            // If the search API can return per-language absolute URLs for each result under `absolute_urls`, we'll use them on selection.
+            contentSearchResults.value = j.results || [];
+          }
+        } catch (e) {
+          console.error('Content search error', e);
+        } finally {
+          contentSearchLoading.value = false;
+        }
+      };
+
+      const contentDebouncedSearch = () => {
+        clearTimeout(contentSearchTimeout.value);
+        contentSearchTimeout.value = setTimeout(() => contentPerformSearch(), 300);
+      };
+
+      const contentSelectSearchResult = async (r) => {
+        if (!r) return;
+
+        // Set content type/id
+        form.value.content_type = r.content_type === 'term' ? 'term' : r.content_type || r.content_type;
+        form.value.content_id = r.id || null;
+
+        contentSearchLoading.value = true;
+
+        try {
+          // Use per-language absolute URLs from the search result if available
+          if (r.absolute_urls && Object.keys(r.absolute_urls).length > 0) {
+            // Try to find first non-empty URL to use as fallback when a language-specific URL is missing
+            const firstAvailable = Object.values(r.absolute_urls).find(v => typeof v === 'string' && v.length > 0) || '';
+
+            Object.keys(supportedLanguages.value).forEach(lang => {
+              if (!form.value.data[lang]) {
+                form.value.data[lang] = { title: '', description: '', menu_url: '', media: { icon: [], cover: [], video: [], gallery: [], document: [] } };
+              }
+              form.value.data[lang].menu_url = r.absolute_urls[lang] || firstAvailable || '';
+            });
+
+            Swal.fire({ icon: 'success', title: 'Seçildi', text: `${r.title} seçildi. Manuel URL'ler diller bazında yerleştirildi.`, toast: true, position: 'top-end', showConfirmButton: false, timer: 1800 });
+          } else {
+            // If search result doesn't include absolute_urls (rare), fall back to using r.url for all languages
+            Object.keys(supportedLanguages.value).forEach(lang => {
+              if (!form.value.data[lang]) {
+                form.value.data[lang] = { title: '', description: '', menu_url: '', media: { icon: [], cover: [], video: [], gallery: [], document: [] } };
+              }
+              form.value.data[lang].menu_url = r.url || '';
+            });
+
+            Swal.fire({ icon: 'success', title: 'Seçildi', text: `${r.title} seçildi. Manuel URL'ler diller bazında yerleştirildi.`, toast: true, position: 'top-end', showConfirmButton: false, timer: 1800 });
+          }
+        } catch (e) {
+          console.error('Content link assignment error', e);
+          Swal.fire({ icon: 'error', title: 'Hata', text: 'URL alınırken hata oluştu', toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
+        } finally {
+          contentSearchLoading.value = false;
+          contentSearchResults.value = [];
+          contentSearchTerm.value = '';
+        }
+      };
+
+      const openMediaLibrary = (langCode) => {
+        // For now, show a simple message
+        Swal.fire({
+          title: 'Medya Kütüphanesi',
+          text: 'Medya kütüphanesi özelliği yakında eklenecek. Şimdilik dosya yükleme özelliğini kullanabilirsiniz.',
+          icon: 'info',
+          confirmButtonText: 'Tamam'
+        });
+      };
+
+      // Save media edit changes
+      const saveMediaEdit = async () => {
+        const { langCode, mediaType, mediaIndex, media, newType } = currentMediaModal.value;
+
+        // Update the media object
+        form.value.data[langCode].media[mediaType][mediaIndex] = { ...media };
+
+        // If type changed, move to new category
+        if (newType !== mediaType) {
+          // Remove from old category
+          const mediaToMove = form.value.data[langCode].media[mediaType].splice(mediaIndex, 1)[0];
+
+          // Add to new category
+          if (!form.value.data[langCode].media[newType]) {
+            form.value.data[langCode].media[newType] = [];
+          }
+          form.value.data[langCode].media[newType].push(mediaToMove);
+
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'success',
+            title: `Medya ${getTypeDisplayName(newType)} kategorisine taşındı`
+          });
+        } else {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'success',
+            title: 'Medya bilgileri güncellendi'
+          });
+        }
+
+        // Close modal
+        const modalElement = document.getElementById('mediaEditModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) modal.hide();
+        }
+
+        // Re-initialize sortable if type changed
+        if (newType !== mediaType) {
+          setTimeout(() => {
+            initializeSortable();
+          }, 100);
+        }
+
+        // Auto-save term silently
+        try {
+          await saveTerm(true);
+        } catch (e) {
+          console.error('Auto-save after media edit failed', e);
+        }
+      };
+
+      // Remove media from modal
+      const removeMediaFromModal = async () => {
+        const { langCode, mediaType, mediaIndex } = currentMediaModal.value;
+
+        const result = await Swal.fire({
+          title: 'Emin misiniz?',
+          text: 'Bu medya dosyası silinecek',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Evet, Sil',
+          cancelButtonText: 'İptal'
+        });
+
+        if (result.isConfirmed) {
+          // Remove from array
+          form.value.data[langCode].media[mediaType].splice(mediaIndex, 1);
+
+          // Close modal
+          const modalElement = document.getElementById('mediaEditModal');
+          if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+          }
+
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+          });
+
+          Toast.fire({
+            icon: 'success',
+            title: 'Medya dosyası silindi'
+          });
+
+          // Auto-save term silently
+          try {
+            await saveTerm(true);
+          } catch (e) {
+            console.error('Auto-save after media delete failed', e);
+          }
+        }
+      };
+
+      // Get display name for media type
+      const getTypeDisplayName = (type) => {
+        const names = {
+          cover: 'Kapak',
+          icon: 'İkon',
+          video: 'Video',
+          gallery: 'Galeri',
+          document: 'Döküman'
+        };
+        return names[type] || type;
+      };
+
+      // Initialize sortable for media items
+      const initializeSortable = () => {
+        // Wait for next tick to ensure DOM is updated
+        nextTick(() => {
+          Object.keys(supportedLanguages.value).forEach(langCode => {
+            ['cover', 'icon', 'video', 'gallery', 'document'].forEach(mediaType => {
+              const element = document.getElementById(`sortable-${mediaType}-${langCode}`);
+              if (element && form.value.data[langCode]?.media?.[mediaType]?.length > 0) {
+                new Sortable(element, {
+                  animation: 150,
+                  handle: '.sortable-handle',
+                  onEnd: (evt) => {
+                    // Update order in Vue data
+                    const items = form.value.data[langCode].media[mediaType];
+                    const movedItem = items.splice(evt.oldIndex, 1)[0];
+                    items.splice(evt.newIndex, 0, movedItem);
+
+                    // Update order_id values
+                    items.forEach((item, index) => {
+                      item.order_id = index + 1;
+                    });
+                  }
+                });
+              }
+            });
+          });
+        });
+      };
+
+      // Lifecycle
+      onMounted(async () => {
+        await loadLanguages();
+        await loadTerms();
+        await loadTermDetails(termId);
+        loadParentTerm();
+
+        // If creating new term with parent_id, fetch breadcrumbs for parent
+        if (!isEditing.value && form.value.parent_id) {
+          try {
+            const response = await fetch(`/admin/api/vocabularies/${vocabularyId}/terms?parent_id=${form.value.parent_id}`);
+            const result = await response.json();
+            if (result.success && result.data && result.data.meta && result.data.meta.breadcrumbs) {
+              breadcrumbs.value = result.data.meta.breadcrumbs;
+            }
+          } catch (e) {
+            console.error('Error loading parent breadcrumbs:', e);
+          }
+        }
+
+        // Initialize sortable after data is loaded
+        setTimeout(() => {
+          initializeSortable();
+        }, 500);
+      });
+
+      return {
+        supportedLanguages,
+        loadingLanguages,
+        activeTab,
+        allTerms,
+        saving,
+        loading,
+        loadingParents,
+        vocabularyId,
+        vocabularyTitle,
+        termId,
+        isEditing,
+        form,
+        breadcrumbs,
+        parentSearchQuery,
+        selectedParentId,
+        selectedParentTerm,
+        filteredParentTerms,
+        uploadingMedia,
+        currentMediaModal,
+        loadTerms,
+        loadTermDetails,
+        loadParentTerm,
+        searchParentTerms,
+        showParentModal,
+        selectParent,
+        removeParent,
+        saveTerm,
+        getTermTitle,
+        titleErrors,
+        validateTitleUnique,
+        validateAllTitlesUnique,
+        // Media search bindings
+        mediaSearchTerm,
+        mediaSearchResults,
+        mediaSearchLoading,
+        mediaDebouncedSearch,
+        mediaPerformSearch,
+        mediaSelectSearchResult,
+        // Content/link search bindings
+        contentSearchTerm,
+        contentSearchResults,
+        contentSearchLoading,
+        contentDebouncedSearch,
+        contentPerformSearch,
+        contentSelectSearchResult,
+        groupedMedia,
+        handleMediaUpload,
+        getMediaIcon,
+        getMediaIconColor,
+        removeMedia,
+        openMediaModal,
+        openMediaLibrary,
+        saveMediaEdit,
+        removeMediaFromModal,
+        getTypeDisplayName,
+        initializeSortable
+      };
+    },
+  }).mount("#termForm");
+</script>
+
+<style>
+  .breadcrumb {
+    background: none;
+    padding: 0;
+  }
+
+  .nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+  }
+
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+
+  .form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  .list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+</style>
+
+{% endblock %}

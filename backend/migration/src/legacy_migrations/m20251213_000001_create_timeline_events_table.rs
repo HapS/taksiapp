@@ -1,0 +1,177 @@
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(TimelineEvents::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(TimelineEvents::Id)
+                            .big_integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::ModuleType)
+                            .string_len(50)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::ContentType)
+                            .string_len(50)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::ContentId)
+                            .big_integer()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::EventType)
+                            .string_len(100)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::Title)
+                            .json()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::Description)
+                            .json()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::Icon)
+                            .string_len(50)
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::Color)
+                            .string_len(20)
+                            .default("primary")
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::UserId)
+                            .big_integer()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::AdminUserId)
+                            .big_integer()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::Metadata)
+                            .json()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::IsPublic)
+                            .boolean()
+                            .default(true)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::IsAdminOnly)
+                            .boolean()
+                            .default(false)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default(Expr::current_timestamp())
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(TimelineEvents::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .default(Expr::current_timestamp())
+                            .null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // İndeksler oluştur
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_timeline_module_content")
+                    .table(TimelineEvents::Table)
+                    .col(TimelineEvents::ModuleType)
+                    .col(TimelineEvents::ContentType)
+                    .col(TimelineEvents::ContentId)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_timeline_user")
+                    .table(TimelineEvents::Table)
+                    .col(TimelineEvents::UserId)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_timeline_created_at")
+                    .table(TimelineEvents::Table)
+                    .col(TimelineEvents::CreatedAt)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_timeline_public")
+                    .table(TimelineEvents::Table)
+                    .col(TimelineEvents::IsPublic)
+                    .to_owned(),
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(TimelineEvents::Table).to_owned())
+            .await
+    }
+}
+
+#[derive(DeriveIden)]
+enum TimelineEvents {
+    Table,
+    Id,
+    ModuleType,
+    ContentType,
+    ContentId,
+    EventType,
+    Title,
+    Description,
+    Icon,
+    Color,
+    UserId,
+    AdminUserId,
+    Metadata,
+    IsPublic,
+    IsAdminOnly,
+    CreatedAt,
+    UpdatedAt,
+}

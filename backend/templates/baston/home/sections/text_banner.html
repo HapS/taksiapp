@@ -1,0 +1,26 @@
+
+{% if section.items and section.items | length > 0 %}
+{% set item = section.items | first %}
+{% set lang_data = item.data.langs[current_language] %}
+{% set data = item.data %}
+
+<section class="py-5 " data-section-id="{{ section.id }}" style="background-color: {{ section.background_color | default(value='transparent') }};">
+    <div class="container">
+        <div class="card shadow-sm border-0 overflow-hidden" style="background-color: {{ data.color1 | default(value="") }};">
+            <div class="card-body p-4 p-lg-5">
+                <div class="row g-4 g-lg-5 align-items-center">
+                    <div class="col-lg-12 order-2 order-lg-1">
+
+                        <div class="lead text-muted">
+                            {{ lang_data.body | default(value="Text Banner")  | safe  }}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{% endif %}
