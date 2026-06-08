@@ -25,60 +25,6 @@ pub struct NestedTerm {
     pub updated_at: Option<String>,
 }
 
-pub fn build_term_hierarchy_breadcrumb(
-    terms: &[crate::modules::taxonomy::models::term::Model],
-    lang: &str,
-    parent_id: Option<i64>,
-) -> Vec<NestedTerm> {
-    use crate::modules::taxonomy::helpers::term_helper::TermExtensions;
-
-    let mut breadcrumb = Vec::new();
-    let mut current_id = parent_id;
-
-    while let Some(pid) = current_id {
-        if let Some(term) = terms.iter().find(|t| t.id == pid) {
-            // Tek dilli için sadece mevcut dili kullan
-            let mut titles = std::collections::HashMap::new();
-            let mut slugs = std::collections::HashMap::new();
-            let mut descriptions = std::collections::HashMap::new();
-
-            titles.insert(lang.to_string(), term.get_title(lang));
-            if let Some(slug) = term.get_slug(lang) {
-                slugs.insert(lang.to_string(), slug);
-            }
-            if let Some(desc) = term.get_description(lang) {
-                descriptions.insert(lang.to_string(), desc);
-            }
-
-            breadcrumb.push(NestedTerm {
-                id: term.id,
-                publish: term.publish,
-                // Backward compatibility fields
-                title: term.get_title(lang),
-                slug: term.get_slug(lang),
-                description: term.get_description(lang),
-                // New multilingual fields
-                titles,
-                slugs,
-                descriptions,
-                term_icon: term.get_term_icon(),
-                data: term.data.clone(),
-                children: Vec::new(),
-                order_id: term.order_id,
-                vocabulary_id: term.vocabulary_id,
-                created_at: term.created_at.map(|dt| dt.to_string()),
-                updated_at: term.updated_at.map(|dt| dt.to_string()),
-            });
-            current_id = term.parent_id;
-        } else {
-            break;
-        }
-    }
-
-    breadcrumb.reverse(); // Kökten başlayarak sıralamak için
-    breadcrumb
-}
-
 pub fn build_term_hierarchy(
     terms: &[crate::modules::taxonomy::models::term::Model],
     lang: &str,

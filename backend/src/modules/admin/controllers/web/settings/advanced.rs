@@ -78,58 +78,6 @@ pub async fn advanced_settings(State(state): State<AppState>, session: Session) 
         &current_settings.default_home_content_id.unwrap_or(70),
     );
 
-    // Default currency setting
-    context.insert(
-        "default_currency",
-        &current_settings
-            .default_currency
-            .clone()
-            .unwrap_or_else(|| "TRY".to_string()),
-    );
-
-    // Supported currencies (individual flags for template checkboxes)
-    let supported = current_settings
-        .supported_currencies
-        .clone()
-        .unwrap_or_else(|| vec!["TRY".to_string()]);
-    context.insert(
-        "supported_currency_TRY",
-        &supported.contains(&"TRY".to_string()),
-    );
-    context.insert(
-        "supported_currency_USD",
-        &supported.contains(&"USD".to_string()),
-    );
-    context.insert(
-        "supported_currency_EUR",
-        &supported.contains(&"EUR".to_string()),
-    );
-    context.insert(
-        "supported_currency_GBP",
-        &supported.contains(&"GBP".to_string()),
-    );
-    context.insert(
-        "supported_currency_CHF",
-        &supported.contains(&"CHF".to_string()),
-    );
-    context.insert(
-        "supported_currency_AUD",
-        &supported.contains(&"AUD".to_string()),
-    );
-    context.insert(
-        "supported_currency_CAD",
-        &supported.contains(&"CAD".to_string()),
-    );
-    context.insert(
-        "supported_currency_AZN",
-        &supported.contains(&"AZN".to_string()),
-    );
-    context.insert(
-        "supported_currency_JPY",
-        &supported.contains(&"JPY".to_string()),
-    );
-    context.insert("supported_currencies", &supported);
-
     match super::render_settings_page(
         &state,
         "advanced",
@@ -156,15 +104,11 @@ pub async fn update_advanced_settings(
     }
 
     let mut form_data = std::collections::HashMap::new();
-    let mut supported_currencies_list: Vec<String> = Vec::new();
 
     // Parse multipart form
     while let Ok(Some(field)) = multipart.next_field().await {
         let name = field.name().unwrap_or("").to_string();
         if let Ok(value) = field.text().await {
-            if name == "supported_currencies" {
-                supported_currencies_list.push(value.clone());
-            }
             form_data.insert(name, value);
         }
     }
@@ -233,22 +177,6 @@ pub async fn update_advanced_settings(
     if let Some(value) = form_data.get("default_home_content_id") {
         current_settings.default_home_content_id = value.parse().ok();
     }
-
-    // Update default currency setting
-    if let Some(value) = form_data.get("default_currency") {
-        current_settings.default_currency = if value.is_empty() {
-            Some("TRY".to_string())
-        } else {
-            Some(value.clone())
-        };
-    }
-
-    // Update supported currencies
-    // En az bir para birimi olmalı
-    if supported_currencies_list.is_empty() {
-        supported_currencies_list.push("TRY".to_string());
-    }
-    current_settings.supported_currencies = Some(supported_currencies_list);
 
     // Save settings
     match settings_service::update_settings(&state.db, current_settings).await {

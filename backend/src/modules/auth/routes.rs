@@ -22,18 +22,6 @@ pub fn routes() -> Router<AppState> {
             get(web_controllers::my_account::profile_page),
         )
         .route(
-            "/my-account/addresses",
-            get(web_controllers::my_account::addresses_page),
-        )
-        .route(
-            "/my-account/orders",
-            get(web_controllers::my_account::orders_page),
-        )
-        .route(
-            "/my-account/orders/{order_id}",
-            get(web_controllers::my_account::order_detail_page),
-        )
-        .route(
             "/my-account/bookmarks",
             get(web_controllers::my_account::my_bookmarks),
         )
@@ -78,15 +66,4 @@ pub fn routes() -> Router<AppState> {
             "/api/user/change-password",
             post(api_controllers::user_profile::change_password),
         )
-        // API: Address Management (Session based for now to work with Web FE, but structured for API)
-        .route(
-            "/api/user/addresses",
-            get(api_controllers::address::list_addresses)
-                .post(api_controllers::address::create_address),
-        )
-        .route(
-            "/api/user/addresses/{id}",
-            post(api_controllers::address::update_address)
-                .delete(api_controllers::address::delete_address),
-        ) // using POST for update to be simple with HTML forms if needed, but here we use JSON mostly
 }

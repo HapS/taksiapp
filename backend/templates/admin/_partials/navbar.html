@@ -25,33 +25,6 @@
           </a>
         </li>
 
-        <!-- Siparişler -->
-        <li class="nav-item">
-          <a class="btn btn-sm btn-dark me-2 {% if current_path and 'orders' in current_path and 'returns' not in current_path %}active-nav{% endif %}" href="/admin/orders">
-            <i class="bi bi-cart-check me-1"></i>Siparişler
-          </a>
-        </li>
-
-        <!-- Kampanyalar -->
-        <li class="nav-item">
-          <a class="btn btn-sm btn-dark me-2 {% if current_path and 'campaigns' in current_path %}active-nav{% endif %}" href="/admin/campaigns">
-            <i class="bi bi-megaphone me-1"></i>Kampanyalar
-          </a>
-        </li>
-
-        <!-- İade Talepleri -->
-        <li class="nav-item">
-          <a class="btn btn-sm btn-dark me-2 {% if current_path and 'returns' in current_path %}active-nav{% endif %}" href="/admin/returns">
-            <i class="bi bi-arrow-return-left me-1"></i>İadeler
-          </a>
-        </li>
-
-         <!-- Ürünler -->
-        <li class="nav-item">
-          <a class="btn btn-sm btn-dark me-2 {% if (active_menu and active_menu == "contents:product") or (current_path and 'content_type=product' in current_path) %}active-nav{% endif %}" href="/admin/contents?content_type=product">
-            <i class="bi bi-bag me-1"></i>Ürünler
-          </a>
-        </li>
 
         {#
           <!-- Taxonomy -->
@@ -126,63 +99,6 @@
           </a>
         </li>
 
-
-        <!-- B2B (Dropdown) -->
-        <li class="nav-item dropdown">
-          <button class="btn btn-sm btn-dark dropdown-toggle me-2 {% if current_path and '/admin/b2b' in current_path %}active-nav{% endif %}" type="button" id="b2bDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-building me-1"></i>B2B
-          </button>
-
-          <ul class="dropdown-menu" aria-labelledby="b2bDropdown">
-            <li>
-              <a class="dropdown-item {% if current_path and '/admin/b2b/companies' in current_path %}active{% endif %}" href="/admin/b2b/companies">
-                <i class="bi bi-building-fill me-2"></i>Şirketler
-              </a>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-              <a class="dropdown-item" href="/admin/b2b/companies/new">
-                <i class="bi bi-plus-circle-dotted me-2"></i>Yeni Şirket
-              </a>
-            </li>
-
-            <li>
-              <a class="dropdown-item" href="/admin/b2b/companies?is_active=false">
-                <i class="bi bi-hourglass-split me-2"></i>Onay Bekleyenler
-              </a>
-            </li>
-
-            <li>
-              <a class="dropdown-item" href="/admin/b2b/companies?is_active=true">
-                <i class="bi bi-check-circle me-2"></i>Aktif Şirketler
-              </a>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-              <a class="dropdown-item {% if current_path and '/admin/b2b/credit/transactions' in current_path %}active{% endif %}" href="/admin/b2b/credit/transactions">
-                <i class="bi bi-credit-card me-2"></i>Kredi İşlemleri
-              </a>
-            </li>
-
-            <li><hr class="dropdown-divider"></li>
-
-            <li>
-              <a class="dropdown-item {% if current_path and '/admin/b2b/representatives' in current_path %}active{% endif %}" href="/admin/b2b/representatives">
-                <i class="bi bi-people-fill me-2"></i>Temsilciler
-              </a>
-            </li>
-
-            <li>
-              <a class="dropdown-item {% if current_path and '/admin/b2b/commission/transactions' in current_path %}active{% endif %}" href="/admin/b2b/commission/transactions">
-                <i class="bi bi-cash-coin me-2"></i>Komisyon İşlemleri
-              </a>
-            </li>
-          </ul>
-        </li>
 
 
 

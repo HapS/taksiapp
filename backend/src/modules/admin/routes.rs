@@ -47,16 +47,6 @@ pub fn routes() -> Router<AppState> {
                 .post(web::settings::notifications::update_notification_settings),
         )
         .route(
-            "/admin/settings/payment",
-            get(web::settings::payment::payment_settings)
-                .post(web::settings::payment::update_payment_settings),
-        )
-        .route(
-            "/admin/settings/payment-methods",
-            get(web::settings::payment_methods::payment_methods_settings)
-                .post(web::settings::payment_methods::update_payment_methods_settings),
-        )
-        .route(
             "/admin/settings/security",
             get(web::settings::security::security_settings)
                 .post(web::settings::security::update_security_settings),
@@ -65,16 +55,6 @@ pub fn routes() -> Router<AppState> {
             "/admin/settings/advanced",
             get(web::settings::advanced::advanced_settings)
                 .post(web::settings::advanced::update_advanced_settings),
-        )
-        .route(
-            "/admin/settings/kargo-sirketleri",
-            get(web::settings::kargo::kargo_sirketleri_list)
-                .post(web::settings::kargo::cargo_extra_settings_post),
-        )
-        .route(
-            "/admin/settings/kargo-sirketi/{kargo_sirketi_id}",
-            get(web::settings::kargo::kargo_sirketi_settings)
-                .post(web::settings::kargo::kargo_sirketi_settings_post),
         )
         // Web: Taxonomy Management HTML Views
         .route("/admin/taxonomy", get(web::taxonomy::taxonomy_manager))
@@ -116,25 +96,6 @@ pub fn routes() -> Router<AppState> {
             "/admin/api/build-content-absolute-url/search",
             get(api::build_content_absolute_url::search_absolute_url),
         )
-        // Admin Orders HTML Views
-        .route("/admin/orders", get(web::orders::orders_list))
-        .route("/admin/orders/{id}", get(web::orders::order_edit))
-        // Admin Campaigns HTML Views
-        .route("/admin/campaigns", get(web::campaign::campaign_list))
-        .route(
-            "/admin/campaigns/new",
-            get(web::campaign::campaign_create),
-        )
-        .route(
-            "/admin/campaigns/{id}",
-            get(web::campaign::campaign_edit),
-        )
-        .route(
-            "/admin/campaigns/{id}/coupons",
-            get(web::campaign::coupon_list),
-        )
-        // Admin Returns HTML Views
-        .route("/admin/returns", get(web::returns::returns_list))
         // Admin Mailer HTML Views
         .route("/admin/mailer", get(web::mailer::admin_mailer_list))
         // API: Vocabulary Management
@@ -251,135 +212,6 @@ pub fn routes() -> Router<AppState> {
             "/api/homepage/render",
             get(web::homepage::api_render_homepage),
         )
-        // Admin Orders API Routes
-        .route("/admin/api/orders", get(api::orders::get_orders))
-        .route("/admin/api/orders/{id}", get(api::orders::get_order))
-        .route(
-            "/admin/api/orders/{id}/status",
-            put(api::orders::update_order_status),
-        )
-        //order larda gelecek kargo şirketleri listesi selectbox için
-        .route(
-            "/admin/api/orders/cargo_companies",
-            get(api::orders::kargo_sirketleri_list),
-        )
-        // İptal talebi yönetimi
-        .route(
-            "/admin/api/orders/{cart_id}/items/{item_id}/cancel/accept",
-            put(api::orders::accept_cancel_request),
-        )
-        .route(
-            "/admin/api/orders/{cart_id}/items/{item_id}/cancel/reject",
-            put(api::orders::reject_cancel_request),
-        )
-        // Admin İade Talebi Yönetimi API Routes
-        .route(
-            "/admin/api/returns",
-            get(api::return_admin::list_return_requests),
-        )
-        .route(
-            "/admin/api/returns/{return_id}",
-            get(api::return_admin::get_return_request),
-        )
-        .route(
-            "/admin/api/returns/{return_id}/approve",
-            put(api::return_admin::approve_return_request),
-        )
-        .route(
-            "/admin/api/returns/{return_id}/reject",
-            put(api::return_admin::reject_return_request),
-        )
-        .route(
-            "/admin/api/returns/{return_id}/received",
-            put(api::return_admin::mark_return_received),
-        )
-        .route(
-            "/admin/api/returns/{return_id}/complete",
-            put(api::return_admin::complete_return_request),
-        )
-        .route(
-            "/admin/api/returns/{return_id}/notes",
-            put(api::return_admin::update_admin_notes),
-        )
-        // B2B Credit Management HTML Views
-        .route(
-            "/admin/b2b/credit/transactions",
-            get(web::credit::credit_transactions_page),
-        )
-        .route(
-            "/admin/b2b/credit/payment/{company_id}",
-            get(web::credit::credit_payment_page),
-        )
-        .route(
-            "/admin/b2b/credit/adjustment/{company_id}",
-            get(web::credit::credit_adjustment_page),
-        )
-        // B2B Credit Management API Routes
-        .route(
-            "/admin/api/credit/transactions",
-            get(api::credit_api::get_credit_transactions),
-        )
-        .route(
-            "/admin/api/credit/summary",
-            get(api::credit_api::get_company_credit_summary),
-        )
-        .route(
-            "/admin/api/credit/payment",
-            post(api::credit_api::create_payment),
-        )
-        .route(
-            "/admin/api/credit/adjustment",
-            post(api::credit_api::create_adjustment),
-        )
-        // B2B Commission Management HTML Views
-        .route(
-            "/admin/b2b/commission/transactions",
-            get(web::commission::commission_transactions_page),
-        )
-        .route(
-            "/admin/b2b/commission/payment/{representative_id}",
-            get(web::commission::commission_payment_page),
-        )
-        .route(
-            "/admin/b2b/commission/adjustment/{representative_id}",
-            get(web::commission::commission_adjustment_page),
-        )
-        .route(
-            "/admin/b2b/representatives",
-            get(web::commission::representatives_list_page),
-        )
-        // B2B Commission Management API Routes
-        .route(
-            "/admin/api/commission/transactions",
-            get(api::commission_api::get_commission_transactions),
-        )
-        .route(
-            "/admin/api/commission/summary",
-            get(api::commission_api::get_representative_commission_summary),
-        )
-        .route(
-            "/admin/api/commission/payment",
-            post(api::commission_api::create_commission_payment),
-        )
-        .route(
-            "/admin/api/commission/adjustment",
-            post(api::commission_api::create_commission_adjustment),
-        )
-        .route(
-            "/admin/api/commission/representatives",
-            get(api::commission_api::get_representatives),
-        )
-        // Refund Management API Routes
-        .route(
-            "/admin/api/refund/bulk-b2b-credit",
-            post(api::refund_api::bulk_refund_to_b2b_credit),
-        )
-        .route(
-            "/admin/api/refund/bulk-bank",
-            post(api::refund_api::bulk_mark_bank_refunded),
-        )
-        // User Credit Management HTML Views
-        .route("/admin/credits", get(web::credit::user_credits_page))
         // User Management HTML Views
         .route("/admin/users", get(web::users::user_list))
         .route("/admin/users/new", get(web::users::user_create))

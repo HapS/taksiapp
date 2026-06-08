@@ -13,9 +13,6 @@ use tokio::time::{interval, Duration};
 
 /// Task süreleri (saniye cinsinden)
 pub mod intervals {
-    /// Exchange rate güncelleme süresi (1 saat)
-    pub const EXCHANGE_RATE_UPDATE: u64 = 60 * 60;
-
     /// Mail queue işleme süresi (30 saniye)
     pub const MAIL_QUEUE_PROCESS: u64 = 10;
 }
@@ -25,9 +22,6 @@ pub mod intervals {
 pub fn start_all(db: Arc<DatabaseConnection>) {
     println!("🔄 Background tasks başlatılıyor...");
 
-    // Exchange rate updater - her 1 saatte bir
-    start_exchange_rate_updater(db.clone());
-
     // Mail queue processor - her 30 saniyede bir
     start_mail_queue_processor(db.clone());
 
@@ -36,56 +30,6 @@ pub fn start_all(db: Arc<DatabaseConnection>) {
     // start_cache_warmer(db.clone());
 
     println!("✅ Background tasks başlatıldı, main.rs çağırdı");
-}
-
-/// Exchange rate güncelleme task'ı
-/// TCMB'den kurları çekip veritabanına kaydeder
-fn start_exchange_rate_updater(db: Arc<DatabaseConnection>) {
-    tokio::spawn(async move {
-        println!(
-            "💱 Exchange rate updater başlatıldı (interval: {} sn)",
-            intervals::EXCHANGE_RATE_UPDATE
-        );
-
-        // İlk güncellemeyi yap
-        match crate::modules::currency::services::exchange_rate_service::fetch_and_save_rates(&*db)
-            .await
-        {
-            Ok(rates) => {
-                println!(
-                    "💱 İlk kur güncellemesi tamamlandı: USD/TRY={:?}",
-                    rates.usd_try
-                );
-            }
-            Err(e) => {
-                eprintln!("⚠️  İlk kur güncellemesi başarısız: {}", e);
-            }
-        }
-
-        // Periyodik güncelleme
-        let mut interval = interval(Duration::from_secs(intervals::EXCHANGE_RATE_UPDATE));
-
-        loop {
-            interval.tick().await;
-
-            println!("💱 Kurlar güncelleniyor...");
-            match crate::modules::currency::services::exchange_rate_service::fetch_and_save_rates(
-                &*db,
-            )
-            .await
-            {
-                Ok(rates) => {
-                    println!(
-                        "💱 Kurlar güncellendi: USD/TRY={:?}, EUR/TRY={:?}",
-                        rates.usd_try, rates.eur_try
-                    );
-                }
-                Err(e) => {
-                    eprintln!("⚠️  Kur güncellemesi başarısız: {}", e);
-                }
-            }
-        }
-    });
 }
 
 /// Mail queue processor task'ı

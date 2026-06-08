@@ -17,14 +17,9 @@ pub fn register_filters(tera: &mut tera::Tera) {
     // format_price
     tera.register_filter(
         "format_price",
-        |value: &serde_json::Value, args: &std::collections::HashMap<String, serde_json::Value>| {
+        |value: &serde_json::Value, _args: &std::collections::HashMap<String, serde_json::Value>| {
             let price = value.as_f64().unwrap_or(0.0);
-            let currency = args
-                .get("currency")
-                .and_then(|v| v.as_str())
-                .unwrap_or("TRY");
-
-            let formatted = crate::modules::utils::format_price::format_price(price, currency);
+            let formatted = crate::modules::utils::format_price::format_price(price, "TRY");
             Ok(serde_json::Value::String(formatted))
         },
     );
@@ -32,15 +27,10 @@ pub fn register_filters(tera: &mut tera::Tera) {
     // format_price_no_symbol
     tera.register_filter(
         "format_price_no_symbol",
-        |value: &serde_json::Value, args: &std::collections::HashMap<String, serde_json::Value>| {
+        |value: &serde_json::Value, _args: &std::collections::HashMap<String, serde_json::Value>| {
             let price = value.as_f64().unwrap_or(0.0);
-            let currency = args
-                .get("currency")
-                .and_then(|v| v.as_str())
-                .unwrap_or("TRY");
-
             let formatted =
-                crate::modules::utils::format_price::format_price_no_symbol(price, currency);
+                crate::modules::utils::format_price::format_price_no_symbol(price, "TRY");
             Ok(serde_json::Value::String(formatted))
         },
     );

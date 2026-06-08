@@ -109,43 +109,15 @@ pub fn has_content_in_language(data: &Value, language: &str) -> bool {
     !title.is_empty() && title != "Başlıksız"
 }
 
-/// Convert prices for batch operations (uses pre-fetched rates)
+/// Convert prices for batch operations (no exchange rate conversion)
 pub fn convert_prices_with_rates(
     price: Option<f64>,
     old_price: Option<f64>,
-    product_currency: Option<&str>,
-    sale_currency: &str,
-    rates: Option<&crate::modules::currency::models::ExchangeRateModel>,
+    _product_currency: Option<&str>,
+    _sale_currency: &str,
+    _rates: Option<&()>,
 ) -> (Option<f64>, Option<f64>, Option<String>) {
-    use crate::modules::currency::services::exchange_rate_service;
-
-    let product_curr = product_currency.unwrap_or("TRY");
-
-    // If same currency, no conversion needed
-    if product_curr.to_uppercase() == sale_currency.to_uppercase() {
-        return (price, old_price, Some(sale_currency.to_string()));
-    }
-
-    // If no rates, return original
-    let rates = match rates {
-        Some(r) => r,
-        None => return (price, old_price, Some(product_curr.to_string())),
-    };
-
-    // Convert prices
-    let display_price = price.and_then(|p| {
-        exchange_rate_service::convert_currency(p, product_curr, sale_currency, rates)
-    });
-
-    let display_old_price = old_price.and_then(|p| {
-        exchange_rate_service::convert_currency(p, product_curr, sale_currency, rates)
-    });
-
-    (
-        display_price,
-        display_old_price,
-        Some(sale_currency.to_string()),
-    )
+    (price, old_price, Some("TRY".to_string()))
 }
 
 /// Convert product data with variants - adds display_price and display_old_price to each variant
@@ -153,9 +125,8 @@ pub fn convert_product_with_variants(
     product_data: Option<&Value>,
     product_currency: Option<&str>,
     sale_currency: &str,
-    rates: Option<&crate::modules::currency::models::ExchangeRateModel>,
+    rates: Option<&()>,
 ) -> Option<Value> {
-    use crate::modules::currency::services::exchange_rate_service;
     use crate::modules::utils::format_price::format_price;
 
     let product = product_data?;
@@ -206,51 +177,7 @@ pub fn convert_product_with_variants(
                             serde_json::json!(format_price(op, sale_currency)),
                         );
                     }
-                } else if let Some(r) = rates {
-                    // Different currency, convert
-                    if let Some(p) = current_price {
-                        variant_obj.insert(
-                            "price_formatted".to_string(),
-                            serde_json::json!(format_price(p, product_curr)),
-                        );
-                        if let Some(converted) = exchange_rate_service::convert_currency(
-                            p,
-                            product_curr,
-                            sale_currency,
-                            r,
-                        ) {
-                            variant_obj
-                                .insert("display_price".to_string(), serde_json::json!(converted));
-                            variant_obj.insert(
-                                "display_price_formatted".to_string(),
-                                serde_json::json!(format_price(converted, sale_currency)),
-                            );
-                        }
-                    }
-                    if let Some(op) = original_price {
-                        variant_obj.insert(
-                            "old_price_formatted".to_string(),
-                            serde_json::json!(format_price(op, product_curr)),
-                        );
-                        if let Some(converted) = exchange_rate_service::convert_currency(
-                            op,
-                            product_curr,
-                            sale_currency,
-                            r,
-                        ) {
-                            variant_obj.insert(
-                                "display_old_price".to_string(),
-                                serde_json::json!(converted),
-                            );
-                            variant_obj.insert(
-                                "display_old_price_formatted".to_string(),
-                                serde_json::json!(format_price(converted, sale_currency)),
-                            );
-                        }
-                    }
                 }
-
-                // Add display_currency to variant
                 variant_obj.insert(
                     "display_currency".to_string(),
                     serde_json::json!(sale_currency),
@@ -598,7 +525,7 @@ pub async fn prepare_product_for_display(
     db: &sea_orm::DatabaseConnection,
     language: &str,
     sale_currency: &str,
-    rates: Option<&crate::modules::currency::models::ExchangeRateModel>,
+    rates: Option<&()>,
     attribute_terms_map: Option<&std::collections::HashMap<i64, serde_json::Value>>,
 ) -> Option<serde_json::Value> {
     let product_data = product_data?;
@@ -693,7 +620,6 @@ pub async fn to_product_get_response(
     content: &crate::modules::content::models::ContentModel,
     language: &str,
     db: &sea_orm::DatabaseConnection,
-    display_currency: Option<&str>,
 ) -> ProductResponse {
     let config = get_config();
     let lang = config.get_language_or_default(Some(language));
@@ -743,46 +669,30 @@ pub async fn to_product_get_response(
         None
     };
 
-    // Get sale currency and rates for conversion
-    let sale_currency = crate::modules::admin::services::settings_service::get_sale_currency(db)
-        .await
-        .unwrap_or_else(|| "TRY".to_string());
-    let target_currency = display_currency.unwrap_or(&sale_currency);
-    let rates =
-        crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
-
     // Convert main prices
     let (display_price, display_old_price, display_currency) = convert_prices_with_rates(
         price,
         old_price,
         currency.as_deref(),
-        target_currency,
-        rates.as_ref(),
+        "TRY",
+        None,
     );
 
-    // Hazır product objesini tek fonksiyonda hazırla (fiyat dönüşümü + attributes zenginleştirme)
     let product_with_converted_variants = prepare_product_for_display(
         content.data.get("product"),
         db,
         &lang,
-        target_currency,
-        rates.as_ref(),
+        "TRY",
+        None,
         None,
     )
     .await;
 
-    // Format prices for display
     let price_formatted = display_price.map(|p| {
-        crate::modules::utils::format_price::format_price(
-            p,
-            display_currency.as_deref().unwrap_or(target_currency),
-        )
+        crate::modules::utils::format_price::format_price(p, "TRY")
     });
     let old_price_formatted = display_old_price.map(|p| {
-        crate::modules::utils::format_price::format_price(
-            p,
-            display_currency.as_deref().unwrap_or(target_currency),
-        )
+        crate::modules::utils::format_price::format_price(p, "TRY")
     });
 
     ProductResponse {
@@ -826,7 +736,7 @@ pub async fn to_product_list_response(
     language: &str,
     tags_map: &std::collections::HashMap<i64, Vec<TagInfo>>,
     sale_currency: &str,
-    rates: Option<&crate::modules::currency::models::ExchangeRateModel>,
+    rates: Option<&()>,
     attribute_terms_map: &std::collections::HashMap<i64, serde_json::Value>,
 ) -> ProductResponse {
     let config = get_config();

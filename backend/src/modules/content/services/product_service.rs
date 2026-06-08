@@ -26,7 +26,6 @@ pub async fn get_product(
     lang: &str,
     slug: Option<&str>,
     id: Option<i64>,
-    display_currency: Option<&str>,
 ) -> Result<crate::modules::content::helpers::product_helper::ProductResponse, ServiceError> {
     let filter = Content::find()
         .filter(ContentColumn::Id.eq(id.unwrap_or(0)))
@@ -52,7 +51,6 @@ pub async fn get_product(
             &model,
             lang,
             db,
-            display_currency,
         )
         .await,
     )
@@ -62,7 +60,6 @@ pub async fn list_products(
     db: &DatabaseConnection,
     lang: &str,
     sort_by: Option<String>,
-    display_currency: Option<&str>,
 ) -> Result<Vec<crate::modules::content::helpers::product_helper::ProductResponse>, ServiceError> {
     let items = Content::find()
         .filter(ContentColumn::ContentType.eq("product"))
@@ -85,14 +82,6 @@ pub async fn list_products(
     } else {
         std::collections::HashMap::new()
     };
-
-    // Get sale currency and exchange rates for price conversion
-    let sale_currency = crate::modules::admin::services::settings_service::get_sale_currency(db)
-        .await
-        .unwrap_or_else(|| "TRY".to_string());
-    let target_currency = display_currency.unwrap_or(&sale_currency);
-    let rates =
-        crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
 
     // Tüm ürünlerde kullanılan öznitelik term ID'lerini önceden getir (N+1 sorgu sorununu önlemek için)
     let mut attr_ids: Vec<i64> = Vec::new();
@@ -134,8 +123,8 @@ pub async fn list_products(
                     product,
                     lang,
                     &tags_map,
-                    target_currency,
-                    rates.as_ref(),
+                    "TRY",
+                    None,
                     &attribute_terms_map,
                 )
                 .await,
@@ -171,7 +160,6 @@ pub async fn list_products_paginated(
     db: &DatabaseConnection,
     lang: &str,
     sort_by: Option<String>,
-    display_currency: Option<&str>,
     page: usize,
     per_page: usize,
 ) -> Result<
@@ -218,14 +206,6 @@ pub async fn list_products_paginated(
         std::collections::HashMap::new()
     };
 
-    // Get sale currency and exchange rates for price conversion
-    let sale_currency = crate::modules::admin::services::settings_service::get_sale_currency(db)
-        .await
-        .unwrap_or_else(|| "TRY".to_string());
-    let target_currency = display_currency.unwrap_or(&sale_currency);
-    let rates =
-        crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
-
     // Tüm ürünlerde kullanılan öznitelik term ID'lerini önceden getir (N+1 sorgu sorununu önlemek için)
     let mut attr_ids: Vec<i64> = Vec::new();
     for p in items.iter() {
@@ -266,8 +246,8 @@ pub async fn list_products_paginated(
                     product,
                     lang,
                     &tags_map,
-                    target_currency,
-                    rates.as_ref(),
+                    "TRY",
+                    None,
                     &attribute_terms_map,
                 )
                 .await,
@@ -299,12 +279,10 @@ pub async fn list_products_paginated(
 }
 
 /// Fetch multiple products by ids in a single batch and return a map of id -> ProductResponse.
-/// This is optimized to avoid N+1 queries by prefetching tags, exchange rates, and attribute terms.
 pub async fn get_products_map_by_ids(
     db: &sea_orm::DatabaseConnection,
     lang: &str,
     ids: &[i64],
-    display_currency: Option<&str>,
 ) -> Result<
     std::collections::HashMap<
         i64,
@@ -336,14 +314,6 @@ pub async fn get_products_map_by_ids(
     } else {
         std::collections::HashMap::new()
     };
-
-    // Get sale currency and exchange rates for price conversion
-    let sale_currency = crate::modules::admin::services::settings_service::get_sale_currency(db)
-        .await
-        .unwrap_or_else(|| "TRY".to_string());
-    let target_currency = display_currency.unwrap_or(&sale_currency);
-    let rates =
-        crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
 
     // Collect attribute term ids used across these products
     let mut attr_ids: Vec<i64> = Vec::new();
@@ -384,8 +354,8 @@ pub async fn get_products_map_by_ids(
                 &content,
                 lang,
                 &tags_map,
-                target_currency,
-                rates.as_ref(),
+                "TRY",
+                None,
                 &attribute_terms_map,
             )
             .await;
@@ -601,7 +571,6 @@ pub async fn list_products_category_with_filters_paginated(
     category_id: Option<i64>,
     attribute_filters: std::collections::HashMap<String, Vec<i64>>,
     sort_by: Option<String>,
-    display_currency: Option<&str>,
     page: usize,
     per_page: usize,
 ) -> Result<
@@ -731,14 +700,6 @@ pub async fn list_products_category_with_filters_paginated(
         std::collections::HashMap::new()
     };
 
-    // Get sale currency and exchange rates for price conversion
-    let sale_currency = crate::modules::admin::services::settings_service::get_sale_currency(db)
-        .await
-        .unwrap_or_else(|| "TRY".to_string());
-    let target_currency = display_currency.unwrap_or(&sale_currency);
-    let rates =
-        crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
-
     // Filtrelenmiş ürünlerde kullanılan öznitelik term ID'lerini önceden getir (N+1 sorgu sorununu önlemek için)
     let mut attr_ids: Vec<i64> = Vec::new();
     for p in items.iter() {
@@ -780,8 +741,8 @@ pub async fn list_products_category_with_filters_paginated(
                     product,
                     lang,
                     &tags_map,
-                    target_currency,
-                    rates.as_ref(),
+                    "TRY",
+                    None,
                     &attribute_terms_map,
                 )
                 .await,

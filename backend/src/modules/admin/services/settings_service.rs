@@ -107,35 +107,4 @@ pub async fn get_vocab_id(db: &DatabaseConnection, vocab_type: &str) -> Option<i
         }
     }
 }
-/// Varsayılan para birimini al (default_currency, yoksa TRY)
-pub async fn get_sale_currency(db: &DatabaseConnection) -> Option<String> {
-    match get_settings(db).await {
-        Ok(settings) => settings.default_currency.or(Some("TRY".to_string())),
-        Err(_) => Some("TRY".to_string()),
-    }
-}
 
-/// Desteklenen para birimlerini al (varsayılan: satış para birimi veya ["TRY"])
-pub async fn get_free_shipping_threshold(db: &DatabaseConnection) -> Option<f64> {
-    match get_settings(db).await {
-        Ok(settings) => settings.free_shipping_threshold.or(Some(500.0)),
-        Err(_) => Some(500.0),
-    }
-}
-
-pub async fn save_extra_settings(
-    db: &DatabaseConnection,
-    extra_settings: &serde_json::Value,
-) -> Result<(), SettingsServiceError> {
-    let mut settings = get_settings(db).await?;
-    // println!("{:?}", extra_settings);
-
-    settings.free_shipping_threshold = extra_settings
-        .get("free_shipping_threshold")
-        .and_then(|v| v.as_f64())
-        .or(Some(500.0));
-
-    update_settings(db, settings).await?;
-
-    Ok(())
-}

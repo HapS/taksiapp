@@ -5,9 +5,7 @@ use crate::modules::auth::helpers::password::{
 use crate::modules::auth::models::{
     PasswordReset, PasswordResetModel, SessionData, User, UserActiveModel, UserModel,
 };
-use crate::modules::ecommerce::models::{cart, cart_item, Cart, CartItem};
 use anyhow::Result;
-use chrono::Utc;
 use sea_orm::*;
 use serde_json::Value as JsonValue;
 
@@ -167,7 +165,7 @@ pub async fn login(
     db: &DatabaseConnection,
     username_or_email: &str,
     password: &str,
-    guest_user_id: Option<i64>,
+    _guest_user_id: Option<i64>,
 ) -> Result<SessionData, AuthError> {
     // Find user by username or email
     let user = User::find()
@@ -192,105 +190,11 @@ pub async fn login(
         return Err(AuthError::InvalidCredentials);
     }
 
-    // Misafir kullanıcı sepetini birleştir (eğer varsa)
-    if let Some(guest_id) = guest_user_id {
-        if let Err(e) = merge_guest_cart_to_user(db, guest_id, user.id).await {
-            eprintln!("Misafir sepet birleştirme hatası: {}", e);
-            // Sepet birleştirme hatası olsa bile login işlemini başarısızlığa uğratma
-        }
-    }
-
     // Return session data with permissions
     user.to_session_data(db).await.map_err(|e| {
         eprintln!("Yetki yükleme hatası: {}", e);
         AuthError::DatabaseError(e)
     })
-}
-
-/// Misafir kullanıcı sepetini giriş yapmış kullanıcının sepetine birleştir
-async fn merge_guest_cart_to_user(
-    db: &DatabaseConnection,
-    guest_user_id: i64,
-    logged_user_id: i64,
-) -> Result<(), AuthError> {
-    // Misafir kullanıcının açık sepetini bul
-    let guest_cart = Cart::find()
-        .filter(cart::Column::UserId.eq(guest_user_id))
-        .filter(cart::Column::Status.eq(cart::status::OPEN_CART))
-        .one(db)
-        .await?;
-
-    let guest_cart = match guest_cart {
-        Some(cart) => cart,
-        None => return Ok(()), // Birleştirilecek misafir sepeti yok
-    };
-
-    // Giriş yapmış kullanıcının açık sepetini bul
-    let user_cart = Cart::find()
-        .filter(cart::Column::UserId.eq(logged_user_id))
-        .filter(cart::Column::Status.eq(cart::status::OPEN_CART))
-        .one(db)
-        .await?;
-
-    match user_cart {
-        Some(user_cart) => {
-            // Kullanıcının mevcut sepeti var, misafir ürünlerini ona birleştir
-            let guest_items = CartItem::find()
-                .filter(cart_item::Column::CartId.eq(guest_cart.id))
-                .all(db)
-                .await?;
-
-            for guest_item in guest_items {
-                // Aynı ürün+varyant kullanıcı sepetinde zaten var mı kontrol et
-                let mut query = CartItem::find()
-                    .filter(cart_item::Column::CartId.eq(user_cart.id))
-                    .filter(cart_item::Column::ProductId.eq(guest_item.product_id));
-
-                // Variant key karşılaştırması IS NULL
-                query = match &guest_item.variant_key {
-                    Some(key) => query.filter(cart_item::Column::VariantKey.eq(key.clone())),
-                    None => query.filter(cart_item::Column::VariantKey.is_null()),
-                };
-
-                let existing_item = query.one(db).await?;
-
-                if let Some(existing) = existing_item {
-                    // Miktarı güncelle (aynı ürün+varyant varsa adetleri topla)
-                    let existing_quantity = existing.quantity;
-                    let new_quantity = existing_quantity + guest_item.quantity;
-
-                    let mut active_item: cart_item::ActiveModel = existing.into();
-                    active_item.quantity = Set(new_quantity);
-                    active_item.updated_at = Set(Some(Utc::now().into()));
-                    active_item.update(db).await?;
-                } else {
-                    // Ürünü kullanıcı sepetine taşı
-                    let mut active_item: cart_item::ActiveModel = guest_item.into();
-                    active_item.cart_id = Set(user_cart.id);
-                    active_item.updated_at = Set(Some(Utc::now().into()));
-                    active_item.update(db).await?;
-                }
-            }
-
-            // Misafir sepetini sil
-            let guest_cart_active: cart::ActiveModel = guest_cart.into();
-            guest_cart_active.delete(db).await?;
-
-            // Kullanıcı sepeti zaman damgasını güncelle
-            let mut user_cart_active: cart::ActiveModel = user_cart.into();
-            user_cart_active.updated_at = Set(Some(Utc::now().into()));
-            user_cart_active.update(db).await?;
-        }
-        None => {
-            // Kullanıcının sepeti yok, misafir sepetini kullanıcıya aktar
-            let mut guest_cart_active: cart::ActiveModel = guest_cart.into();
-            guest_cart_active.user_id = Set(logged_user_id);
-            guest_cart_active.updated_at = Set(Some(Utc::now().into()));
-            guest_cart_active.update(db).await?;
-        }
-    }
-
-    Ok(())
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -414,12 +318,6 @@ pub async fn find_or_create_social_user(
     let user_by_provider = User::find().filter(column.eq(provider_id)).one(db).await?;
 
     if let Some(user) = user_by_provider {
-        // Misafir kullanıcı sepetini birleştir (eğer varsa)
-        if let Some(guest_id) = guest_user_id {
-            if let Err(e) = merge_guest_cart_to_user(db, guest_id, user.id).await {
-                eprintln!("Misafir sepet birleştirme hatası: {}", e);
-            }
-        }
         return Ok(user);
     }
 
@@ -438,13 +336,6 @@ pub async fn find_or_create_social_user(
         }
         active_model.updated_at = Set(Some(chrono::Utc::now().into()));
         let updated_user = active_model.update(db).await?;
-
-        // Misafir kullanıcı sepetini birleştir (eğer varsa)
-        if let Some(guest_id) = guest_user_id {
-            if let Err(e) = merge_guest_cart_to_user(db, guest_id, updated_user.id).await {
-                eprintln!("Misafir sepet birleştirme hatası: {}", e);
-            }
-        }
 
         return Ok(updated_user);
     }
@@ -483,13 +374,6 @@ pub async fn find_or_create_social_user(
     }
 
     let new_user = active_model.insert(db).await?;
-
-    // Misafir kullanıcı sepetini birleştir (eğer varsa)
-    if let Some(guest_id) = guest_user_id {
-        if let Err(e) = merge_guest_cart_to_user(db, guest_id, new_user.id).await {
-            eprintln!("Misafir sepet birleştirme hatası: {}", e);
-        }
-    }
 
     Ok(new_user)
 }

@@ -26,7 +26,7 @@ use crate::modules::admin::controllers::web::homepage;
 /// Home page - shows recent published pages
 pub async fn index(
     State(state): State<AppState>,
-    Extension(global_ctx): Extension<GlobalContext>,
+    Extension(_global_ctx): Extension<GlobalContext>,
     mut ctx: ViewContext,
     Path(language): Path<String>,
     uri: axum::http::Uri,
@@ -106,12 +106,9 @@ pub async fn index(
         std::collections::HashMap::new()
     };
 
-    // Kullanıcının seçtiği display_currency'yi global context'ten al
-    let display_currency = global_ctx.display_currency.clone();
-
     //bu admin modülü içinde direkt oradan front home a getiriyoruz
     let homepage_render =
-        match homepage::get_homepage_render_cached(&state, &lang, Some(&display_currency)).await {
+        match homepage::get_homepage_render_cached(&state, &lang).await {
             Ok(render_data) => render_data,
             Err(e) => {
                 tracing::error!("Homepage render hatası: {:?}", e);

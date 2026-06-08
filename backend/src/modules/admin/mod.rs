@@ -3,9 +3,6 @@
 // Models
 pub mod models;
 
-// DTOs
-pub mod dto;
-
 // Controllers
 pub mod controllers;
 

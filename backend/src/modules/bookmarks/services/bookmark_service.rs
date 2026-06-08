@@ -8,9 +8,6 @@ use sea_orm::*;
 use serde::Serialize;
 use serde_json::Value as JsonValue;
 
-use crate::modules::content::helpers::ProductResponse;
-use crate::modules::content::services::product_service;
-
 use crate::modules::content::helpers::PageResponse;
 use crate::modules::content::models::content::Column as ContentColumn;
 use crate::modules::content::models::Content;
@@ -52,8 +49,6 @@ pub struct BookmarkResponse {
     pub link: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub product: Option<ProductResponse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub page: Option<PageResponse>,
 }
 
@@ -85,30 +80,16 @@ impl BookmarkService {
             .await?;
 
         // Türlere göre gruplanmış id'leri topla
-        let mut product_ids: Vec<i64> = Vec::new();
         let mut page_ids: Vec<i64> = Vec::new();
         for r in rows.iter() {
-            match r.content_type.as_str() {
-                "product" => product_ids.push(r.content_id),
-                "page" => page_ids.push(r.content_id),
-                _ => {}
+            if r.content_type == "page" {
+                page_ids.push(r.content_id);
             }
         }
-        product_ids.sort_unstable();
-        product_ids.dedup();
         page_ids.sort_unstable();
         page_ids.dedup();
 
-        // Ürünleri ve sayfaları toplu olarak getir
-        let products_map = if !product_ids.is_empty() {
-            match product_service::get_products_map_by_ids(db, lang, &product_ids, None).await {
-                Ok(m) => m,
-                Err(_) => std::collections::HashMap::new(),
-            }
-        } else {
-            std::collections::HashMap::new()
-        };
-
+        // Sayfaları toplu olarak getir
         let pages_map = if !page_ids.is_empty() {
             match page_service::get_pages_map_by_ids_including_unpublished(db, lang, &page_ids)
                 .await
@@ -153,186 +134,10 @@ impl BookmarkService {
                 content_description: None,
                 media: None,
                 link: None,
-                product: None,
                 page: None,
             };
 
             match resp.content_type.as_str() {
-                "product" => {
-                    if let Some(prod) = products_map.get(&resp.content_id) {
-                        resp.product = Some(prod.clone());
-                        // Görüntüleme alanlarını üründen doldur
-                        resp.content_title = Some(prod.title.clone());
-                        resp.content_description = prod.description.clone();
-                        resp.link = prod.get_absolute_url.clone().or_else(|| {
-                            Some(format!("/{}/product/{}-{}", lang, prod.slug, prod.id))
-                        });
-                        // Öncelikle product.data.langs.$lang.media içindeki yerelleştirilmiş medyayı kullan
-                        if let Some(media_val) = prod
-                            .data
-                            .get("langs")
-                            .and_then(|langs| langs.get(lang))
-                            .and_then(|ld| ld.get("media"))
-                        {
-                            resp.media = Some(media_val.clone());
-                        } else if let Some(prod_value) = prod.product.as_ref() {
-                            if let Some(media_val) = prod_value.get("media") {
-                                resp.media = Some(media_val.clone());
-                            } else if let Some(raw) = raw_contents_map.get(&resp.content_id) {
-                                // Yedek olarak ham içerik alanlarını kullan
-                                if resp.content_title.is_none() {
-                                    resp.content_title = raw
-                                        .data
-                                        .get("langs")
-                                        .and_then(|langs| langs.get(lang))
-                                        .and_then(|ld| ld.get("title"))
-                                        .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                        .or_else(|| {
-                                            raw.data
-                                                .get("title")
-                                                .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                        });
-                                }
-                                if resp.content_description.is_none() {
-                                    resp.content_description = raw
-                                        .data
-                                        .get("langs")
-                                        .and_then(|langs| langs.get(lang))
-                                        .and_then(|ld| ld.get("description"))
-                                        .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                        .or_else(|| {
-                                            raw.data
-                                                .get("description")
-                                                .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                        });
-                                }
-                                if let Some(media_val) = raw
-                                    .data
-                                    .get("langs")
-                                    .and_then(|langs| langs.get(lang))
-                                    .and_then(|ld| ld.get("media"))
-                                {
-                                    resp.media = Some(media_val.clone());
-                                } else if let Some(media_val) = raw.data.get("media") {
-                                    resp.media = Some(media_val.clone());
-                                }
-                            }
-                        } else if let Some(raw) = raw_contents_map.get(&resp.content_id) {
-                            // Yedek olarak ham içerik alanlarını kullan
-                            if resp.content_title.is_none() {
-                                resp.content_title = raw
-                                    .data
-                                    .get("langs")
-                                    .and_then(|langs| langs.get(lang))
-                                    .and_then(|ld| ld.get("title"))
-                                    .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                    .or_else(|| {
-                                        raw.data
-                                            .get("title")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                    });
-                            }
-                            if resp.content_description.is_none() {
-                                resp.content_description = raw
-                                    .data
-                                    .get("langs")
-                                    .and_then(|langs| langs.get(lang))
-                                    .and_then(|ld| ld.get("description"))
-                                    .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                    .or_else(|| {
-                                        raw.data
-                                            .get("description")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                    });
-                            }
-                            if let Some(media_val) = raw
-                                .data
-                                .get("langs")
-                                .and_then(|langs| langs.get(lang))
-                                .and_then(|ld| ld.get("media"))
-                            {
-                                resp.media = Some(media_val.clone());
-                            } else if let Some(media_val) = raw.data.get("media") {
-                                resp.media = Some(media_val.clone());
-                            }
-                        }
-
-                        // Eğer bookmark belirli bir varyanta işaret ediyorsa, gösterilen fiyatı varyant fiyatına göre override et
-                        if let Some(ref vk) = resp.variant_key {
-                            // Clone the product response so we can mutate the displayed price fields safely
-                            let mut prod_clone = prod.clone();
-
-                            if let Some(prod_json) = prod_clone.product.as_ref() {
-                                if let Some(variants) =
-                                    prod_json.get("variants").and_then(|v| v.as_array())
-                                {
-                                    if let Some(variant) = variants.iter().find(|v| {
-                                        v.get("option_values_display")
-                                            .and_then(|x| x.as_str())
-                                            .map(|s| s.trim() == vk.trim())
-                                            .unwrap_or(false)
-                                    }) {
-                                        // Prefer display_price (converted), fall back to raw price (float/int)
-                                        let variant_price = variant
-                                            .get("display_price")
-                                            .and_then(|p| p.as_f64())
-                                            .or_else(|| {
-                                                variant.get("price").and_then(|p| {
-                                                    p.as_f64()
-                                                        .or_else(|| p.as_i64().map(|i| i as f64))
-                                                })
-                                            });
-
-                                        // Build a formatted price string (prefer variant-provided formatted string)
-                                        let formatted = variant
-                                            .get("display_price_formatted")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                            .or(prod_clone.price_formatted.clone())
-                                            .or_else(|| {
-                                                variant_price.map(|n| {
-                                                    crate::modules::utils::format_price::format_price(
-                                                        n,
-                                                        prod_clone
-                                                            .display_currency
-                                                            .as_deref()
-                                                            .unwrap_or("TRY"),
-                                                    )
-                                                })
-                                            });
-
-                                        if let Some(vp) = variant_price {
-                                            // Keep numeric display price on product clone
-                                            prod_clone.display_price = Some(vp);
-                                        }
-
-                                        if let Some(ref fstr) = formatted {
-                                            // Keep the bookmark's stored 'added' price (do not overwrite resp.price)
-                                            // Set product display formatted price to current variant price for UI ('Şimdiki Fiyat')
-                                            prod_clone.price_formatted = Some(fstr.clone());
-                                        }
-
-                                        // Also override old price fields if present
-                                        prod_clone.display_old_price = variant
-                                            .get("display_old_price")
-                                            .and_then(|p| p.as_f64())
-                                            .or_else(|| {
-                                                variant.get("old_price").and_then(|p| p.as_f64())
-                                            })
-                                            .or(prod_clone.display_old_price);
-
-                                        prod_clone.old_price_formatted = variant
-                                            .get("display_old_price_formatted")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string()))
-                                            .or(prod_clone.old_price_formatted.clone());
-
-                                        // Replace the product info on response with the overridden clone
-                                        resp.product = Some(prod_clone);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
                 "page" => {
                     if let Some(pg) = pages_map.get(&resp.content_id) {
                         resp.page = Some(pg.clone());

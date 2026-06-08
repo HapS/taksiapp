@@ -2,11 +2,8 @@
 pub mod advanced;
 pub mod appearance;
 pub mod general;
-pub mod kargo;
 pub mod mail;
 pub mod notifications;
-pub mod payment;
-pub mod payment_methods;
 pub mod security;
 pub mod seo;
 pub mod social;
@@ -121,24 +118,6 @@ fn get_sidebar_items() -> Vec<SidebarItem> {
             title: "Mail Ayarları".to_string(),
             icon: "bi-envelope".to_string(),
             url: "/admin/settings/mail".to_string(),
-        },
-        SidebarItem {
-            id: "payment".to_string(),
-            title: "Ödeme Ayarları".to_string(),
-            icon: "bi-credit-card".to_string(),
-            url: "/admin/settings/payment".to_string(),
-        },
-        SidebarItem {
-            id: "payment-methods".to_string(),
-            title: "Ödeme Yöntemleri".to_string(),
-            icon: "bi-wallet2".to_string(),
-            url: "/admin/settings/payment-methods".to_string(),
-        },
-        SidebarItem {
-            id: "kargo".to_string(),
-            title: "Kargo Ayarları".to_string(),
-            icon: "bi-truck".to_string(),
-            url: "/admin/settings/kargo-sirketleri".to_string(),
         },
         SidebarItem {
             id: "security".to_string(),

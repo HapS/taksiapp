@@ -50,24 +50,6 @@ pub async fn list_terms(
     Ok(response)
 }
 
-/// Get terms by vocabulary ID
-pub async fn get_terms_by_vocabulary(
-    db: &DatabaseConnection,
-    vocabulary_id: i64,
-    lang: &str,
-) -> Result<Vec<TermResponse>, TermError> {
-    let terms = Term::find()
-        .filter(Column::VocabularyId.eq(vocabulary_id))
-        .filter(Column::Publish.eq(true))
-        .order_by_asc(Column::OrderId)
-        .all(db)
-        .await?;
-
-    let response = terms.into_iter().map(|t| t.to_response(lang)).collect();
-
-    Ok(response)
-}
-
 /// Get term by ID
 // pub async fn get_term_by_id(
 //     db: &DatabaseConnection,

@@ -84,17 +84,10 @@ pub struct SettingsCache {
     // Default Content Ayarları
     pub default_home_content_id: Option<i64>,
 
-    // Varsayılan Para Birimi
-    pub default_currency: Option<String>, // "TRY", "USD", "EUR"
-
     // Robots.txt
     pub robots: Option<String>,
     // NOT: smtp_password, payment_providers config (api_key, secret_key) gibi
     // hassas veriler BU STRUCT'A DAHİL DEĞİL!
-    pub free_shipping_threshold: Option<f64>,
-
-    // Desteklenen Para Birimleri
-    pub supported_currencies: Option<Vec<String>>,
 }
 
 impl SettingsCache {
@@ -246,22 +239,10 @@ impl SettingsCache {
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
             default_home_content_id: data.get("default_home_content_id").and_then(|v| v.as_i64()),
-            default_currency: data
-                .get("default_currency")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
             robots: data
                 .get("robots")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            free_shipping_threshold: data.get("free_shipping_threshold").and_then(|v| v.as_f64()),
-            supported_currencies: data.get("supported_currencies").and_then(|v| {
-                v.as_array().map(|arr| {
-                    arr.iter()
-                        .filter_map(|item| item.as_str().map(|s| s.to_string()))
-                        .collect()
-                })
-            }),
             debug_logs: data.get("debug_logs").and_then(|v| v.as_bool()),
         }
     }
@@ -409,14 +390,6 @@ impl SettingsCache {
                 .robots
                 .as_ref()
                 .map(|s| serde_json::Value::String(s.clone())),
-            "supported_currencies" => self.supported_currencies.as_ref().map(|currencies| {
-                serde_json::Value::Array(
-                    currencies
-                        .iter()
-                        .map(|c| serde_json::Value::String(c.clone()))
-                        .collect(),
-                )
-            }),
             "debug_logs" => self
                 .debug_logs
                 .as_ref()
@@ -429,20 +402,6 @@ impl SettingsCache {
     /// Default home content ID'sini al
     pub fn get_default_home_content_id(&self) -> i64 {
         self.default_home_content_id.unwrap_or(70)
-    }
-
-    /// Varsayılan para birimini al (default_currency, yoksa TRY)
-    pub fn get_sale_currency(&self) -> String {
-        self.default_currency
-            .clone()
-            .unwrap_or_else(|| "TRY".to_string())
-    }
-
-    /// Desteklenen para birimlerini al (varsayılan: ["TRY"])
-    pub fn get_supported_currencies(&self) -> Vec<String> {
-        self.supported_currencies
-            .clone()
-            .unwrap_or_else(|| vec!["TRY".to_string()])
     }
 
     /// Site adını dil bazlı al
@@ -511,32 +470,13 @@ pub struct GlobalContext {
     pub has_b2b_access: bool,
     pub is_authenticated: bool,
     pub is_guest: bool,
-    pub cart_count: i64,
-    pub cart_total_amount: Option<f64>,
-    pub cart_total_amount_formatted: Option<String>,
     pub bookmark_product_count: u64,
-    pub free_shipping_threshold: Option<f64>,
-    pub free_shipping_threshold_formatted: Option<String>,
     pub supported_languages: std::collections::HashMap<String, String>,
     pub current_language: String,
     pub settings: SettingsCache,
     pub menu_items: Vec<serde_json::Value>,
     pub debug: bool,
-    /// Kullanıcının seçtiği görüntüleme para birimi (session'dan)
-    pub display_currency: String,
-    /// Desteklenen para birimleri listesi (admin ayarlarından)
-    pub supported_currencies: Vec<CurrencyDisplayInfo>,
     pub base_url: String,
-}
-
-/// Frontend template'lerinde para birimi dropdown'ı için bilgi
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct CurrencyDisplayInfo {
-    pub code: String,
-    pub name: String,
-    pub symbol: String,
-    pub flag: String,
-    pub is_active: bool,
 }
 
 pub async fn global_context_middleware(
@@ -575,62 +515,6 @@ pub async fn global_context_middleware(
     //burayı değiştiriyoruz guest gelir gelmez cart açmanın manası yok çünkü cart  boş olacak, eğer sepete bir şey atarsa cart açılıyor zaten atmazsa boşuna db de cart yer işgal etmesin
     //bu yüzden guest veya register olmuş kullanıcıya cart açma işlemi yapmıyoruz, sadece var olan cart ı kontrol ediyoruz, cart yoksa 0 dönecek
 
-    // Sepet fiyatlarını doğru para biriminde göstermek için display_currency'yi erken hesapla
-    // (Tam hesaplama aşağıda tekrar yapılacak — burada sadece sepet çağrısı için gerekli)
-    let early_display_currency = {
-        let sale_cur = global_context.settings.get_sale_currency();
-        let supported = global_context.settings.get_supported_currencies();
-
-        // Session'dan
-        let sess_cur = session
-            .get::<String>("display_currency")
-            .await
-            .unwrap_or(None);
-
-        // Cookie'den
-        let cookie_cur = request
-            .headers()
-            .get("cookie")
-            .and_then(|h| h.to_str().ok())
-            .and_then(|cookie_str| {
-                for cookie in cookie_str.split(';') {
-                    let cookie = cookie.trim();
-                    if cookie.starts_with("display_currency=") {
-                        let cur = &cookie[17..];
-                        if supported.contains(&cur.to_string()) {
-                            return Some(cur.to_string());
-                        }
-                    }
-                }
-                None
-            });
-
-        sess_cur.or(cookie_cur).unwrap_or(sale_cur)
-    };
-
-    if let Some(uid) = user_id {
-        if let Ok(Some(cart)) =
-            crate::modules::ecommerce::services::cart_service::find_active_cart_by_user(
-                &state.db, uid,
-            )
-            .await
-        {
-            if let Ok(cart_data) = crate::modules::ecommerce::services::cart_service::get_cart(
-                &state.db,
-                cart.id,
-                None,
-                user_id,
-                Some(early_display_currency.clone()),
-            )
-            .await
-            {
-                global_context.cart_count = cart_data.item_count as i64;
-                global_context.cart_total_amount = Some(cart_data.total);
-                global_context.cart_total_amount_formatted = Some(cart_data.total_formatted);
-            }
-        }
-    }
-
     if let Some(uid) = user_id {
         if let Ok(favorite_count) =
             crate::modules::bookmarks::services::bookmark_service::BookmarkService::bookmarks_product_count(&state.db, uid)
@@ -650,41 +534,6 @@ pub async fn global_context_middleware(
     // Set authentication status
     global_context.is_authenticated = is_authenticated;
     global_context.is_guest = is_guest;
-
-    // free_shipping_threshold admin ayarlarında sale_currency cinsinden (ör. 500 TRY)
-    // Kullanıcının seçtiği display_currency farklıysa döviz kuru ile dönüştür
-    let raw_threshold =
-        crate::modules::admin::services::settings_service::get_free_shipping_threshold(&state.db)
-            .await;
-    let sale_cur_for_threshold = global_context.settings.get_sale_currency();
-
-    let converted_threshold = if sale_cur_for_threshold == early_display_currency {
-        raw_threshold
-    } else if let Some(raw_val) = raw_threshold {
-        let rates =
-            crate::modules::currency::services::exchange_rate_service::get_cached_rates(&state.db)
-                .await;
-        if let Some(ref r) = rates {
-            crate::modules::currency::services::exchange_rate_service::convert_currency(
-                raw_val,
-                &sale_cur_for_threshold,
-                &early_display_currency,
-                r,
-            )
-        } else {
-            Some(raw_val)
-        }
-    } else {
-        None
-    };
-
-    global_context.free_shipping_threshold = converted_threshold;
-
-    global_context.free_shipping_threshold_formatted =
-        Some(crate::modules::utils::format_price::format_price(
-            converted_threshold.unwrap_or(0.0),
-            &early_display_currency,
-        ));
 
     //5. Supported Languages and Current Language from URL or Cookie
     // URL'den dil kodunu çıkar: /tr/page/123 -> "tr"
@@ -738,68 +587,6 @@ pub async fn global_context_middleware(
         global_context.menu_items = menu_cache.get(&global_context.current_language);
     }
 
-    // Para birimi tercihi: Session > Cookie > sale_currency
-    let sale_currency = global_context.settings.get_sale_currency();
-    let supported_codes = global_context.settings.get_supported_currencies();
-
-    // Session'dan display_currency tercihini al
-    let session_currency = session
-        .get::<String>("display_currency")
-        .await
-        .unwrap_or(None);
-
-    // Cookie'den display_currency tercihini al (session yoksa)
-    let cookie_currency = request
-        .headers()
-        .get("cookie")
-        .and_then(|cookie_header| cookie_header.to_str().ok())
-        .and_then(|cookie_str| {
-            for cookie in cookie_str.split(';') {
-                let cookie = cookie.trim();
-                if cookie.starts_with("display_currency=") {
-                    let cur = &cookie[17..]; // "display_currency=" kısmını atla
-                    if supported_codes.contains(&cur.to_string()) {
-                        return Some(cur.to_string());
-                    }
-                }
-            }
-            None
-        });
-
-    // Öncelik: session > cookie > sale_currency
-    let display_currency = session_currency
-        .or(cookie_currency)
-        .unwrap_or_else(|| sale_currency.clone());
-
-    // Desteklenen para birimleri detay listesi (template dropdown için)
-    let currency_details_fn = |code: &str, active_code: &str| -> CurrencyDisplayInfo {
-        let (name, symbol, flag) = match code {
-            "TRY" => ("Türk Lirası", "₺", "🇹🇷"),
-            "USD" => ("US Dollar", "$", "🇺🇸"),
-            "EUR" => ("Euro", "€", "🇪🇺"),
-            "GBP" => ("British Pound", "£", "🇬🇧"),
-            "CHF" => ("Swiss Franc", "CHF", "🇨🇭"),
-            "AUD" => ("Australian Dollar", "A$", "🇦🇺"),
-            "CAD" => ("Canadian Dollar", "C$", "🇨🇦"),
-            "AZN" => ("Azerbaycan Manatı", "₼", "🇦🇿"),
-            "JPY" => ("Japanese Yen", "¥", "🇯🇵"),
-            _ => (code, code, "🏳️"),
-        };
-        CurrencyDisplayInfo {
-            code: code.to_string(),
-            name: name.to_string(),
-            symbol: symbol.to_string(),
-            flag: flag.to_string(),
-            is_active: code == active_code,
-        }
-    };
-
-    global_context.display_currency = display_currency.clone();
-    global_context.supported_currencies = supported_codes
-        .iter()
-        .map(|code| currency_details_fn(code, &display_currency))
-        .collect();
-
     // Global context içeriklerini cache'den al
     if let Ok(global_cache) = state.global_context_cache.read() {
         request.extensions_mut().insert(global_cache.clone());
@@ -843,20 +630,6 @@ where
                 // context.insert("user_permissions", &session_data.permissions);
                 // context.insert("user_profile", &session_data.profile);
             }
-            context.insert("cart_count", &global_data.cart_count);
-            context.insert(
-                "free_shipping_threshold",
-                &global_data.free_shipping_threshold,
-            );
-            context.insert(
-                "free_shipping_threshold_formatted",
-                &global_data.free_shipping_threshold_formatted,
-            );
-            context.insert("cart_total_amount", &global_data.cart_total_amount);
-            context.insert(
-                "cart_total_amount_formatted",
-                &global_data.cart_total_amount_formatted,
-            );
             context.insert(
                 "bookmark_product_count",
                 &global_data.bookmark_product_count,
@@ -871,11 +644,6 @@ where
             context.insert("settings", &global_data.settings);
             context.insert("menu_items", &global_data.menu_items);
             context.insert("debug", &global_data.debug);
-            context.insert("display_currency", &global_data.display_currency);
-            context.insert(
-                "supported_currencies_list",
-                &global_data.supported_currencies,
-            );
             context.insert("base_url", &global_data.base_url);
         }
 

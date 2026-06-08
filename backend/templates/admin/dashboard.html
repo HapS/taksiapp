@@ -58,143 +58,7 @@
         </div>
     </div>
 
-    <!-- Revenue Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2 small fw-semibold">Toplam Ciro</p>
-                            <h3 class="mb-0 fw-bold">{{ stats.total_revenue }}</h3>
-                            <p class="text-success small mb-0 mt-1">
-                                <i class="bi bi-calendar-check-fill"></i>
-                                {% if filters.start_date or filters.end_date %}
-                                    Seçili Dönem
-                                {% else %}
-                                    Tüm Zamanlar
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                            <i class="bi bi-currency-dollar"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2 small fw-semibold">Bugünkü Ciro</p>
-                            <h3 class="mb-0 fw-bold">{{ stats.revenue_today }}</h3>
-                            <p class="text-info small mb-0 mt-1">
-                                <i class="bi bi-calendar-day"></i> Bugün
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2 small fw-semibold">Haftalık Ciro</p>
-                            <h3 class="mb-0 fw-bold">{{ stats.revenue_week }}</h3>
-                            <p class="text-primary small mb-0 mt-1">
-                                <i class="bi bi-calendar-week"></i> Son 7 gün
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-info bg-opacity-10 text-info">
-                            <i class="bi bi-cash-stack"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-2 small fw-semibold">Aylık Ciro</p>
-                            <h3 class="mb-0 fw-bold">{{ stats.revenue_month }}</h3>
-                            <p class="text-warning small mb-0 mt-1">
-                                <i class="bi bi-calendar-month"></i> Son 30 gün
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Order Stats -->
-    <div class="row g-3 mb-4">
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">Bekleyen</p>
-                    <h4 class="mb-0 fw-bold text-warning">{{ stats.pending_orders }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">Onaylandı</p>
-                    <h4 class="mb-0 fw-bold text-info">{{ stats.confirmed_orders }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">Hazırlanıyor</p>
-                    <h4 class="mb-0 fw-bold text-primary">{{ stats.preparing_orders }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">Kargoda</p>
-                    <h4 class="mb-0 fw-bold text-info">{{ stats.shipped_orders }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">Teslim Edildi</p>
-                    <h4 class="mb-0 fw-bold text-success">{{ stats.delivered_orders }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <p class="text-muted mb-1 small fw-semibold">İptal Edildi</p>
-                    <h4 class="mb-0 fw-bold text-danger">{{ stats.cancelled_orders }}</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- User & Content Stats -->
+    <!-- Stats Cards -->
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm">
@@ -240,25 +104,6 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-muted mb-2 small fw-semibold">Aktif Sepetler</p>
-                            <h3 class="mb-0 fw-bold">{{ stats.active_carts }}</h3>
-                            <p class="text-warning small mb-0 mt-1">
-                                <i class="bi bi-exclamation-triangle"></i> {{ stats.abandoned_carts }} terk edildi
-                            </p>
-                        </div>
-                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                            <i class="bi bi-cart3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
                             <p class="text-muted mb-2 small fw-semibold">Toplam İçerik</p>
                             <h3 class="mb-0 fw-bold">{{ stats.total_contents }}</h3>
                             <div class="d-flex gap-1 mt-1 flex-wrap">
@@ -273,26 +118,30 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Charts Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-8">
+        <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-graph-up me-2"></i>Sipariş Durumu Dağılımı
-                    </h5>
-                </div>
                 <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="orderStatusChart"></canvas>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-2 small fw-semibold">Yayın Durumu</p>
+                            <h3 class="mb-0 fw-bold">{{ stats.published_contents }}</h3>
+                            <p class="text-muted small mb-0 mt-1">
+                                <i class="bi bi-file-earmark"></i> {{ stats.draft_contents }} taslak
+                            </p>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-4">
+    <!-- Content Types Chart -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
@@ -308,63 +157,35 @@
         </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Recent Content -->
     <div class="row g-3">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Son Siparişler
+                        <i class="bi bi-clock-history me-2"></i>Son İçerikler
                     </h5>
-                    <a href="/admin/orders" class="btn btn-sm btn-outline-primary">
+                    <a href="/admin/contents" class="btn btn-sm btn-outline-primary">
                         Tümünü Gör <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
                 <div class="card-body p-0">
-                    {% if recent_orders %}
+                    {% if recent_pages %}
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="border-0">Sipariş No</th>
-                                    <th class="border-0">Müşteri</th>
-                                    <th class="border-0">Tutar</th>
-                                    <th class="border-0">Durum</th>
+                                    <th class="border-0">Başlık</th>
+                                    <th class="border-0">Tür</th>
                                     <th class="border-0">Tarih</th>
-                                    <th class="border-0">İşlem</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for order in recent_orders %}
+                                {% for page in recent_pages %}
                                 <tr>
-                                    <td class="fw-semibold">#{{ order.id }}</td>
-                                    <td>{{ order.user_email | default(value="Misafir") }}</td>
-                                    <td class="fw-bold">{{ order.total_amount }}</td>
-                                    <td>
-                                        {% if order.status == "pending" %}
-                                            <span class="badge bg-warning">Bekliyor</span>
-                                        {% elif order.status == "confirmed" %}
-                                            <span class="badge bg-info">Onaylandı</span>
-                                        {% elif order.status == "preparing" %}
-                                            <span class="badge bg-primary">Hazırlanıyor</span>
-                                        {% elif order.status == "shipped" %}
-                                            <span class="badge bg-primary">Kargoda</span>
-                                        {% elif order.status == "delivered" %}
-                                            <span class="badge bg-success">Teslim Edildi</span>
-                                        {% elif order.status == "cancelled" %}
-                                            <span class="badge bg-danger">İptal</span>
-                                        {% elif order.status == "refunded" %}
-                                            <span class="badge bg-secondary">İade Edildi</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ order.status }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-muted small">{{ order.created_at }}</td>
-                                    <td>
-                                        <a href="/admin/orders/{{ order.id }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
+                                    <td class="fw-semibold">{{ page.title | default(value="Başlıksız") }}</td>
+                                    <td><span class="badge bg-secondary">{{ page.content_type | default(value="unknown") }}</span></td>
+                                    <td class="text-muted small">{{ page.created_at | default(value="") }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -373,17 +194,11 @@
                     {% else %}
                     <div class="text-center py-5">
                         <i class="bi bi-inbox display-4 text-muted"></i>
-                        <p class="text-muted mt-2">Henüz sipariş bulunmuyor</p>
+                        <p class="text-muted mt-2">Henüz içerik bulunmuyor</p>
                     </div>
                     {% endif %}
                 </div>
             </div>
-        </div>
-
-        <div class="col-lg-4">
-
-
-
         </div>
     </div>
 </div>
@@ -392,71 +207,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Update current time
-function updateTime() {
-    const now = new Date();
-    const timeEl = document.getElementById('current-time');
-    if (timeEl) {
-        timeEl.textContent = now.toLocaleTimeString('tr-TR');
-    }
-}
-updateTime();
-setInterval(updateTime, 1000);
-
-// Order Status Chart
-const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-new Chart(orderStatusCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Bekleyen', 'Onaylanan', 'Hazırlanıyor', 'Kargoda', 'Teslim Edildi', 'İptal'],
-        datasets: [{
-            label: 'Sipariş Sayısı',
-            data: [
-                {{ stats.pending_orders }},
-                {{ stats.confirmed_orders }},
-                {{ stats.preparing_orders }},
-                {{ stats.shipped_orders }},
-                {{ stats.delivered_orders }},
-                {{ stats.cancelled_orders }}
-            ],
-            backgroundColor: [
-                'rgba(255, 193, 7, 0.8)',
-                'rgba(13, 202, 240, 0.8)',
-                'rgba(13, 110, 253, 0.8)',
-                'rgba(111, 66, 193, 0.8)',
-                'rgba(25, 135, 84, 0.8)',
-                'rgba(220, 53, 69, 0.8)'
-            ],
-            borderColor: [
-                'rgb(255, 193, 7)',
-                'rgb(13, 202, 240)',
-                'rgb(13, 110, 253)',
-                'rgb(111, 66, 193)',
-                'rgb(25, 135, 84)',
-                'rgb(220, 53, 69)'
-            ],
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
-                }
-            }
-        }
-    }
-});
-
 // Content Types Chart
 const contentTypesCtx = document.getElementById('contentTypesChart').getContext('2d');
 new Chart(contentTypesCtx, {
@@ -500,7 +250,6 @@ function setFilter(period) {
     const now = new Date();
     let startDate, endDate;
 
-    // YYYY-MM-DD format helper (use local time to match input[type="date"] expectation)
     const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');

@@ -16,17 +16,6 @@ pub async fn has_admin_access(_state: &AppState, session: &Session) -> bool {
     false
 }
 
-//burası düzeltilecek user_type a göre değil permission ve role referans alınacak,
-pub async fn has_b2b_access(_state: &AppState, session: &Session) -> bool {
-    if let Ok(Some(user_data)) = session
-        .get::<crate::modules::auth::models::SessionData>("user_data")
-        .await
-    {
-        return user_data.has_b2b_access;
-    }
-    false
-}
-
 /// API için admin access kontrolü helper fonksiyonu
 /// AuthenticatedUser middleware ile kullanım için
 pub async fn check_admin_access_api(state: &AppState, user_id: i64) -> Result<(), Response> {

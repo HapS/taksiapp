@@ -136,26 +136,23 @@ async fn load_homepage_sections(db: &DatabaseConnection) -> Result<JsonValue, Db
 async fn get_cached_homepage_render(
     state: &AppState,
     lang: &str,
-    display_currency: Option<&str>,
 ) -> Result<HomepageRenderResponse, Box<dyn std::error::Error>> {
-    // Cache key'e display_currency dahil et - farklı para birimlerinde farklı cache
-    let currency_key = display_currency.unwrap_or("default");
-    let cache_key = format!("homepage_render_{}_{}", lang, currency_key);
+    let cache_key = format!("homepage_render_{}", lang);
 
     // Önce render cache'den kontrol et
     if let Ok(cache_guard) = HOMEPAGE_RENDER_CACHE.read() {
         if let Some(cached_render) = cache_guard.get(&cache_key) {
             eprintln!(
-                "Homepage RENDER loaded from CACHE (lang: {}, currency: {})",
-                lang, currency_key
+                "Homepage RENDER loaded from CACHE (lang: {})",
+                lang
             );
             return Ok(cached_render.clone());
         }
     }
 
     eprintln!(
-        "🔄 Homepage RENDER loading from DATABASE (cache miss, lang: {}, currency: {})",
-        lang, currency_key
+        "🔄 Homepage RENDER loading from DATABASE (cache miss, lang: {})",
+        lang
     );
 
     // Cache'de yoksa database'den yükle ve render et
@@ -183,7 +180,7 @@ async fn get_cached_homepage_render(
             .and_then(|v| v.as_bool())
             .unwrap_or(true)
         {
-            match render_section(&state.db, section, lang, display_currency).await {
+            match render_section(&state.db, section, lang).await {
                 Ok(rendered_section) => rendered_sections.push(rendered_section),
                 Err(e) => {
                     eprintln!(
@@ -213,8 +210,8 @@ async fn get_cached_homepage_render(
     if let Ok(mut cache_guard) = HOMEPAGE_RENDER_CACHE.write() {
         cache_guard.insert(cache_key, render_response.clone());
         eprintln!(
-            "📦 Homepage RENDER CACHED successfully (lang: {}, currency: {})",
-            lang, currency_key
+            "📦 Homepage RENDER CACHED successfully (lang: {})",
+            lang
         );
     }
 
@@ -258,8 +255,8 @@ pub struct HomepageContentResponse {
     pub data: serde_json::Value, // Manipüle edilmiş JSON data
 }
 
-// Re-use TagInfo from product_helper
-pub use crate::modules::content::helpers::product_helper::TagInfo;
+// Re-use TagInfo from page_helper
+pub use crate::modules::content::helpers::page_helper::TagInfo;
 
 #[derive(Serialize, Clone)]
 pub struct RenderedSection {
@@ -521,17 +518,13 @@ pub async fn api_update_homepage_sections(
 }
 
 // Helper functions
-// get_string_from_json is now used from product_helper
-use crate::modules::content::helpers::product_helper::get_string_from_json;
-
-// fetch_tags_for_contents is now used from product_helper
-use crate::modules::content::helpers::product_helper::fetch_tags_for_contents;
+use crate::modules::content::helpers::page_helper::get_string_from_json;
+use crate::modules::content::helpers::page_helper::fetch_tags_for_contents;
 
 async fn render_section(
     db: &DatabaseConnection,
     section: &serde_json::Value,
     lang: &str,
-    display_currency: Option<&str>,
 ) -> Result<RenderedSection, Box<dyn std::error::Error>> {
     // println!("SECTIONS : {}", &section);
 
@@ -746,7 +739,7 @@ async fn render_section(
                         if let Some(content) = contents.iter().find(|c| c.id == *content_id) {
                             let tags = tags_map.get(&content.id).cloned().unwrap_or_default();
                             let rendered_item =
-                                render_content_item(content, lang, &tags, db, display_currency)
+                                render_content_item(content, lang, &tags)
                                     .await?;
                             items.push(rendered_item);
                         }
@@ -797,7 +790,7 @@ async fn render_section(
             for content in contents {
                 let tags = tags_map.get(&content.id).cloned().unwrap_or_default();
                 let rendered_item =
-                    render_content_item(&content, lang, &tags, db, display_currency).await?;
+                    render_content_item(&content, lang, &tags).await?;
                 items.push(rendered_item);
             }
         }
@@ -820,52 +813,14 @@ async fn render_section(
 }
 
 // Data manipülasyon fonksiyonu - content type'a göre data'yı işle
-async fn process_content_data(
+fn process_content_data(
     content: &ContentModel,
     lang: &str,
-    db: &DatabaseConnection,
-    display_currency: Option<&str>,
 ) -> serde_json::Value {
     let mut data = content.data.clone();
 
     // Apply media fallbacks for the current language
     crate::modules::media::helpers::media_helper::resolve_media_fallbacks(&mut data, lang);
-
-    // Sadece product content type için özel işlem yap
-    if content.content_type == "product" {
-        // Product için kur dönüşümü yap
-
-        // Sale currency ve exchange rates al
-        let sale_currency =
-            crate::modules::admin::services::settings_service::get_sale_currency(db)
-                .await
-                .unwrap_or_else(|| "TRY".to_string());
-        // Kullanıcının seçtiği display_currency varsa onu kullan, yoksa sale_currency
-        let target_currency = display_currency.unwrap_or(&sale_currency);
-        let rates =
-            crate::modules::currency::services::exchange_rate_service::get_cached_rates(db).await;
-
-        // Product data'sını al ve dönüştür
-        if let Some(product_data) = data.get("product") {
-            // Hazır product objesini tek fonksiyonda hazırla (fiyat dönüşümü + attributes zenginleştirme)
-            let prepared =
-                crate::modules::content::helpers::product_helper::prepare_product_for_display(
-                    Some(product_data),
-                    db,
-                    lang,
-                    target_currency,
-                    rates.as_ref(),
-                    None,
-                )
-                .await;
-
-            if let Some(obj) = data.as_object_mut() {
-                if let Some(converted) = prepared {
-                    obj.insert("product".to_string(), converted);
-                }
-            }
-        }
-    }
 
     data
 }
@@ -921,8 +876,6 @@ async fn render_content_item(
     content: &ContentModel,
     lang: &str,
     tags: &[TagInfo],
-    db: &DatabaseConnection,
-    display_currency: Option<&str>,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let title = get_string_from_json(&content.data, lang, "title")
         .unwrap_or_else(|| format!("Content {}", content.id));
@@ -947,31 +900,9 @@ async fn render_content_item(
         .map(|dt| dt.format("%d.%m.%Y").to_string());
 
     // Data'yı işle
-    let processed_data = process_content_data(content, lang, db, display_currency).await;
+    let processed_data = process_content_data(content, lang);
 
-    let price = if content.content_type == "product" {
-        if let Some(product) = processed_data.get("product") {
-            let p_val = product
-                .get("display_price_formatted")
-                .or_else(|| product.get("display_price"));
-
-            p_val.and_then(|v| {
-                if let Some(s) = v.as_str() {
-                    Some(s.to_string())
-                } else if let Some(f) = v.as_f64() {
-                    Some(f.to_string())
-                } else if let Some(i) = v.as_i64() {
-                    Some(i.to_string())
-                } else {
-                    None
-                }
-            })
-        } else {
-            None
-        }
-    } else {
-        get_string_from_json(&content.data, lang, "price")
-    };
+    let price = get_string_from_json(&content.data, lang, "price");
 
     // Unified response
     let response = HomepageContentResponse {
@@ -1048,10 +979,9 @@ pub async fn api_get_vocabularies(State(state): State<AppState>, session: Sessio
 pub async fn get_homepage_render_cached(
     state: &AppState,
     lang: &str,
-    display_currency: Option<&str>,
 ) -> Result<HomepageRenderResponse, Box<dyn std::error::Error>> {
     // Direkt cache'li render fonksiyonunu kullan
-    get_cached_homepage_render(state, lang, display_currency).await
+    get_cached_homepage_render(state, lang).await
 }
 
 // API: Homepage render (önizleme için) - Cache ile
@@ -1069,7 +999,7 @@ pub async fn api_render_homepage(
     let lang = params.lang.unwrap_or_else(|| "tr".to_string());
 
     // Cache'den render'ı getir (admin preview - sale_currency kullanır)
-    match get_cached_homepage_render(&state, &lang, None).await {
+    match get_cached_homepage_render(&state, &lang).await {
         Ok(render_response) => (StatusCode::OK, Json(render_response)).into_response(),
         Err(e) => {
             eprintln!("Homepage render error: {}", e);

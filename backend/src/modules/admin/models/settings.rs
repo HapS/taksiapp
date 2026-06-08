@@ -99,16 +99,8 @@ pub struct SettingsData {
     // Default Content Ayarları
     pub default_home_content_id: Option<i64>, // Ana sayfa için varsayılan content ID
 
-    // Varsayılan Para Birimi
-    pub default_currency: Option<String>, // "TRY", "USD", "EUR" - Varsayılan para birimi
-
-    // Desteklenen Para Birimleri
-    pub supported_currencies: Option<Vec<String>>,
-
     // Robots.txt
     pub robots: Option<String>,
-
-    pub free_shipping_threshold: Option<f64>,
 
     // Bildirim Ayarları (Mail & Telefon)
     pub admin_notification_mail: Option<String>,
@@ -261,15 +253,7 @@ impl Default for SettingsData {
             frontend_theme: Some("base".to_string()),
             debug_logs: Some(false),
             default_home_content_id: Some(70), // Varsayılan olarak 70
-            default_currency: Some("TRY".to_string()), // Varsayılan para birimi
-            supported_currencies: Some(vec![
-                "TRY".to_string(),
-                "USD".to_string(),
-                "EUR".to_string(),
-            ]),
             robots: Some("User-agent: *\nAllow: /".to_string()),
-            free_shipping_threshold: Some(50.0),
-
             // Bildirim Ayarları Varsayılan Değerler
             admin_notification_mail: None,
             admin_notification_phone: None,
@@ -353,123 +337,5 @@ impl SettingsData {
             "vocab_payment_methods" => self.vocab_payment_methods,
             _ => None,
         }
-    }
-
-    /// Helper method to set payment provider enabled status
-    pub fn set_payment_provider_enabled(&mut self, provider: &str, enabled: bool) {
-        let mut providers = self
-            .payment_providers
-            .clone()
-            .unwrap_or_else(|| serde_json::json!({}));
-
-        if providers.get(provider).is_none() {
-            providers[provider] = serde_json::json!({
-                "provider_type": provider,
-                "enabled": false,
-                "test_mode": true,
-                "config": {}
-            });
-        }
-
-        providers[provider]["enabled"] = serde_json::Value::Bool(enabled);
-        self.payment_providers = Some(providers);
-    }
-
-    /// Helper method to set payment provider test mode
-    pub fn set_payment_provider_test_mode(&mut self, provider: &str, test_mode: bool) {
-        let mut providers = self
-            .payment_providers
-            .clone()
-            .unwrap_or_else(|| serde_json::json!({}));
-
-        if providers.get(provider).is_none() {
-            providers[provider] = serde_json::json!({
-                "provider_type": provider,
-                "enabled": false,
-                "test_mode": true,
-                "config": {}
-            });
-        }
-
-        providers[provider]["test_mode"] = serde_json::Value::Bool(test_mode);
-        self.payment_providers = Some(providers);
-    }
-
-    /// Helper method to set payment provider config values
-    pub fn set_payment_provider_config(&mut self, provider: &str, key: &str, value: &str) {
-        let mut providers = self
-            .payment_providers
-            .clone()
-            .unwrap_or_else(|| serde_json::json!({}));
-
-        if providers.get(provider).is_none() {
-            providers[provider] = serde_json::json!({
-                "provider_type": provider,
-                "enabled": false,
-                "test_mode": true,
-                "config": {}
-            });
-        }
-
-        if !value.is_empty() {
-            providers[provider]["config"][key] = serde_json::Value::String(value.to_string());
-        }
-
-        self.payment_providers = Some(providers);
-    }
-
-    /// Helper method to update payment method settings
-    pub fn update_payment_method(
-        &mut self,
-        method_key: &str,
-        lang: &str,
-        title: Option<&str>,
-        description: Option<&str>,
-        b2b_available: Option<bool>,
-        b2c_available: Option<bool>,
-        icon: Option<&str>,
-        order_id: Option<i32>,
-    ) {
-        use serde_json::json;
-
-        let mut methods = self.payment_methods.clone().unwrap_or_else(|| json!({}));
-
-        if methods.get(method_key).is_none() {
-            methods[method_key] = json!({
-                "keyword": method_key.replace("_", "-"),
-                "enabled": true,
-                "icon": method_key,
-                "order_id": 999,
-                "b2b_available": false,
-                "b2c_available": false,
-                "langs": {}
-            });
-        }
-
-        if let Some(title) = title {
-            methods[method_key]["langs"][lang]["title"] = json!(title);
-        }
-
-        if let Some(description) = description {
-            methods[method_key]["langs"][lang]["description"] = json!(description);
-        }
-
-        if let Some(b2b) = b2b_available {
-            methods[method_key]["b2b_available"] = json!(b2b);
-        }
-
-        if let Some(b2c) = b2c_available {
-            methods[method_key]["b2c_available"] = json!(b2c);
-        }
-
-        if let Some(icon) = icon {
-            methods[method_key]["icon"] = json!(icon);
-        }
-
-        if let Some(order) = order_id {
-            methods[method_key]["order_id"] = json!(order);
-        }
-
-        self.payment_methods = Some(methods);
     }
 }

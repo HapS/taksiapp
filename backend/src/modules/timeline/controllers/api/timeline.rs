@@ -8,7 +8,6 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use serde::{Deserialize, Serialize};
-use sea_orm::*;
 
 #[derive(Debug, Deserialize)]
 pub struct TimelineQuery {
@@ -168,36 +167,6 @@ pub async fn get_content_timeline(
 ) -> impl IntoResponse {
     // Admin kontrolü yap
     let is_admin = crate::modules::auth::helpers::rbac::check_admin_access_api(&state, auth_user.id).await.is_ok();
-
-    // Ecommerce cart timeline'ı için özel kontrol
-    if module_type == "ecommerce" && content_type == "cart" {
-        if !is_admin {
-            // Admin değilse, cart'ın bu kullanıcıya ait olup olmadığını kontrol et
-            use crate::modules::ecommerce::models::{cart, Cart};
-            match Cart::find_by_id(content_id)
-                .filter(cart::Column::UserId.eq(auth_user.id))
-                .one(&state.db)
-                .await
-            {
-                Ok(Some(_)) => {
-                    // Cart kullanıcıya ait, timeline'ı gösterebiliriz
-                }
-                Ok(None) => {
-                    return (
-                        StatusCode::FORBIDDEN,
-                        Json(ApiResponse::<Vec<TimelineEventResponse>>::error("Bu siparişe erişim yetkiniz yok")),
-                    ).into_response();
-                }
-                Err(_) => {
-                    return (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(ApiResponse::<Vec<TimelineEventResponse>>::error("Sipariş kontrolü yapılamadı")),
-                    ).into_response();
-                }
-            }
-        }
-        // Admin ise tüm cart'ların timeline'ını görebilir
-    }
 
     match TimelineService::get_content_timeline(
         &state.db,
